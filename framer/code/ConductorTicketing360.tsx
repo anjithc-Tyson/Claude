@@ -1,5 +1,6 @@
 import * as React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { RenderTarget } from "framer"
 
 // Conductor ticketing v2: 360 × 640 screen with sun (light) and shade (dark) themes.
 // Route V-335E stops from the supplied route file; fares are samples until real tariff tables are wired in.
@@ -435,7 +436,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     const changeTotal = changeOwed.reduce((s, c) => s + c.amount, 0)
 
     const screen = (
-        <div style={{ position: "relative", width: W, height: H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
+        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
             {/* Hard-to-reach corner: risky actions on purpose */}
             <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 52 }}>
                 <button
@@ -606,7 +607,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                         style={{ width: "100%", maxHeight: "94%", display: "flex", flexDirection: "column", background: t.bg, borderTop: `2px solid ${t.border}`, borderRadius: "20px 20px 0 0", boxSizing: "border-box" }}
                         onClick={e => e.stopPropagation()}
                     >
-                        <div style={{ overflow: "auto", padding: "14px 12px 0" }}>
+                        <div style={{ overflow: "auto", overscrollBehavior: "contain", padding: "14px 12px 0" }}>
                             {sheet === "more" && <MoreSheet origin={origin} onPick={pickDest} />}
                             {sheet === "note" && (
                                 <NoteSheet
@@ -646,12 +647,16 @@ function Ticketing({ mobile }: { mobile: boolean }) {
         </div>
     )
 
-    if (mobile)
+    // On the canvas the screen is the 360 × 640 frame. On a real phone it takes the whole viewport:
+    // extra height opens up above the tiles, so the thumb zone and sheets stay on the bottom edge.
+    if (mobile) {
+        const live = RenderTarget.current() !== RenderTarget.canvas
         return (
             <ThemeCtx.Provider value={t}>
-                {screen}
+                <div style={live ? { position: "fixed", inset: 0, height: "100dvh", zIndex: 10, background: t.bg } : { width: "100%", height: "100%" }}>{screen}</div>
             </ThemeCtx.Provider>
         )
+    }
 
     return (
         <ThemeCtx.Provider value={t}>
