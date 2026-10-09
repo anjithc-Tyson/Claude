@@ -1,0 +1,13 @@
+{
+  "name": "neilsen-framer",
+  "version": "1.0.0",
+  "scripts": {
+    "connect": "node --env-file-if-exists=.env connect.js"
+  },
+  "dependencies": {
+    "framer-api": "^5.1.0"
+  },
+  "type": "module",
+  "private": true,
+  "description": "Framer Server API connection for the Neilsen project"
+}
