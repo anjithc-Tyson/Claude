@@ -65,8 +65,18 @@ const SEGMENTS = ROUTE_STOPS.map(s => s[1])
 const GPS_DIP = ROUTE_STOPS.map(s => s[2].includes("gps_dip_candidate"))
 // Short names for tiles and receipts: drop the bracketed alias and anything after " / ".
 const STOPS = FULL_NAMES.map(n => n.replace(/\s*\(.*\)\s*$/, "").split(" / ")[0])
-// Sample fares only (₹10, then +₹5 every two stops); real tariff tables should replace this.
-const FARES = FULL_NAMES.map((_, n) => (n === 0 ? 0 : 10 + 5 * Math.floor((n - 1) / 2)))
+// Fare stages: a stage is a fare band of several stops, not one stop. Each entry is the stop
+// number (seq in the route file) where a stage begins. Sample grouping until the depot's stage list is wired in.
+const STAGE_STARTS = [1, 4, 7, 10, 14, 18, 21, 24, 27, 31, 35, 39, 43]
+const STAGE_OF = FULL_NAMES.map((_, i) => STAGE_STARTS.filter(seq => seq <= i + 1).length - 1)
+const STAGE_COUNT = STAGE_STARTS.length
+// Vajra-style sample fare by stages travelled (minimum fare inside one stage).
+const FARE_BY_STAGES = [15, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70]
+const stagesBetween = (from: number, to: number) => STAGE_OF[to] - STAGE_OF[from]
+const fareFor = (from: number, to: number) => FARE_BY_STAGES[Math.min(Math.max(stagesBetween(from, to), 0), FARE_BY_STAGES.length - 1)]
+// Popular stops keep a fixed tile position for the whole trip, so muscle memory works.
+const POPULAR = ["Marathahalli", "Kundalahalli Gate", "ITPL Whitefield", "Hope Farm"].map(n => FULL_NAMES.indexOf(n))
+const POPULAR_LABEL = ["Marathahalli", "Kundalahalli Gate", "ITPL", "Hope Farm"]
 const VOID_REASONS = ["Wrong stop", "Wrong count", "Passenger left", "Printer jam"]
 const STAGE_REASONS = ["GPS wrong", "GPS lost", "Route diversion"]
 const NOTES = [50, 100, 200, 500]
@@ -158,7 +168,118 @@ type Ticket = {
     voided?: boolean
 }
 type Sale = { origin: number; startedAt: number }
-type Sheet = null | "stage" | "void" | "upi" | "more" | "note" | "trays" | "shift"
+type Sheet = null | "stage" | "void" | "upi" | "more" | "trays" | "shift"
+type Lang = "en" | "kn"
+
+// UI strings. Stop names stay in English as printed in the route file.
+// Kannada strings are a first pass and need review by a native speaker before field use.
+const STRINGS = {
+    en: {
+        stageBtn: "STAGE ±",
+        void: "VOID",
+        pending: "PENDING",
+        popular: "POPULAR",
+        nearest: "NEXT STOPS",
+        more: "MORE",
+        allStops: "All stops",
+        stopsLeft: (n: number) => (n === 1 ? "1 stop" : `${n} stops`),
+        stages: (n: number) => (n <= 0 ? "same stage" : n === 1 ? "1 stage" : `${n} stages`),
+        passed: "passed",
+        paid: "PAID",
+        free: "FREE",
+        note: "NOTE",
+        issue: "ISSUE",
+        pickStop: "PICK A STOP",
+        nextSale: "NEXT SALE",
+        orTapStop: "or tap a stop",
+        change: "Change",
+        from: "from",
+        noteTooSmall: "Note too small",
+        boarding: "BOARDING",
+        stop: "Stop",
+        stage: "Stage",
+        close: "Close",
+        confirm: "CONFIRM",
+        gpsLost: "GPS LOST · STAGE HELD · TAP TO CORRECT",
+        manual: "MANUAL · GPS SAYS",
+        offline: "OFFLINE · SAVED",
+        printing: "printing",
+        printed: "printed",
+        farStops: "All stops ahead",
+        farSub: "Grouped by road segment. Fare depends on stages, not stops.",
+        scanToPay: "SCAN TO PAY",
+        park: "Park · serve next passenger",
+        payCash: "Paying cash instead",
+        printsAfterBank: "The ticket prints only after the bank confirms.",
+        correctStage: "Correct stage",
+        reason: "Reason",
+        voidTitle: "Void a ticket",
+        hold: "HOLD 1 s TO VOID",
+        slip: "Slip dropped in satchel slot",
+        pendingTitle: "Pending",
+        printer: "Printer",
+        ready: "Ready",
+        upiWait: "UPI waiting for bank",
+        changeOwed: "Change owed",
+        none: "None",
+        notPaid: "Not paid",
+        markGiven: "Mark given",
+        shift: "Shift summary",
+    },
+    kn: {
+        stageBtn: "ಹಂತ ±",
+        void: "ರದ್ದು",
+        pending: "ಬಾಕಿ",
+        popular: "ಜನಪ್ರಿಯ",
+        nearest: "ಮುಂದಿನ ನಿಲ್ದಾಣಗಳು",
+        more: "ಇನ್ನಷ್ಟು",
+        allStops: "ಎಲ್ಲಾ ನಿಲ್ದಾಣ",
+        stopsLeft: (n: number) => `${n} ನಿಲ್ದಾಣ`,
+        stages: (n: number) => (n <= 0 ? "ಅದೇ ಹಂತ" : `${n} ಹಂತ`),
+        passed: "ದಾಟಿದೆ",
+        paid: "ಪಾವತಿ",
+        free: "ಉಚಿತ",
+        note: "ನೋಟು",
+        issue: "ಟಿಕೆಟ್ ನೀಡಿ",
+        pickStop: "ನಿಲ್ದಾಣ ಆರಿಸಿ",
+        nextSale: "ಮುಂದಿನ ಟಿಕೆಟ್",
+        orTapStop: "ಅಥವಾ ನಿಲ್ದಾಣ ಒತ್ತಿ",
+        change: "ಚಿಲ್ಲರೆ",
+        from: "ರಿಂದ",
+        noteTooSmall: "ನೋಟು ಸಾಲದು",
+        boarding: "ಹತ್ತಿದ ನಿಲ್ದಾಣ",
+        stop: "ನಿಲ್ದಾಣ",
+        stage: "ಹಂತ",
+        close: "ಮುಚ್ಚಿ",
+        confirm: "ಖಚಿತಪಡಿಸಿ",
+        gpsLost: "GPS ಇಲ್ಲ · ಹಂತ ಸರಿಪಡಿಸಿ",
+        manual: "ಕೈಯಾರೆ · GPS ಪ್ರಕಾರ",
+        offline: "ಆಫ್‌ಲೈನ್ · ಉಳಿಸಲಾಗಿದೆ",
+        printing: "ಮುದ್ರಣ",
+        printed: "ಮುದ್ರಿತ",
+        farStops: "ಮುಂದಿನ ಎಲ್ಲಾ ನಿಲ್ದಾಣಗಳು",
+        farSub: "ದರ ಹಂತಗಳ ಮೇಲೆ ಅವಲಂಬಿತ.",
+        scanToPay: "ಪಾವತಿಸಲು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
+        park: "ಬಾಕಿ ಇಡಿ · ಮುಂದಿನ ಪ್ರಯಾಣಿಕ",
+        payCash: "ನಗದು ಪಾವತಿ",
+        printsAfterBank: "ಬ್ಯಾಂಕ್ ಖಚಿತಪಡಿಸಿದ ನಂತರವೇ ಟಿಕೆಟ್ ಮುದ್ರಣ.",
+        correctStage: "ಹಂತ ಸರಿಪಡಿಸಿ",
+        reason: "ಕಾರಣ",
+        voidTitle: "ಟಿಕೆಟ್ ರದ್ದು",
+        hold: "ರದ್ದು ಮಾಡಲು 1 ಸೆ ಒತ್ತಿ ಹಿಡಿಯಿರಿ",
+        slip: "ಚೀಟಿ ಚೀಲದಲ್ಲಿ ಹಾಕಲಾಗಿದೆ",
+        pendingTitle: "ಬಾಕಿ",
+        printer: "ಮುದ್ರಕ",
+        ready: "ಸಿದ್ಧ",
+        upiWait: "UPI ಬ್ಯಾಂಕ್ ದೃಢೀಕರಣ ಬಾಕಿ",
+        changeOwed: "ಕೊಡಬೇಕಾದ ಚಿಲ್ಲರೆ",
+        none: "ಇಲ್ಲ",
+        notPaid: "ಪಾವತಿ ಆಗಿಲ್ಲ",
+        markGiven: "ಕೊಟ್ಟಿದೆ",
+        shift: "ಪಾಳಿ ಸಾರಾಂಶ",
+    },
+}
+type Strings = typeof STRINGS.en
 
 const pad = (n: number) => String(n).padStart(4, "0")
 const clock = () => new Date().toLocaleTimeString("en-GB")
@@ -185,6 +306,8 @@ function feedback(kind: "tap" | "issue" | "warn" = "tap") {
 
 const ThemeCtx = React.createContext<Theme>(LIGHT)
 const useT = () => React.useContext(ThemeCtx)
+const LangCtx = React.createContext<Strings>(STRINGS.en)
+const useL = () => React.useContext(LangCtx)
 
 const btn: React.CSSProperties = {
     fontFamily: "inherit",
@@ -218,6 +341,9 @@ const MOBILE_BANK_DELAY_MS = 4000
 function Ticketing({ mobile }: { mobile: boolean }) {
     const [dark, setDark] = useState(false)
     const [leftHanded, setLeftHanded] = useState(false)
+    const [lang, setLang] = useState<Lang>("en")
+    const [battery, setBattery] = useState<{ level: number; charging: boolean } | null>(null)
+    const [network, setNetwork] = useState<{ online: boolean; type: string | null }>({ online: true, type: null })
     const [busStage, setBusStage] = useState(0)
     const [stage, setStage] = useState(0)
     const [gpsOk, setGpsOk] = useState(true)
@@ -237,6 +363,37 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     const [now, setNow] = useState(Date.now())
     const nextNo = useRef(FIRST_TICKET)
     const t = dark ? DARK : LIGHT
+    const L = STRINGS[lang]
+
+    // Device status from the browser where it is available (Battery API is Android Chrome only).
+    useEffect(() => {
+        const nav = navigator as any
+        let bat: any = null
+        const readBat = () => bat && setBattery({ level: Math.round(bat.level * 100), charging: !!bat.charging })
+        if (nav.getBattery)
+            nav.getBattery()
+                .then((b: any) => {
+                    bat = b
+                    readBat()
+                    b.addEventListener("levelchange", readBat)
+                    b.addEventListener("chargingchange", readBat)
+                })
+                .catch(() => {})
+        const readNet = () => setNetwork({ online: navigator.onLine, type: nav.connection?.effectiveType ?? null })
+        readNet()
+        window.addEventListener("online", readNet)
+        window.addEventListener("offline", readNet)
+        nav.connection?.addEventListener?.("change", readNet)
+        return () => {
+            window.removeEventListener("online", readNet)
+            window.removeEventListener("offline", readNet)
+            nav.connection?.removeEventListener?.("change", readNet)
+            if (bat) {
+                bat.removeEventListener("levelchange", readBat)
+                bat.removeEventListener("chargingchange", readBat)
+            }
+        }
+    }, [])
 
     const addLog = (line: string) => setLog(l => [`${clock()}  ${line}`, ...l].slice(0, 80))
     const flash = (msg: string) => {
@@ -263,7 +420,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
 
     const origin = sale ? sale.origin : stage
     const span = dest === null ? 0 : dest - origin
-    const fare = span > 0 ? FARES[Math.min(span, FARES.length - 1)] : 0
+    const fare = span > 0 && dest !== null ? fareFor(origin, dest) : 0
     const total = fare * paid
     const change = note !== null && dest !== null ? note - total : null
     const graceLeft = sale ? GRACE_SECONDS - Math.floor((now - sale.startedAt) / 1000) : GRACE_SECONDS
@@ -432,110 +589,152 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     }
 
     const dir = leftHanded ? "row-reverse" : "row"
-    const tilesAhead = [1, 2, 3, 4, 5].map(n => origin + n).filter(i => i < STOPS.length)
+    const nearest = [1, 2, 3].map(n => origin + n).filter(i => i < STOPS.length)
     const changeTotal = changeOwed.reduce((s, c) => s + c.amount, 0)
+    const pendingCount = pendingUpi.length + changeOwed.length
+    const farPick = dest !== null && !POPULAR.includes(dest) && !nearest.includes(dest)
+    const toggleNote = (n: number) => {
+        feedback()
+        touchSale()
+        setNote(v => (v === n ? null : n))
+    }
 
     const screen = (
-        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
-            {/* Hard-to-reach corner: risky actions on purpose */}
-            <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 52 }}>
+        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 10px 10px", gap: 6, boxSizing: "border-box", fontFamily: FONT }}>
+            {/* Status strip: device health and rare settings */}
+            <div style={{ display: "flex", flexDirection: dir, alignItems: "center", gap: 6, height: 30 }}>
+                <DeviceStatus battery={battery} network={network} />
+                <button
+                    aria-label="Shift summary"
+                    style={{ ...btn, flex: 1, minWidth: 0, background: "transparent", color: t.text, fontSize: 13, fontWeight: 900, textAlign: "center", padding: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                    onClick={() => (feedback(), setSheet("shift"))}
+                >
+                    {ROUTE}
+                </button>
+                <SmallToggle label="Language" onClick={() => (feedback(), setLang(l => (l === "en" ? "kn" : "en")))}>
+                    {lang === "en" ? "ಕ" : "EN"}
+                </SmallToggle>
+                <SmallToggle label="Hand" onClick={() => (feedback(), setLeftHanded(v => !v))}>
+                    {leftHanded ? "L✋" : "✋R"}
+                </SmallToggle>
+                <SmallToggle label="Switch theme" onClick={() => (feedback(), setDark(d => !d))}>
+                    {dark ? "☾" : "☀"}
+                </SmallToggle>
+            </div>
+
+            {/* Far corner: risky actions on purpose. Pending tray on the near side. */}
+            <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 48 }}>
                 <button
                     aria-label="Correct stage"
-                    style={{ ...btn, flex: 1, minWidth: 0, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, padding: "3px 8px", textAlign: "left" }}
+                    style={{ ...btn, flex: 1, minWidth: 0, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, padding: "3px 8px", textAlign: leftHanded ? "right" : "left" }}
                     onClick={() => (feedback(), setSheet("stage"))}
                 >
-                    <div style={{ fontSize: 10, fontWeight: 800, color: t.text2, letterSpacing: 0.4 }}>STAGE ±</div>
-                    <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{STOPS[stage]}</div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: t.text2, letterSpacing: 0.4 }}>
+                        {L.stageBtn} · {STAGE_OF[stage] + 1}/{STAGE_COUNT}
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[stage]}</div>
                 </button>
                 <button
                     aria-label="Void a ticket"
                     style={{ ...btn, width: 52, background: t.surface, color: t.dangerText, border: `2px solid ${t.dangerText}`, borderRadius: 12, fontSize: 11, fontWeight: 900 }}
                     onClick={() => (feedback(), setSheet("void"))}
                 >
-                    <div style={{ fontSize: 18, lineHeight: 1 }}>✕</div>
-                    VOID
+                    <div style={{ fontSize: 16, lineHeight: 1 }}>✕</div>
+                    {L.void}
                 </button>
                 <button
-                    aria-label="Shift summary"
-                    style={{ ...btn, background: "transparent", color: t.text, textAlign: leftHanded ? "left" : "right", padding: 0 }}
-                    onClick={() => (feedback(), setSheet("shift"))}
+                    aria-label="Pending tray"
+                    style={{
+                        ...btn,
+                        width: 92,
+                        borderRadius: 12,
+                        padding: "3px 8px",
+                        textAlign: "left",
+                        background: pendingCount ? t.pending : t.surface,
+                        color: pendingCount ? t.pendingText : t.text,
+                        border: `2px solid ${pendingCount ? t.pendingBorder : t.border}`,
+                    }}
+                    onClick={() => (feedback(), setSheet("trays"))}
                 >
-                    <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap" }}>{ROUTE}</div>
-                    <div style={{ fontSize: 11, fontWeight: 800, color: t.text2, whiteSpace: "nowrap", marginTop: 2 }}>
-                        {gpsOk ? (
-                            <span>
-                                <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: t.go, border: dark ? "none" : "1px solid #000", marginRight: 3 }} />
-                                GPS · ₹{counters.cash + counters.upi}
-                            </span>
-                        ) : (
-                            <span style={{ fontSize: 10, fontWeight: 900, background: t.pending, color: t.pendingText, borderRadius: 4, padding: "1px 4px" }}>NO GPS</span>
-                        )}
+                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, color: pendingCount ? t.pendingText : t.text2 }}>
+                        {L.pending} {pendingCount || ""}
+                    </div>
+                    <div style={{ fontSize: 12, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {pendingCount ? [pendingUpi.length ? `UPI ${pendingUpi.length}` : "", changeOwed.length ? `₹${changeTotal}` : ""].filter(Boolean).join(" · ") : "—"}
                     </div>
                 </button>
-                <button
-                    aria-label="Switch theme"
-                    style={{ ...btn, width: 44, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, fontSize: 20 }}
-                    onClick={() => (feedback(), setDark(d => !d))}
-                >
-                    {dark ? "☾" : "☀"}
-                </button>
-            </div>
-
-            {/* Status chips: printer, UPI pending, change owed */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, height: 40 }}>
-                <StatusChip label="PRINTER" value={printQueue.length ? `#${pad(printQueue[0])}${printQueue.length > 1 ? ` +${printQueue.length - 1}` : ""}` : "Ready"} />
-                <StatusChip label="UPI WAIT" value={pendingUpi.length ? String(pendingUpi.length) : "—"} hot={pendingUpi.length > 0} onClick={() => (feedback(), setSheet("trays"))} />
-                <StatusChip label="CHANGE" value={changeOwed.length ? `₹${changeTotal}` : "—"} hot={changeOwed.length > 0} onClick={() => (feedback(), setSheet("trays"))} />
             </div>
 
             {/* Proof area: last ticket stays visible until the next sale starts */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 6, minHeight: 0, overflow: "hidden" }}>
                 {notice && (
-                    <div style={{ background: t.surface, border: `2px solid ${t.border}`, borderRadius: 10, padding: "6px 10px", fontSize: 13, fontWeight: 800 }}>{notice}</div>
+                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 10, padding: "5px 10px", fontSize: 13, fontWeight: 800 }}>{notice}</div>
                 )}
                 {receipt && !notice && (
-                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "6px 10px" }}>
+                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "5px 10px" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14, fontWeight: 900 }}>
                             <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                 ✓ #{pad(receipt.ticket.no)} → {STOPS[receipt.ticket.to]}
                             </span>
-                            {receipt.seconds !== null && <span style={{ flexShrink: 0, fontSize: 12 }}>{receipt.seconds.toFixed(1)} s</span>}
+                            <span style={{ flexShrink: 0, fontSize: 12 }}>
+                                {printQueue.includes(receipt.ticket.no) ? L.printing : L.printed}
+                                {receipt.seconds !== null ? ` · ${receipt.seconds.toFixed(1)} s` : ""}
+                            </span>
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {receipt.ticket.paid} × ₹{receipt.ticket.fare}
-                            {receipt.ticket.free ? ` + ${receipt.ticket.free} free` : ""} = ₹{receipt.ticket.amount}
-                            {receipt.change ? ` · change ₹${receipt.change}` : ""}
+                            {receipt.ticket.free ? ` + ${receipt.ticket.free} ${L.free.toLowerCase()}` : ""} = ₹{receipt.ticket.amount}
+                            {receipt.change ? ` · ${L.change} ₹${receipt.change}` : ""}
                         </div>
                     </div>
                 )}
                 <RouteCard
                     origin={origin}
                     gpsOk={gpsOk}
+                    online={network.online}
                     manual={gpsOk && stage !== busStage ? STOPS[busStage] : null}
                     status={sale ? (stampHeld ? `held ${Math.max(0, graceLeft)}s` : "stamped") : null}
                     onClick={() => (feedback(), setSheet("stage"))}
                 />
             </div>
 
-            {/* Thumb zone: destination tiles, fixed positions within a stage */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gridTemplateRows: "88px 88px", gap: 8 }}>
-                {tilesAhead.map(i => (
-                    <Tile key={i} on={dest === i} fare={FARES[i - origin]} name={STOPS[i]} hint={`+${i - origin}`} onClick={() => pickDest(i)} />
+            {/* Thumb zone. Row 1: popular stops, fixed in place for the whole trip. Row 2: the next stops and MORE. */}
+            <TileRowLabel left={L.popular} right={`${L.stage} ${STAGE_OF[origin] + 1} →`} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "72px", gap: 6 }}>
+                {POPULAR.map((i, k) => {
+                    const gone = i <= origin
+                    return (
+                        <Tile
+                            key={i}
+                            on={dest === i}
+                            disabled={gone}
+                            fare={gone ? null : fareFor(origin, i)}
+                            name={POPULAR_LABEL[k]}
+                            meta={gone ? L.passed : L.stages(stagesBetween(origin, i))}
+                            onClick={() => (gone ? feedback("warn") : pickDest(i))}
+                        />
+                    )
+                })}
+            </div>
+            <TileRowLabel left={L.nearest} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "72px", gap: 6 }}>
+                {nearest.map(i => (
+                    <Tile key={i} on={dest === i} fare={fareFor(origin, i)} name={STOPS[i]} meta={L.stages(stagesBetween(origin, i))} onClick={() => pickDest(i)} />
                 ))}
-                {origin + 6 < STOPS.length && (
+                {origin + 1 < STOPS.length && (
                     <Tile
-                        on={dest !== null && dest - origin > 5}
-                        fare={dest !== null && dest - origin > 5 ? FARES[Math.min(dest - origin, FARES.length - 1)] : null}
-                        name={dest !== null && dest - origin > 5 ? STOPS[dest] : "Far stops list"}
-                        hint={dest !== null && dest - origin > 5 ? `+${dest - origin}` : "6+"}
-                        title="MORE"
+                        on={farPick}
+                        fare={farPick && dest !== null ? fareFor(origin, dest) : null}
+                        title={L.more}
+                        name={farPick && dest !== null ? STOPS[dest] : L.allStops}
+                        meta={farPick && dest !== null ? L.stages(stagesBetween(origin, dest)) : L.stopsLeft(STOPS.length - origin - 1)}
                         onClick={() => (feedback(), touchSale(), setSheet("more"))}
                     />
                 )}
             </div>
 
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 52, alignItems: "center" }}>
-                <RowLabel>PAID</RowLabel>
+            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 46, alignItems: "center" }}>
+                <RowLabel>{L.paid}</RowLabel>
                 {[1, 2, 3, 4].map(n => (
                     <Chip key={n} on={paid === n} onClick={() => pickPaid(n)}>
                         {n}
@@ -546,27 +745,34 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 </Chip>
             </div>
 
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 48, alignItems: "center" }}>
-                <RowLabel>FREE</RowLabel>
-                <Chip on={false} onClick={() => changeFree(-1)} aria="Fewer free riders">
+            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 42, alignItems: "center" }}>
+                <RowLabel>{L.free}</RowLabel>
+                <Chip on={false} onClick={() => changeFree(-1)} aria="Fewer free riders" grow={1.4}>
                     −
                 </Chip>
                 <Chip on={free > 0} onClick={() => {}} static>
                     {free}
                 </Chip>
-                <Chip on={false} onClick={() => changeFree(1)} aria="More free riders">
+                <Chip on={false} onClick={() => changeFree(1)} aria="More free riders" grow={1.4}>
                     +
-                </Chip>
-                <Chip on={note !== null} grow={1.7} onClick={() => (feedback(), setSheet("note"))} small>
-                    {note === null ? "Note ₹" : `Got ₹${note}`}
                 </Chip>
             </div>
 
+            {/* Quick note chips: the note handed over, tap again to clear. Change is computed, never typed. */}
+            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 42, alignItems: "center" }}>
+                <RowLabel>{L.note}</RowLabel>
+                {NOTES.map(n => (
+                    <Chip key={n} on={note === n} small onClick={() => toggleNote(n)} dim={dest !== null && n < total}>
+                        ₹{n}
+                    </Chip>
+                ))}
+            </div>
+
             {/* Commit row: ISSUE on the thumb side, UPI opposite. After issuing it becomes NEXT SALE, so a double tap cannot double-issue. */}
-            <div style={{ display: "flex", flexDirection: dir, gap: 8, height: 84 }}>
+            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 80 }}>
                 <button
                     aria-label="UPI QR"
-                    style={{ ...btn, width: 76, borderRadius: 16, background: t.surface, color: canIssue ? t.text : t.text2, border: `2px ${canIssue ? "solid" : "dashed"} ${t.border}`, opacity: canIssue ? 1 : 0.6 }}
+                    style={{ ...btn, width: 72, borderRadius: 16, background: t.surface, color: canIssue ? t.text : t.text2, border: `2px ${canIssue ? "solid" : "dashed"} ${t.border}`, opacity: canIssue ? 1 : 0.6 }}
                     onClick={openUpi}
                 >
                     <QrGlyph color={canIssue ? t.text : t.text2} />
@@ -577,8 +783,8 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                         style={{ ...btn, flex: 1, borderRadius: 16, background: t.go, color: t.goText, border: t.goBorder, fontSize: 24, fontWeight: 900 }}
                         onClick={() => (feedback(), setReceipt(null))}
                     >
-                        NEXT SALE
-                        <div style={{ fontSize: 12, fontWeight: 800 }}>or tap a stop</div>
+                        {L.nextSale}
+                        <div style={{ fontSize: 12, fontWeight: 800 }}>{L.orTapStop}</div>
                     </button>
                 ) : (
                     <button
@@ -593,10 +799,12 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                         onClick={issueCash}
                     >
                         <div style={{ fontSize: 12, fontWeight: 900 }}>
-                            {dest === null ? "PICK A STOP" : `ISSUE · ${paid} × ₹${fare}${free ? ` + ${free} free` : ""}`}
+                            {dest === null ? L.pickStop : `${L.issue} · ${paid} × ₹${fare}${free ? ` + ${free} ${L.free.toLowerCase()}` : ""}`}
                         </div>
-                        <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.05 }}>₹{total}</div>
-                        {change !== null && <div style={{ fontSize: 12, fontWeight: 900 }}>{change < 0 ? "Note too small" : `Change ₹${change}`}</div>}
+                        <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.05 }}>₹{total}</div>
+                        {change !== null && (
+                            <div style={{ fontSize: 12, fontWeight: 900 }}>{change < 0 ? L.noteTooSmall : `${L.change} ₹${change} · ${L.note} ₹${note}`}</div>
+                        )}
                     </button>
                 )}
             </div>
@@ -609,17 +817,6 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     >
                         <div style={{ overflow: "auto", overscrollBehavior: "contain", padding: "14px 12px 0" }}>
                             {sheet === "more" && <MoreSheet origin={origin} onPick={pickDest} />}
-                            {sheet === "note" && (
-                                <NoteSheet
-                                    total={total}
-                                    onPick={n => {
-                                        feedback()
-                                        touchSale()
-                                        setNote(n)
-                                        setSheet(null)
-                                    }}
-                                />
-                            )}
                             {sheet === "upi" && (
                                 <UpiSheet
                                     amount={total}
@@ -633,12 +830,12 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                             )}
                             {sheet === "stage" && <StageSheet stage={stage} gpsStage={busStage} gpsOk={gpsOk} onSet={setManualStage} />}
                             {sheet === "void" && <VoidSheet tickets={tickets.filter(x => !x.voided).slice(0, 3)} onVoid={doVoid} />}
-                            {sheet === "trays" && <TraySheet pending={pendingUpi} change={changeOwed} onFail={failUpi} onGive={giveChange} />}
+                            {sheet === "trays" && <TraySheet printQueue={printQueue} pending={pendingUpi} change={changeOwed} onFail={failUpi} onGive={giveChange} />}
                             {sheet === "shift" && <ShiftSheet counters={counters} />}
                         </div>
                         <div style={{ padding: 12 }}>
                             <button style={{ ...btn, width: "100%", height: 52, borderRadius: 14, background: t.surface, color: t.text, border: `2px solid ${t.border}`, fontSize: 16, fontWeight: 800 }} onClick={() => setSheet(null)}>
-                                Close
+                                {L.close}
                             </button>
                         </div>
                     </div>
@@ -650,16 +847,20 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     // On the canvas the screen is the 360 × 640 frame. On a real phone it takes the whole viewport:
     // extra height opens up above the tiles, so the thumb zone and sheets stay on the bottom edge.
     if (mobile) {
-        const live = RenderTarget.current() !== RenderTarget.canvas
+        // Published pages and previews report "preview"; canvas, export and thumbnails keep the fixed frame.
+        const live = RenderTarget.current() === RenderTarget.preview
         return (
             <ThemeCtx.Provider value={t}>
+                <LangCtx.Provider value={L}>
                 <div style={live ? { position: "fixed", inset: 0, height: "100dvh", zIndex: 10, background: t.bg } : { width: "100%", height: "100%" }}>{screen}</div>
+                </LangCtx.Provider>
             </ThemeCtx.Provider>
         )
     }
 
     return (
         <ThemeCtx.Provider value={t}>
+            <LangCtx.Provider value={L}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 36, justifyContent: "center", alignItems: "flex-start", width: "100%", height: "100%", padding: 28, boxSizing: "border-box", background: "#E9E9E9", fontFamily: FONT, color: "#000" }}>
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, flexShrink: 0 }}>
                     <div style={{ padding: 10, background: "#1A1A1A", borderRadius: 30, boxShadow: "0 18px 40px rgba(0,0,0,0.25)" }}>
@@ -683,17 +884,19 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     onReset={resetAll}
                 />
             </div>
+            </LangCtx.Provider>
         </ThemeCtx.Provider>
     )
 }
 
-// Where the fare starts: boarding stop, position on the route and GPS state.
-function RouteCard({ origin, gpsOk, manual, status, onClick }: { origin: number; gpsOk: boolean; manual: string | null; status: string | null; onClick: () => void }) {
+// Where the fare starts: boarding stop, stop and stage position, GPS and network state.
+function RouteCard({ origin, gpsOk, online, manual, status, onClick }: { origin: number; gpsOk: boolean; online: boolean; manual: string | null; status: string | null; onClick: () => void }) {
     const t = useT()
-    const warn = !gpsOk || manual !== null
+    const L = useL()
+    const warn = !gpsOk || manual !== null || !online
     const ink = warn ? t.pendingText : t.text
     const sub = warn ? t.pendingText : t.text2
-    const top = !gpsOk ? "GPS LOST · STAGE HELD · TAP TO CORRECT" : manual ? `MANUAL STAGE · GPS SAYS ${manual.toUpperCase()}` : `FROM · ${SEGMENTS[origin].toUpperCase()}`
+    const top = !gpsOk ? L.gpsLost : manual ? `${L.manual} ${manual.toUpperCase()}` : !online ? L.offline : `${L.boarding} · ${SEGMENTS[origin].toUpperCase()}`
     return (
         <button
             style={{
@@ -705,60 +908,88 @@ function RouteCard({ origin, gpsOk, manual, status, onClick }: { origin: number;
                 color: ink,
                 border: `2px solid ${warn ? t.pendingBorder : t.border}`,
                 borderRadius: 12,
-                padding: "5px 10px 7px",
+                padding: "4px 10px 6px",
             }}
             onClick={onClick}
         >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, fontWeight: 900, letterSpacing: 0.3, color: sub }}>
                 <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{top}</span>
                 <span style={{ flexShrink: 0 }}>
-                    {origin + 1}/{STOPS.length}
+                    {L.stop} {origin + 1}/{STOPS.length} · {L.stage} {STAGE_OF[origin] + 1}/{STAGE_COUNT}
                 </span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
                 <span style={{ minWidth: 0, fontSize: 15, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[origin]}</span>
                 {status && <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 800, color: sub }}>{status}</span>}
             </div>
-            <div style={{ height: 4, borderRadius: 2, background: warn ? "rgba(0,0,0,0.2)" : t.tile, marginTop: 4, overflow: "hidden" }}>
-                <div style={{ height: "100%", width: `${((origin + 1) / STOPS.length) * 100}%`, background: warn ? t.pendingText : t.text }} />
+            {/* Stage track: one segment per fare stage */}
+            <div style={{ display: "flex", gap: 2, marginTop: 4 }}>
+                {STAGE_STARTS.map((_, k) => (
+                    <div key={k} style={{ flex: 1, height: 4, borderRadius: 2, background: k <= STAGE_OF[origin] ? (warn ? t.pendingText : t.text) : warn ? "rgba(0,0,0,0.2)" : t.tile }} />
+                ))}
             </div>
         </button>
     )
 }
 
-function StatusChip({ label, value, hot, onClick }: { label: string; value: string; hot?: boolean; onClick?: () => void }) {
+// GPS state lives in the route card, which turns yellow when it drops.
+function DeviceStatus({ battery, network }: { battery: { level: number; charging: boolean } | null; network: { online: boolean; type: string | null } }) {
+    const t = useT()
+    const low = battery !== null && battery.level <= 20 && !battery.charging
+    const bars = !network.online ? 0 : network.type === "slow-2g" ? 1 : network.type === "2g" ? 2 : network.type === "3g" ? 3 : 4
+    return (
+        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, fontWeight: 900, color: t.text, flexShrink: 0 }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: low ? t.dangerText : t.text }} aria-label="Battery">
+                <svg width="20" height="11" viewBox="0 0 20 11" aria-hidden="true">
+                    <rect x="0.75" y="0.75" width="16.5" height="9.5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                    <rect x="18" y="3.5" width="2" height="4" rx="0.5" fill="currentColor" />
+                    <rect x="2.5" y="2.5" width={battery ? Math.max(1, (13 * battery.level) / 100) : 0} height="6" rx="1" fill="currentColor" />
+                </svg>
+                {battery ? `${battery.level}%${battery.charging ? "⚡" : ""}` : "—"}
+            </span>
+            <span style={{ display: "inline-flex", alignItems: "flex-end", gap: 1.5 }} aria-label="Network">
+                {[1, 2, 3, 4].map(k => (
+                    <span key={k} style={{ width: 3, height: 3 + k * 2, borderRadius: 1, background: k <= bars ? t.text : t.tile, border: k <= bars ? "none" : `1px solid ${t.border}`, boxSizing: "border-box" }} />
+                ))}
+                <span style={{ marginLeft: 3, color: network.online ? t.text : t.dangerText }}>{network.online ? (network.type ?? "").toUpperCase() || "NET" : "OFF"}</span>
+            </span>
+        </div>
+    )
+}
+
+function SmallToggle({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
     const t = useT()
     return (
-        <button
-            style={{
-                ...btn,
-                background: hot ? t.pending : t.surface,
-                color: hot ? t.pendingText : t.text,
-                border: `2px solid ${hot ? t.pendingBorder : t.border}`,
-                borderRadius: 10,
-                padding: "2px 8px",
-                textAlign: "left",
-                cursor: onClick ? "pointer" : "default",
-            }}
-            onClick={onClick}
-        >
-            <div style={{ fontSize: 9, fontWeight: 900, letterSpacing: 0.4, color: hot ? t.pendingText : t.text2 }}>{label}</div>
-            <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap" }}>{value}</div>
+        <button aria-label={label} style={{ ...btn, minWidth: 36, height: 30, padding: "0 6px", borderRadius: 9, background: t.surface, color: t.text, border: `2px solid ${t.border}`, fontSize: 13, fontWeight: 900 }} onClick={onClick}>
+            {children}
         </button>
     )
 }
 
-function Tile({ on, fare, name, hint, title, onClick }: { on: boolean; fare: number | null; name: string; hint: string; title?: string; onClick: () => void }) {
+function TileRowLabel({ left, right }: { left: string; right?: string }) {
     const t = useT()
     return (
+        <div style={{ display: "flex", justifyContent: "space-between", height: 12, fontSize: 10, fontWeight: 900, letterSpacing: 0.5, color: t.text2, lineHeight: "12px", marginBottom: -2 }}>
+            <span>{left}</span>
+            {right && <span>{right}</span>}
+        </div>
+    )
+}
+
+function Tile({ on, fare, name, meta, title, disabled, onClick }: { on: boolean; fare: number | null; name: string; meta: string; title?: string; disabled?: boolean; onClick: () => void }) {
+    const t = useT()
+    const longest = Math.max(...name.split(/\s+/).map(w => w.length))
+    const nameSize = longest > 11 ? 9.5 : longest > 9 ? 10.5 : 11.5
+    return (
         <button
+            aria-disabled={disabled}
             style={{
                 ...btn,
-                background: on ? t.activeBg : t.tile,
-                color: on ? t.activeText : t.text,
-                border: `2px solid ${on ? t.activeBg : t.tileBorder}`,
-                borderRadius: 14,
-                padding: "6px 8px",
+                background: on ? t.activeBg : disabled ? t.surface : t.tile,
+                color: on ? t.activeText : disabled ? t.text2 : t.text,
+                border: `2px ${disabled ? "dashed" : "solid"} ${on ? t.activeBg : t.tileBorder}`,
+                borderRadius: 12,
+                padding: "5px 5px",
                 textAlign: "left",
                 display: "flex",
                 flexDirection: "column",
@@ -768,32 +999,27 @@ function Tile({ on, fare, name, hint, title, onClick }: { on: boolean; fare: num
             }}
             onClick={onClick}
         >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 4 }}>
-                <span style={{ fontSize: fare === null ? 22 : 28, fontWeight: 900, lineHeight: 1 }}>{fare === null ? title : `₹${fare}`}</span>
-                <span style={{ fontSize: 12, fontWeight: 900, color: on ? t.activeText : t.text2, whiteSpace: "nowrap" }}>{hint}</span>
-            </div>
+            <div style={{ fontSize: fare === null ? 15 : 22, fontWeight: 900, lineHeight: 1, letterSpacing: -0.3 }}>{fare === null ? title ?? "—" : `₹${fare}`}</div>
             <div
                 style={{
-                    fontSize: name.length > 11 ? 11 : 12,
+                    fontSize: nameSize,
                     fontWeight: 800,
-                    letterSpacing: name.length > 11 ? -0.4 : -0.2,
-                    lineHeight: 1.2,
-                    marginTop: 5,
-                    minHeight: 30,
+                    lineHeight: 1.05,
+                    letterSpacing: longest > 9 ? -0.4 : -0.2,
                     overflow: "hidden",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
-                    overflowWrap: "break-word",
                 }}
             >
                 {name}
             </div>
+            <div style={{ fontSize: 10, fontWeight: 900, color: on ? t.activeText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{meta}</div>
         </button>
     )
 }
 
-function Chip({ on, onClick, children, grow, small, aria, static: isStatic }: { on: boolean; onClick: () => void; children: React.ReactNode; grow?: number; small?: boolean; aria?: string; static?: boolean }) {
+function Chip({ on, onClick, children, grow, small, aria, dim, static: isStatic }: { on: boolean; onClick: () => void; children: React.ReactNode; grow?: number; small?: boolean; aria?: string; dim?: boolean; static?: boolean }) {
     const t = useT()
     return (
         <button
@@ -810,6 +1036,7 @@ function Chip({ on, onClick, children, grow, small, aria, static: isStatic }: { 
                 color: on ? t.activeText : t.text,
                 border: `2px solid ${on ? t.activeBg : t.tileBorder}`,
                 cursor: isStatic ? "default" : "pointer",
+                opacity: dim && !on ? 0.45 : 1,
             }}
             onClick={onClick}
         >
@@ -911,20 +1138,23 @@ function BigButton({ kind, onClick, children, disabled }: { kind: "go" | "pendin
 
 function MoreSheet({ origin, onPick }: { origin: number; onPick: (i: number) => void }) {
     const t = useT()
-    const far = STOPS.map((_, i) => i).filter(i => i - origin > 5)
+    const L = useL()
+    const ahead = STOPS.map((_, i) => i).filter(i => i > origin)
     return (
         <div>
-            <SheetTitle sub="Grouped by road segment, nearest first.">Far stops</SheetTitle>
+            <SheetTitle sub={L.farSub}>{L.farStops}</SheetTitle>
             <div style={{ display: "grid", gap: 6 }}>
-                {far.map(i => (
+                {ahead.map(i => (
                     <React.Fragment key={i}>
-                        {(i === far[0] || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
-                        <ListButton onClick={() => onPick(i)}>
+                        {(i === ahead[0] || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
+                        <ListButton onClick={() => onPick(i)} style={{ padding: "8px 12px" }}>
                             <span style={{ minWidth: 0 }}>
                                 <b>{FULL_NAMES[i]}</b>
-                                <span style={{ color: t.text2, fontSize: 12 }}> · +{i - origin}</span>
+                                <div style={{ color: t.text2, fontSize: 12, fontWeight: 700 }}>
+                                    {L.stop} {i + 1} · {L.stages(stagesBetween(origin, i))}
+                                </div>
                             </span>
-                            <span style={{ fontWeight: 900, fontSize: 22, flexShrink: 0 }}>₹{FARES[i - origin]}</span>
+                            <span style={{ fontWeight: 900, fontSize: 22, flexShrink: 0 }}>₹{fareFor(origin, i)}</span>
                         </ListButton>
                     </React.Fragment>
                 ))}
@@ -933,27 +1163,9 @@ function MoreSheet({ origin, onPick }: { origin: number; onPick: (i: number) => 
     )
 }
 
-function NoteSheet({ total, onPick }: { total: number; onPick: (n: number | null) => void }) {
-    const t = useT()
-    return (
-        <div>
-            <SheetTitle sub="Change owed is recorded against the ticket number.">Note received</SheetTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                {NOTES.map(n => (
-                    <ListButton key={n} onClick={() => onPick(n)} style={{ justifyContent: "center", fontSize: 26, fontWeight: 900, height: 72, color: n >= total ? t.text : t.text2 }}>
-                        ₹{n}
-                    </ListButton>
-                ))}
-            </div>
-            <ListButton onClick={() => onPick(null)} style={{ justifyContent: "center", marginTop: 8 }}>
-                Exact cash
-            </ListButton>
-        </div>
-    )
-}
-
 function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: number; onPark: () => void; onCash: () => void }) {
     const t = useT()
+    const L = useL()
     const cells = useMemo(() => {
         const n = 25
         let x = seed * 9301 + amount * 49297
@@ -973,7 +1185,7 @@ function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: numb
     }, [seed, amount])
     return (
         <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: t.text2 }}>SCAN TO PAY</div>
+            <div style={{ fontSize: 13, fontWeight: 800, color: t.text2 }}>{L.scanToPay}</div>
             <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.1 }}>₹{amount}</div>
             <div style={{ display: "inline-grid", gridTemplateColumns: "repeat(25, 7px)", background: "#FFFFFF", padding: 10, borderRadius: 10, border: "2px solid #000", marginTop: 6 }}>
                 {cells.map((on, i) => (
@@ -981,12 +1193,12 @@ function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: numb
                 ))}
             </div>
             <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, marginTop: 6 }}>Sample QR · new code per ticket</div>
-            <div style={{ fontSize: 14, fontWeight: 800, marginTop: 6 }}>The ticket prints only after the bank confirms.</div>
+            <div style={{ fontSize: 14, fontWeight: 800, marginTop: 6 }}>{L.printsAfterBank}</div>
             <BigButton kind="pending" onClick={onPark}>
-                Park · serve next passenger
+                {L.park}
             </BigButton>
             <ListButton onClick={onCash} style={{ justifyContent: "center", marginTop: 8 }}>
-                Paying cash instead
+                {L.payCash}
             </ListButton>
         </div>
     )
@@ -994,6 +1206,7 @@ function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: numb
 
 function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage: number; gpsOk: boolean; onSet: (s: number, reason: string) => void }) {
     const t = useT()
+    const L = useL()
     const [pick, setPick] = useState(stage)
     const [reason, setReason] = useState(gpsOk ? STAGE_REASONS[0] : STAGE_REASONS[1])
     const current = useRef<HTMLDivElement | null>(null)
@@ -1002,11 +1215,15 @@ function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage
     }, [])
     return (
         <div>
-            <SheetTitle sub={`GPS ${gpsOk ? `suggests ${STOPS[gpsStage]}` : "is lost"}. Every change is logged with a reason.`}>Correct stage</SheetTitle>
+            <SheetTitle sub={`GPS ${gpsOk ? `suggests ${STOPS[gpsStage]}` : "is lost"}. Every change is logged with a reason.`}>{L.correctStage}</SheetTitle>
             <div style={{ maxHeight: 230, overflow: "auto", border: `2px solid ${t.border}`, borderRadius: 12, padding: "0 6px 6px" }}>
                 {STOPS.slice(0, -1).map((s, i) => (
                     <div key={i} ref={i === stage ? current : undefined}>
-                        {(i === 0 || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
+                        {(i === 0 || STAGE_OF[i] !== STAGE_OF[i - 1]) && (
+                            <Label>
+                                {L.stage.toUpperCase()} {STAGE_OF[i] + 1} · {SEGMENTS[i].toUpperCase()}
+                            </Label>
+                        )}
                         <ListButton on={pick === i} onClick={() => (feedback(), setPick(i))} style={{ fontSize: 13, padding: "8px 10px", marginTop: 4 }}>
                             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {i + 1}. {FULL_NAMES[i]}
@@ -1016,10 +1233,10 @@ function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage
                     </div>
                 ))}
             </div>
-            <Label>Reason</Label>
+            <Label>{L.reason}</Label>
             <ReasonChips reasons={STAGE_REASONS} value={reason} onChange={setReason} />
             <BigButton kind="go" onClick={() => onSet(pick, reason)}>
-                CONFIRM · {STOPS[pick]}
+                {L.confirm} · {STOPS[pick]}
             </BigButton>
         </div>
     )
@@ -1027,6 +1244,7 @@ function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage
 
 function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number, reason: string) => void }) {
     const t = useT()
+    const L = useL()
     const [no, setNo] = useState<number | null>(tickets[0]?.no ?? null)
     const [reason, setReason] = useState<string | null>(null)
     const [slip, setSlip] = useState(false)
@@ -1034,12 +1252,12 @@ function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number
     if (tickets.length === 0)
         return (
             <div>
-                <SheetTitle sub="Nothing issued yet this shift.">Void a ticket</SheetTitle>
+                <SheetTitle sub="Nothing issued yet this shift.">{L.voidTitle}</SheetTitle>
             </div>
         )
     return (
         <div>
-            <SheetTitle sub="Logged with a reason. The depot counts slips against voids.">Void a ticket</SheetTitle>
+            <SheetTitle sub="Logged with a reason. The depot counts slips against voids.">{L.voidTitle}</SheetTitle>
             <div style={{ display: "grid", gap: 6 }}>
                 {tickets.map(x => (
                     <ListButton key={x.no} on={no === x.no} danger onClick={() => (feedback(), setNo(x.no))} style={{ fontSize: 13, minHeight: 44, padding: "8px 10px" }}>
@@ -1052,11 +1270,13 @@ function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number
                     </ListButton>
                 ))}
             </div>
-            <Label>1 · Reason</Label>
+            <Label>1 · {L.reason}</Label>
             <ReasonChips reasons={VOID_REASONS} value={reason} onChange={setReason} danger />
             <Label>2 · Paper slip</Label>
             <ListButton on={slip} danger onClick={() => (feedback(), setSlip(s => !s))}>
-                <span>{slip ? "☑" : "☐"} Slip dropped in satchel slot</span>
+                <span>
+                    {slip ? "☑" : "☐"} {L.slip}
+                </span>
             </ListButton>
             <Label>3 · Hold to confirm</Label>
             <HoldButton enabled={ready} onDone={() => no !== null && reason && onVoid(no, reason)} />
@@ -1065,35 +1285,39 @@ function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number
     )
 }
 
-function TraySheet({ pending, change, onFail, onGive }: { pending: Ticket[]; change: { no: number; amount: number }[]; onFail: (no: number) => void; onGive: (no: number, amount: number) => void }) {
+function TraySheet({ printQueue, pending, change, onFail, onGive }: { printQueue: number[]; pending: Ticket[]; change: { no: number; amount: number }[]; onFail: (no: number) => void; onGive: (no: number, amount: number) => void }) {
     const t = useT()
+    const L = useL()
     return (
         <div>
-            <SheetTitle sub="Pending UPI prints only after the bank confirms.">Waiting</SheetTitle>
-            <Label>UPI pending</Label>
-            {pending.length === 0 && <div style={{ fontSize: 14, color: t.text2 }}>None</div>}
+            <SheetTitle>{L.pendingTitle}</SheetTitle>
+            <Label>{L.printer}</Label>
+            <div style={{ fontSize: 15, fontWeight: 800 }}>
+                {printQueue.length ? `#${pad(printQueue[0])} ${L.printing}${printQueue.length > 1 ? ` · +${printQueue.length - 1}` : ""}` : L.ready}
+            </div>
+            <Label>{L.upiWait}</Label>
+            {pending.length === 0 && <div style={{ fontSize: 14, color: t.text2 }}>{L.none}</div>}
             <div style={{ display: "grid", gap: 6 }}>
                 {pending.map(p => (
                     <div key={p.no} style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
                         <div style={{ flex: 1, background: t.pending, color: t.pendingText, border: `2px solid ${t.pendingBorder}`, borderRadius: 12, padding: "8px 10px", fontSize: 13, fontWeight: 800 }}>
-                            #{pad(p.no)} · ₹{p.amount}
-                            <div style={{ fontSize: 11, fontWeight: 700 }}>Waiting for bank…</div>
+                            #{pad(p.no)} → {STOPS[p.to]} · ₹{p.amount}
                         </div>
-                        <ListButton danger onClick={() => onFail(p.no)} style={{ width: 110, justifyContent: "center", color: t.dangerText, fontSize: 13 }}>
-                            Not paid
+                        <ListButton danger onClick={() => onFail(p.no)} style={{ width: 104, justifyContent: "center", color: t.dangerText, fontSize: 13 }}>
+                            {L.notPaid}
                         </ListButton>
                     </div>
                 ))}
             </div>
-            <Label>Change owed</Label>
-            {change.length === 0 && <div style={{ fontSize: 14, color: t.text2 }}>None</div>}
+            <Label>{L.changeOwed}</Label>
+            {change.length === 0 && <div style={{ fontSize: 14, color: t.text2 }}>{L.none}</div>}
             <div style={{ display: "grid", gap: 6 }}>
                 {change.map(c => (
                     <ListButton key={c.no} onClick={() => onGive(c.no, c.amount)}>
                         <span>
                             #{pad(c.no)} · <b>₹{c.amount}</b>
                         </span>
-                        <span style={{ fontWeight: 900 }}>Mark given</span>
+                        <span style={{ fontWeight: 900 }}>{L.markGiven}</span>
                     </ListButton>
                 ))}
             </div>
@@ -1113,7 +1337,7 @@ function ShiftSheet({ counters }: { counters: { tickets: number; pax: number; fr
     ]
     return (
         <div>
-            <SheetTitle sub={`Route ${ROUTE} · this shift`}>Shift summary</SheetTitle>
+            <SheetTitle sub={`Route ${ROUTE} · this shift`}>{useL().shift}</SheetTitle>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {rows.map(([k, v]) => (
                     <div key={k} style={{ background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "8px 10px" }}>
@@ -1145,6 +1369,7 @@ function ReasonChips({ reasons, value, onChange, danger }: { reasons: string[]; 
 
 function HoldButton({ enabled, onDone }: { enabled: boolean; onDone: () => void }) {
     const t = useT()
+    const L = useL()
     const [progress, setProgress] = useState(0)
     const raf = useRef<number | null>(null)
     const start = useRef(0)
@@ -1189,7 +1414,7 @@ function HoldButton({ enabled, onDone }: { enabled: boolean; onDone: () => void 
             onPointerCancel={stop}
         >
             <div style={{ position: "absolute", top: 0, bottom: 0, left: 0, width: `${progress * 100}%`, background: "rgba(255,255,255,0.35)" }} />
-            <span style={{ position: "relative" }}>HOLD 1 s TO VOID</span>
+            <span style={{ position: "relative" }}>{L.hold}</span>
         </button>
     )
 }
@@ -1236,14 +1461,13 @@ function DemoPanel(p: {
                 </button>
             </div>
 
-            <div style={title}>What changed from v1</div>
+            <div style={title}>How this screen works</div>
             <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.55, color: "#222" }}>
-                <li>Sun and shade themes from the token spec, switchable in one tap.</li>
-                <li>After ISSUE the bar turns into NEXT SALE, so a jolt-induced double tap cannot print twice. Tapping a stop skips it.</li>
-                <li>The last ticket stays on screen as proof until the next sale starts.</li>
-                <li>Pending UPI and change owed live in one tray with Not paid and Mark given actions.</li>
-                <li>Real V-335E stops, grouped by road segment. Flyovers, underpasses and bridges tagged in the route file drop GPS when the bus reaches them.</li>
-                <li>Shift totals move into a summary sheet, which frees space for larger targets on 360 × 640.</li>
+                <li>Popular stops (Marathahalli, Kundalahalli Gate, ITPL, Hope Farm) keep fixed tiles for the whole trip; the next three stops sit below.</li>
+                <li>Tiles show fare stages, not stops. 46 stops are grouped into 13 sample stages with Vajra-style sample fares.</li>
+                <li>Note chips record the note handed over, and change is worked out automatically.</li>
+                <li>Pending UPI, change owed and the printer live in one tray. Void and Stage ± stay in the far corner.</li>
+                <li>Top strip: battery and network from the device, language, hand and theme.</li>
             </ul>
 
             <div style={title}>Audit log</div>

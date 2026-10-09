@@ -49,11 +49,17 @@ await withConnection(
                 : { backgroundColor: target.background, height: `${target.height + 80}px` }
         )
 
-        const old = (await framer.getChildren(frame.id)).filter(n => n.name === target.name)
-        if (old.length) await framer.removeNodes(old.map(n => n.id))
+        // Keep an existing instance (it follows the updated code file); add one only when missing.
+        // Adding straight into a breakpoint frame can fail, so add at the root and then move it in.
+        const placed = (await framer.getChildren(frame.id)).filter(n => n.name === target.name)
+        if (placed.length > 1) await framer.removeNodes(placed.slice(1).map(n => n.id))
+        let instance = placed[0]
+        if (!instance) {
+            instance = await framer.addComponentInstance({ url: component.insertURL })
+            await framer.setParent(instance.id, frame.id)
+        }
 
         const width = parseInt(String(frame.width)) || 1200
-        const instance = await framer.addComponentInstance({ url: component.insertURL, parentId: frame.id })
         await framer.setAttributes(
             instance.id,
             target.screen
@@ -67,7 +73,7 @@ await withConnection(
                       height: `${target.height}px`,
                   }
         )
-        console.log("Placed instance", instance.id, "on", target.page, frame.name)
+        console.log(placed[0] ? "Updated instance" : "Placed instance", instance.id, "on", target.page, frame.name)
 
         if (process.argv.includes("--screenshot")) {
             const shot = await framer.screenshot(frame.id, { format: "png", scale: target.screen ? 2 : 1 })
