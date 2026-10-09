@@ -199,8 +199,15 @@ export default function ConductorTicketing360() {
     return <Ticketing mobile={false} />
 }
 
-// Phone-only build: the screen fills the device, with no frame, notes or simulation panel.
-// With no panel to press, the bank confirms a parked UPI payment after a few seconds.
+/**
+ * Phone-only build: the 360 × 640 screen on its own, with no frame, notes or simulation panel.
+ * With no panel to press, the bank confirms a parked UPI payment after a few seconds.
+ *
+ * @framerSupportedLayoutWidth fixed
+ * @framerSupportedLayoutHeight fixed
+ * @framerIntrinsicWidth 360
+ * @framerIntrinsicHeight 640
+ */
 export function ConductorTicketingMobile() {
     return <Ticketing mobile />
 }
@@ -428,16 +435,16 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     const changeTotal = changeOwed.reduce((s, c) => s + c.amount, 0)
 
     const screen = (
-        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
+        <div style={{ position: "relative", width: W, height: H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
             {/* Hard-to-reach corner: risky actions on purpose */}
             <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 52 }}>
                 <button
                     aria-label="Correct stage"
-                    style={{ ...btn, width: 128, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, padding: "4px 10px", textAlign: "left" }}
+                    style={{ ...btn, flex: 1, minWidth: 0, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, padding: "3px 8px", textAlign: "left" }}
                     onClick={() => (feedback(), setSheet("stage"))}
                 >
                     <div style={{ fontSize: 10, fontWeight: 800, color: t.text2, letterSpacing: 0.4 }}>STAGE ±</div>
-                    <div style={{ fontSize: 15, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[stage]}</div>
+                    <div style={{ fontSize: 13, fontWeight: 900, lineHeight: 1.1, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{STOPS[stage]}</div>
                 </button>
                 <button
                     aria-label="Void a ticket"
@@ -447,25 +454,21 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     <div style={{ fontSize: 18, lineHeight: 1 }}>✕</div>
                     VOID
                 </button>
-                <div style={{ flex: 1 }} />
                 <button
                     aria-label="Shift summary"
                     style={{ ...btn, background: "transparent", color: t.text, textAlign: leftHanded ? "left" : "right", padding: 0 }}
                     onClick={() => (feedback(), setSheet("shift"))}
                 >
-                    <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap" }}>
-                        {ROUTE}{" "}
+                    <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap" }}>{ROUTE}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: t.text2, whiteSpace: "nowrap", marginTop: 2 }}>
                         {gpsOk ? (
-                            <span style={{ fontSize: 11, fontWeight: 800, color: t.text2 }}>
+                            <span>
                                 <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 4, background: t.go, border: dark ? "none" : "1px solid #000", marginRight: 3 }} />
-                                GPS
+                                GPS · ₹{counters.cash + counters.upi}
                             </span>
                         ) : (
                             <span style={{ fontSize: 10, fontWeight: 900, background: t.pending, color: t.pendingText, borderRadius: 4, padding: "1px 4px" }}>NO GPS</span>
                         )}
-                    </div>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: t.text2 }}>
-                        {counters.tickets} tkts · ₹{counters.cash + counters.upi}
                     </div>
                 </button>
                 <button
@@ -476,15 +479,6 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     {dark ? "☾" : "☀"}
                 </button>
             </div>
-
-            {(!gpsOk || stage !== busStage) && (
-                <button
-                    style={{ ...btn, background: t.pending, color: t.pendingText, border: `2px solid ${t.pendingBorder}`, borderRadius: 10, padding: "6px 10px", fontSize: 13, fontWeight: 800, textAlign: "left" }}
-                    onClick={() => setSheet("stage")}
-                >
-                    {gpsOk ? `Manual stage · GPS says ${STOPS[busStage]}` : `GPS lost · stage held at ${STOPS[stage]}. Tap to correct.`}
-                </button>
-            )}
 
             {/* Status chips: printer, UPI pending, change owed */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, height: 40 }}>
@@ -499,28 +493,27 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     <div style={{ background: t.surface, border: `2px solid ${t.border}`, borderRadius: 10, padding: "6px 10px", fontSize: 13, fontWeight: 800 }}>{notice}</div>
                 )}
                 {receipt && !notice && (
-                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "8px 10px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 800, color: t.text2 }}>
-                            <span>✓ ISSUED #{pad(receipt.ticket.no)}</span>
-                            {receipt.seconds !== null && <span>{receipt.seconds.toFixed(1)} s</span>}
+                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "6px 10px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14, fontWeight: 900 }}>
+                            <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                ✓ #{pad(receipt.ticket.no)} → {STOPS[receipt.ticket.to]}
+                            </span>
+                            {receipt.seconds !== null && <span style={{ flexShrink: 0, fontSize: 12 }}>{receipt.seconds.toFixed(1)} s</span>}
                         </div>
-                        <div style={{ fontSize: 15, fontWeight: 900, marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {STOPS[receipt.ticket.from]} → {STOPS[receipt.ticket.to]}
-                        </div>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: t.text2 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {receipt.ticket.paid} × ₹{receipt.ticket.fare}
                             {receipt.ticket.free ? ` + ${receipt.ticket.free} free` : ""} = ₹{receipt.ticket.amount}
                             {receipt.change ? ` · change ₹${receipt.change}` : ""}
                         </div>
                     </div>
                 )}
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, fontWeight: 700, color: t.text2 }}>
-                    <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        FROM <b style={{ color: t.text }}>{STOPS[origin]}</b>
-                        {sale ? (stampHeld ? ` · held ${Math.max(0, graceLeft)}s` : " · stamped") : ""}
-                    </span>
-                    <span>Target &lt; 4 s</span>
-                </div>
+                <RouteCard
+                    origin={origin}
+                    gpsOk={gpsOk}
+                    manual={gpsOk && stage !== busStage ? STOPS[busStage] : null}
+                    status={sale ? (stampHeld ? `held ${Math.max(0, graceLeft)}s` : "stamped") : null}
+                    onClick={() => (feedback(), setSheet("stage"))}
+                />
             </div>
 
             {/* Thumb zone: destination tiles, fixed positions within a stage */}
@@ -656,9 +649,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     if (mobile)
         return (
             <ThemeCtx.Provider value={t}>
-                <div style={{ width: "100%", height: "100%", minHeight: 600, background: t.bg, display: "flex", justifyContent: "center", overflow: "auto" }}>
-                    <div style={{ width: "100%", maxWidth: 480, height: "100%", minHeight: 600 }}>{screen}</div>
-                </div>
+                {screen}
             </ThemeCtx.Provider>
         )
 
@@ -688,6 +679,45 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 />
             </div>
         </ThemeCtx.Provider>
+    )
+}
+
+// Where the fare starts: boarding stop, position on the route and GPS state.
+function RouteCard({ origin, gpsOk, manual, status, onClick }: { origin: number; gpsOk: boolean; manual: string | null; status: string | null; onClick: () => void }) {
+    const t = useT()
+    const warn = !gpsOk || manual !== null
+    const ink = warn ? t.pendingText : t.text
+    const sub = warn ? t.pendingText : t.text2
+    const top = !gpsOk ? "GPS LOST · STAGE HELD · TAP TO CORRECT" : manual ? `MANUAL STAGE · GPS SAYS ${manual.toUpperCase()}` : `FROM · ${SEGMENTS[origin].toUpperCase()}`
+    return (
+        <button
+            style={{
+                ...btn,
+                flexShrink: 0,
+                width: "100%",
+                textAlign: "left",
+                background: warn ? t.pending : t.surface,
+                color: ink,
+                border: `2px solid ${warn ? t.pendingBorder : t.border}`,
+                borderRadius: 12,
+                padding: "5px 10px 7px",
+            }}
+            onClick={onClick}
+        >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, fontWeight: 900, letterSpacing: 0.3, color: sub }}>
+                <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{top}</span>
+                <span style={{ flexShrink: 0 }}>
+                    {origin + 1}/{STOPS.length}
+                </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
+                <span style={{ minWidth: 0, fontSize: 15, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[origin]}</span>
+                {status && <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 800, color: sub }}>{status}</span>}
+            </div>
+            <div style={{ height: 4, borderRadius: 2, background: warn ? "rgba(0,0,0,0.2)" : t.tile, marginTop: 4, overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${((origin + 1) / STOPS.length) * 100}%`, background: warn ? t.pendingText : t.text }} />
+            </div>
+        </button>
     )
 }
 
