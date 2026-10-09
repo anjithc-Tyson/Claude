@@ -77,6 +77,24 @@ const fareFor = (from: number, to: number) => FARE_BY_STAGES[Math.min(Math.max(s
 // Popular stops keep a fixed tile position for the whole trip, so muscle memory works.
 const POPULAR = ["Marathahalli", "Kundalahalli Gate", "ITPL Whitefield", "Hope Farm"].map(n => FULL_NAMES.indexOf(n))
 const POPULAR_LABEL = ["Marathahalli", "Kundalahalli Gate", "ITPL", "Hope Farm"]
+// Soft hyphens at syllable breaks, so long names wrap legibly in a 4-across tile instead of being cut.
+const SPLITS: Record<string, string> = {
+    Kempegowda: "Kempe-gowda",
+    Corporation: "Corpo-ration",
+    Rajarajeshwari: "Raja-rajeshwari",
+    Helicopter: "Heli-copter",
+    Doddanekkundi: "Dodda-nekkundi",
+    Munnekolalu: "Munne-kolalu",
+    Whitefield: "White-field",
+    Murugeshpalya: "Murugesh-palya",
+    Mahadevapura: "Mahadeva-pura",
+    Accounts: "Ac-counts",
+}
+const hyphenate = (name: string) =>
+    name
+        .split(" ")
+        .map(w => (SPLITS[w] ?? w.replace(/(.{3,})(halli|palya)$/i, "$1-$2")).replace(/-/g, "\u00AD"))
+        .join(" ")
 const VOID_REASONS = ["Wrong stop", "Wrong count", "Passenger left", "Printer jam"]
 const STAGE_REASONS = ["GPS wrong", "GPS lost", "Route diversion"]
 const NOTES = [50, 100, 200, 500]
@@ -182,8 +200,10 @@ const STRINGS = {
         nearest: "NEXT STOPS",
         more: "MORE",
         allStops: "All stops",
+        byStage: "by stage",
+        held: "held",
         stopsLeft: (n: number) => (n === 1 ? "1 stop" : `${n} stops`),
-        stages: (n: number) => (n <= 0 ? "same stage" : n === 1 ? "1 stage" : `${n} stages`),
+        stages: (n: number) => (n <= 0 ? "0 stages" : n === 1 ? "1 stage" : `${n} stages`),
         passed: "passed",
         paid: "PAID",
         free: "FREE",
@@ -201,13 +221,13 @@ const STRINGS = {
         stage: "Stage",
         close: "Close",
         confirm: "CONFIRM",
-        gpsLost: "GPS LOST · STAGE HELD · TAP TO CORRECT",
-        manual: "MANUAL · GPS SAYS",
+        gpsLost: "GPS LOST · FIX",
+        manual: "MANUAL STAGE",
         offline: "OFFLINE · SAVED",
         printing: "printing",
         printed: "printed",
         farStops: "All stops ahead",
-        farSub: "Grouped by road segment. Fare depends on stages, not stops.",
+        farSub: "Grouped by fare stage. Every stop in a stage costs the same.",
         scanToPay: "SCAN TO PAY",
         park: "Park · serve next passenger",
         payCash: "Paying cash instead",
@@ -235,6 +255,8 @@ const STRINGS = {
         nearest: "ಮುಂದಿನ ನಿಲ್ದಾಣಗಳು",
         more: "ಇನ್ನಷ್ಟು",
         allStops: "ಎಲ್ಲಾ ನಿಲ್ದಾಣ",
+        byStage: "ಹಂತವಾರು",
+        held: "ಹಿಡಿದಿದೆ",
         stopsLeft: (n: number) => `${n} ನಿಲ್ದಾಣ`,
         stages: (n: number) => (n <= 0 ? "ಅದೇ ಹಂತ" : `${n} ಹಂತ`),
         passed: "ದಾಟಿದೆ",
@@ -254,13 +276,13 @@ const STRINGS = {
         stage: "ಹಂತ",
         close: "ಮುಚ್ಚಿ",
         confirm: "ಖಚಿತಪಡಿಸಿ",
-        gpsLost: "GPS ಇಲ್ಲ · ಹಂತ ಸರಿಪಡಿಸಿ",
-        manual: "ಕೈಯಾರೆ · GPS ಪ್ರಕಾರ",
+        gpsLost: "GPS ಇಲ್ಲ · ಸರಿಪಡಿಸಿ",
+        manual: "ಕೈಯಾರೆ ಹಂತ",
         offline: "ಆಫ್‌ಲೈನ್ · ಉಳಿಸಲಾಗಿದೆ",
         printing: "ಮುದ್ರಣ",
         printed: "ಮುದ್ರಿತ",
         farStops: "ಮುಂದಿನ ಎಲ್ಲಾ ನಿಲ್ದಾಣಗಳು",
-        farSub: "ದರ ಹಂತಗಳ ಮೇಲೆ ಅವಲಂಬಿತ.",
+        farSub: "ಹಂತವಾರು ಗುಂಪು. ಒಂದೇ ಹಂತದ ನಿಲ್ದಾಣಗಳಿಗೆ ಒಂದೇ ದರ.",
         scanToPay: "ಪಾವತಿಸಲು ಸ್ಕ್ಯಾನ್ ಮಾಡಿ",
         park: "ಬಾಕಿ ಇಡಿ · ಮುಂದಿನ ಪ್ರಯಾಣಿಕ",
         payCash: "ನಗದು ಪಾವತಿ",
@@ -459,11 +481,6 @@ function Ticketing({ mobile }: { mobile: boolean }) {
         touchSale()
         setPaid(n)
     }
-    const changeFree = (d: number) => {
-        feedback()
-        touchSale()
-        setFree(f => Math.max(0, Math.min(9, f + d)))
-    }
     const resetSale = () => {
         setSale(null)
         setDest(null)
@@ -598,24 +615,40 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     }
 
     const dir = leftHanded ? "row-reverse" : "row"
-    const nearest = [1, 2, 3].map(n => origin + n).filter(i => i < STOPS.length)
+    const nearest = [1, 2, 3, 4].map(n => origin + n).filter(i => i < STOPS.length)
+    // Mid-distance row: the first stop of the stage 4, 5 and 6 stages ahead.
+    // Skip a popular stop (it already has a fixed tile) in favour of the next stop in that stage.
+    const mid = [4, 5, 6]
+        .map(k => STAGE_OF[origin] + k)
+        .filter(k => k < STAGE_COUNT)
+        .map(k => {
+            const inStage = STOPS.map((_, i) => i).filter(i => STAGE_OF[i] === k)
+            return inStage.find(i => !POPULAR.includes(i)) ?? inStage[0]
+        })
     const changeTotal = changeOwed.reduce((s, c) => s + c.amount, 0)
     const pendingCount = pendingUpi.length + changeOwed.length
-    const farPick = dest !== null && !POPULAR.includes(dest) && !nearest.includes(dest)
+    const farPick = dest !== null && !POPULAR.includes(dest) && !nearest.includes(dest) && !mid.includes(dest)
     const toggleNote = (n: number) => {
         feedback()
         touchSale()
         setNote(v => (v === n ? null : n))
     }
+    const pickFree = (n: number) => {
+        feedback()
+        touchSale()
+        setFree(n)
+    }
+    const row = (height: number): React.CSSProperties => ({ display: "flex", flexDirection: dir, gap: 5, height, alignItems: "stretch", flexShrink: 0 })
+    const tileRow: React.CSSProperties = { display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "86px", gap: 5, flexShrink: 0 }
 
     const screen = (
-        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 10px 10px", gap: 6, boxSizing: "border-box", fontFamily: FONT }}>
+        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: "8px 10px", gap: 5, boxSizing: "border-box", fontFamily: FONT }}>
             {/* Status strip: device health and rare settings */}
-            <div style={{ display: "flex", flexDirection: dir, alignItems: "center", gap: 6, height: 30 }}>
+            <div style={{ ...row(30), alignItems: "center", gap: 6 }}>
                 <DeviceStatus battery={battery} network={network} />
                 <button
                     aria-label="Shift summary"
-                    style={{ ...btn, flex: 1, minWidth: 0, background: "transparent", color: t.text, fontSize: 13, fontWeight: 900, textAlign: "center", padding: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                    style={{ ...btn, flex: 1, minWidth: 0, background: "transparent", color: t.text, fontSize: 14, fontWeight: 900, textAlign: "center", padding: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
                     onClick={() => (feedback(), setSheet("shift"))}
                 >
                     {ROUTE}
@@ -632,20 +665,18 @@ function Ticketing({ mobile }: { mobile: boolean }) {
             </div>
 
             {/* Far corner: risky actions on purpose. Pending tray on the near side. */}
-            <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 48 }}>
-                <button
-                    aria-label="Correct stage"
-                    style={{ ...btn, flex: 1, minWidth: 0, background: t.surface, color: t.text, border: `2px solid ${t.border}`, borderRadius: 12, padding: "3px 8px", textAlign: leftHanded ? "right" : "left" }}
+            <div style={row(48)}>
+                <StageButton
+                    stage={origin}
+                    gpsOk={gpsOk}
+                    manual={gpsOk && stage !== busStage}
+                    online={network.online}
+                    alignRight={leftHanded}
                     onClick={() => (feedback(), setSheet("stage"))}
-                >
-                    <div style={{ fontSize: 10, fontWeight: 800, color: t.text2, letterSpacing: 0.4 }}>
-                        {L.stageBtn} · {STAGE_OF[stage] + 1}/{STAGE_COUNT}
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[stage]}</div>
-                </button>
+                />
                 <button
                     aria-label="Void a ticket"
-                    style={{ ...btn, width: 52, background: t.surface, color: t.dangerText, border: `2px solid ${t.dangerText}`, borderRadius: 12, fontSize: 11, fontWeight: 900 }}
+                    style={{ ...btn, width: 56, background: t.surface, color: t.dangerText, border: `2px solid ${t.dangerText}`, borderRadius: 12, fontSize: 14, fontWeight: 900, padding: 0 }}
                     onClick={() => (feedback(), setSheet("void"))}
                 >
                     <div style={{ fontSize: 16, lineHeight: 1 }}>✕</div>
@@ -655,9 +686,9 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     aria-label="Pending tray"
                     style={{
                         ...btn,
-                        width: 92,
+                        width: 96,
                         borderRadius: 12,
-                        padding: "3px 8px",
+                        padding: "2px 8px",
                         textAlign: "left",
                         background: pendingCount ? t.pending : t.surface,
                         color: pendingCount ? t.pendingText : t.text,
@@ -665,55 +696,29 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     }}
                     onClick={() => (feedback(), setSheet("trays"))}
                 >
-                    <div style={{ fontSize: 10, fontWeight: 900, letterSpacing: 0.4, color: pendingCount ? t.pendingText : t.text2 }}>
-                        {L.pending} {pendingCount || ""}
-                    </div>
-                    <div style={{ fontSize: 12, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 900, color: pendingCount ? t.pendingText : t.text2 }}>{L.pending}</div>
+                    <div style={{ fontSize: 14, lineHeight: "19px", fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {pendingCount ? [pendingUpi.length ? `UPI ${pendingUpi.length}` : "", changeOwed.length ? `₹${changeTotal}` : ""].filter(Boolean).join(" · ") : "—"}
                     </div>
                 </button>
             </div>
 
-            {/* Proof area: last ticket stays visible until the next sale starts */}
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 6, minHeight: 0, overflow: "hidden" }}>
-                {notice && (
-                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 10, padding: "5px 10px", fontSize: 13, fontWeight: 800 }}>{notice}</div>
-                )}
-                {receipt && !notice && (
-                    <div style={{ flexShrink: 0, background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "5px 10px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 14, fontWeight: 900 }}>
-                            <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                                ✓ #{pad(receipt.ticket.no)} → {STOPS[receipt.ticket.to]}
-                            </span>
-                            <span style={{ flexShrink: 0, fontSize: 12 }}>
-                                {printQueue.includes(receipt.ticket.no) ? L.printing : L.printed}
-                                {receipt.seconds !== null ? ` · ${receipt.seconds.toFixed(1)} s` : ""}
-                            </span>
-                        </div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {fareLine(receipt.ticket.paid, receipt.ticket.fare, receipt.ticket.free, L)} = ₹{receipt.ticket.amount}
-                            {receipt.change ? ` · ${L.change} ₹${receipt.change}` : ""}
-                        </div>
-                    </div>
-                )}
-                <RouteCard
-                    origin={origin}
-                    gpsOk={gpsOk}
-                    online={network.online}
-                    manual={gpsOk && stage !== busStage ? STOPS[busStage] : null}
-                    status={sale ? (stampHeld ? `held ${Math.max(0, graceLeft)}s` : "stamped") : null}
-                    onClick={() => (feedback(), setSheet("stage"))}
-                />
-            </div>
+            {/* Flexible space: on taller phones it grows here, keeping the thumb zone on the bottom edge */}
+            <div style={{ flex: 1, minHeight: 0 }} />
+            {notice && (
+                <div style={{ position: "absolute", left: 10, right: 10, top: 43, height: 48, zIndex: 2, display: "flex", alignItems: "center", background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "0 10px", fontSize: 14, fontWeight: 900, boxSizing: "border-box", boxShadow: "0 4px 12px rgba(0,0,0,0.25)" }}>
+                    {notice}
+                </div>
+            )}
 
-            {/* Thumb zone. Row 1: popular stops, fixed in place for the whole trip. Row 2: the next stops and MORE. */}
-            <TileRowLabel left={L.popular} right={`${L.stage} ${STAGE_OF[origin] + 1} →`} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "72px", gap: 6 }}>
+            {/* Thumb zone. Row 1: popular stops, fixed for the whole trip. Row 2: the next four stops. Row 3: 4 to 6 stages ahead, and MORE. */}
+            <div style={tileRow}>
                 {POPULAR.map((i, k) => {
                     const gone = i <= origin
                     return (
                         <Tile
                             key={i}
+                            star
                             on={dest === i}
                             disabled={gone}
                             fare={gone ? null : fareFor(origin, i)}
@@ -724,9 +729,13 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     )
                 })}
             </div>
-            <TileRowLabel left={L.nearest} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gridTemplateRows: "72px", gap: 6 }}>
+            <div style={tileRow}>
                 {nearest.map(i => (
+                    <Tile key={i} on={dest === i} fare={fareFor(origin, i)} name={STOPS[i]} meta={L.stages(stagesBetween(origin, i))} onClick={() => pickDest(i)} />
+                ))}
+            </div>
+            <div style={tileRow}>
+                {mid.map(i => (
                     <Tile key={i} on={dest === i} fare={fareFor(origin, i)} name={STOPS[i]} meta={L.stages(stagesBetween(origin, i))} onClick={() => pickDest(i)} />
                 ))}
                 {origin + 1 < STOPS.length && (
@@ -735,13 +744,14 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                         fare={farPick && dest !== null ? fareFor(origin, dest) : null}
                         title={L.more}
                         name={farPick && dest !== null ? STOPS[dest] : L.allStops}
-                        meta={farPick && dest !== null ? L.stages(stagesBetween(origin, dest)) : L.stopsLeft(STOPS.length - origin - 1)}
+                        meta={farPick && dest !== null ? L.stages(stagesBetween(origin, dest)) : L.byStage}
                         onClick={() => (feedback(), touchSale(), setSheet("more"))}
+                        style={{ gridColumn: 4 }}
                     />
                 )}
             </div>
 
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 46, alignItems: "center" }}>
+            <div style={row(52)}>
                 <RowLabel>{L.paid}</RowLabel>
                 {[0, 1, 2, 3, 4].map(n => (
                     <Chip key={n} on={paid === n} onClick={() => pickPaid(n)}>
@@ -753,21 +763,21 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 </Chip>
             </div>
 
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 42, alignItems: "center" }}>
+            {/* Free riders (for example Shakti): one tap, like PAID */}
+            <div style={row(52)}>
                 <RowLabel>{L.free}</RowLabel>
-                <Chip on={false} onClick={() => changeFree(-1)} aria="Fewer free riders" grow={1.4}>
-                    −
-                </Chip>
-                <Chip on={free > 0} onClick={() => {}} static>
-                    {free}
-                </Chip>
-                <Chip on={false} onClick={() => changeFree(1)} aria="More free riders" grow={1.4}>
-                    +
+                {[0, 1, 2, 3].map(n => (
+                    <Chip key={n} on={free === n} onClick={() => pickFree(n)} aria={`${n} free`}>
+                        {n}
+                    </Chip>
+                ))}
+                <Chip on={free >= 4} onClick={() => pickFree(free >= 4 ? Math.min(free + 1, 20) : 4)} aria="4 or more free">
+                    {free >= 4 ? free : "4+"}
                 </Chip>
             </div>
 
             {/* Quick note chips: the note handed over, tap again to clear. Change is computed, never typed. */}
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 42, alignItems: "center" }}>
+            <div style={row(52)}>
                 <RowLabel>{L.note}</RowLabel>
                 {NOTES.map(n => (
                     <Chip key={n} on={note === n} small onClick={() => toggleNote(n)} dim={dest !== null && (total === 0 || n < total)}>
@@ -776,42 +786,54 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 ))}
             </div>
 
-            {/* Commit row: ISSUE on the thumb side, UPI opposite. After issuing it becomes NEXT SALE, so a double tap cannot double-issue. */}
-            <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 80 }}>
+            {/* Commit row: ISSUE on the thumb side, UPI opposite. After issuing it shows the ticket and becomes NEXT SALE, so a double tap cannot double-issue. */}
+            <div style={row(76)}>
                 <button
                     aria-label="UPI QR"
                     style={{ ...btn, width: 72, borderRadius: 16, background: t.surface, color: canUpi ? t.text : t.text2, border: `2px ${canUpi ? "solid" : "dashed"} ${t.border}`, opacity: canUpi ? 1 : 0.6 }}
                     onClick={openUpi}
                 >
                     <QrGlyph color={canUpi ? t.text : t.text2} />
-                    <div style={{ fontSize: 13, fontWeight: 900, marginTop: 4 }}>UPI</div>
+                    <div style={{ fontSize: 14, fontWeight: 900, marginTop: 2 }}>UPI</div>
                 </button>
                 {receipt && dest === null ? (
                     <button
-                        style={{ ...btn, flex: 1, borderRadius: 16, background: t.go, color: t.goText, border: t.goBorder, fontSize: 24, fontWeight: 900 }}
+                        style={{ ...btn, flex: 1, minWidth: 0, borderRadius: 16, background: t.go, color: t.goText, border: t.goBorder, padding: "4px 10px", textAlign: "left" }}
                         onClick={() => (feedback(), setReceipt(null))}
                     >
-                        {L.nextSale}
-                        <div style={{ fontSize: 12, fontWeight: 800 }}>{L.orTapStop}</div>
+                        <div style={{ display: "flex", justifyContent: "space-between", gap: 6, fontSize: 14, fontWeight: 900, lineHeight: "17px" }}>
+                            <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                ✓ #{pad(receipt.ticket.no)} → {STOPS[receipt.ticket.to]}
+                            </span>
+                            <span style={{ flexShrink: 0 }}>{printQueue.includes(receipt.ticket.no) ? "🖨" : "✓"}</span>
+                        </div>
+                        <div style={{ fontSize: 14, fontWeight: 800, lineHeight: "17px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {fareLine(receipt.ticket.paid, receipt.ticket.fare, receipt.ticket.free, L)} = ₹{receipt.ticket.amount}
+                            {receipt.change ? ` · ${L.change} ₹${receipt.change}` : ""}
+                        </div>
+                        <div style={{ fontSize: 22, fontWeight: 900, lineHeight: "26px" }}>{L.nextSale} ›</div>
                     </button>
                 ) : (
                     <button
                         style={{
                             ...btn,
                             flex: 1,
+                            minWidth: 0,
                             borderRadius: 16,
+                            padding: "2px 6px",
                             background: canIssue ? t.go : t.surface,
                             color: canIssue ? t.goText : t.text2,
                             border: canIssue ? t.goBorder : `2px dashed ${t.border}`,
                         }}
                         onClick={issueCash}
                     >
-                        <div style={{ fontSize: 12, fontWeight: 900 }}>
+                        <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                             {dest === null ? L.pickStop : paid + free === 0 ? L.addPassenger : `${L.issue} · ${fareLine(paid, fare, free, L)}`}
+                            {stampHeld ? ` · ${L.held} ${Math.max(0, graceLeft)}s` : ""}
                         </div>
-                        <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.05 }}>₹{total}</div>
+                        <div style={{ fontSize: 34, fontWeight: 900, lineHeight: 1.05 }}>₹{total}</div>
                         {change !== null && (
-                            <div style={{ fontSize: 12, fontWeight: 900 }}>{change < 0 ? L.noteTooSmall : `${L.change} ₹${change} · ${L.note} ₹${note}`}</div>
+                            <div style={{ fontSize: 14, fontWeight: 900, whiteSpace: "nowrap" }}>{change < 0 ? L.noteTooSmall : `${L.change} ₹${change} · ${L.note} ₹${note}`}</div>
                         )}
                     </button>
                 )}
@@ -897,43 +919,34 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     )
 }
 
-// Where the fare starts: boarding stop, stop and stage position, GPS and network state.
-function RouteCard({ origin, gpsOk, online, manual, status, onClick }: { origin: number; gpsOk: boolean; online: boolean; manual: string | null; status: string | null; onClick: () => void }) {
+// Far-corner stage control. It names the boarding stop, shows the stage track and turns yellow
+// when GPS is lost, the stage was set by hand, or the device is offline.
+function StageButton({ stage, gpsOk, manual, online, alignRight, onClick }: { stage: number; gpsOk: boolean; manual: boolean; online: boolean; alignRight: boolean; onClick: () => void }) {
     const t = useT()
     const L = useL()
-    const warn = !gpsOk || manual !== null || !online
-    const ink = warn ? t.pendingText : t.text
-    const sub = warn ? t.pendingText : t.text2
-    const top = !gpsOk ? L.gpsLost : manual ? `${L.manual} ${manual.toUpperCase()}` : !online ? L.offline : `${L.boarding} · ${SEGMENTS[origin].toUpperCase()}`
+    const warn = !gpsOk || manual || !online
+    const top = !gpsOk ? L.gpsLost : manual ? L.manual : !online ? L.offline : `${L.stageBtn} · ${STAGE_OF[stage] + 1}/${STAGE_COUNT}`
     return (
         <button
+            aria-label="Correct stage"
             style={{
                 ...btn,
-                flexShrink: 0,
-                width: "100%",
-                textAlign: "left",
+                flex: 1,
+                minWidth: 0,
                 background: warn ? t.pending : t.surface,
-                color: ink,
+                color: warn ? t.pendingText : t.text,
                 border: `2px solid ${warn ? t.pendingBorder : t.border}`,
                 borderRadius: 12,
-                padding: "4px 10px 6px",
+                padding: "1px 8px 3px",
+                textAlign: alignRight ? "right" : "left",
             }}
             onClick={onClick}
         >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, fontSize: 10, fontWeight: 900, letterSpacing: 0.3, color: sub }}>
-                <span style={{ minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{top}</span>
-                <span style={{ flexShrink: 0 }}>
-                    {L.stop} {origin + 1}/{STOPS.length} · {L.stage} {STAGE_OF[origin] + 1}/{STAGE_COUNT}
-                </span>
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "baseline" }}>
-                <span style={{ minWidth: 0, fontSize: 15, fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[origin]}</span>
-                {status && <span style={{ flexShrink: 0, fontSize: 11, fontWeight: 800, color: sub }}>{status}</span>}
-            </div>
-            {/* Stage track: one segment per fare stage */}
-            <div style={{ display: "flex", gap: 2, marginTop: 4 }}>
+            <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 900, color: warn ? t.pendingText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{top}</div>
+            <div style={{ fontSize: 15, lineHeight: "19px", fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[stage]}</div>
+            <div style={{ display: "flex", gap: 1.5, marginTop: 2 }}>
                 {STAGE_STARTS.map((_, k) => (
-                    <div key={k} style={{ flex: 1, height: 4, borderRadius: 2, background: k <= STAGE_OF[origin] ? (warn ? t.pendingText : t.text) : warn ? "rgba(0,0,0,0.2)" : t.tile }} />
+                    <div key={k} style={{ flex: 1, height: 3, borderRadius: 2, background: k <= STAGE_OF[stage] ? (warn ? t.pendingText : t.text) : warn ? "rgba(0,0,0,0.2)" : t.tile }} />
                 ))}
             </div>
         </button>
@@ -946,7 +959,7 @@ function DeviceStatus({ battery, network }: { battery: { level: number; charging
     const low = battery !== null && battery.level <= 20 && !battery.charging
     const bars = !network.online ? 0 : network.type === "slow-2g" ? 1 : network.type === "2g" ? 2 : network.type === "3g" ? 3 : 4
     return (
-        <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11, fontWeight: 900, color: t.text, flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 14, fontWeight: 900, color: t.text, flexShrink: 0 }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: low ? t.dangerText : t.text }} aria-label="Battery">
                 <svg width="20" height="11" viewBox="0 0 20 11" aria-hidden="true">
                     <rect x="0.75" y="0.75" width="16.5" height="9.5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -968,26 +981,17 @@ function DeviceStatus({ battery, network }: { battery: { level: number; charging
 function SmallToggle({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
     const t = useT()
     return (
-        <button aria-label={label} style={{ ...btn, minWidth: 36, height: 30, padding: "0 6px", borderRadius: 9, background: t.surface, color: t.text, border: `2px solid ${t.border}`, fontSize: 13, fontWeight: 900 }} onClick={onClick}>
+        <button aria-label={label} style={{ ...btn, minWidth: 38, height: 30, padding: "0 6px", borderRadius: 9, background: t.surface, color: t.text, border: `2px solid ${t.border}`, fontSize: 14, fontWeight: 900 }} onClick={onClick}>
             {children}
         </button>
     )
 }
 
-function TileRowLabel({ left, right }: { left: string; right?: string }) {
-    const t = useT()
-    return (
-        <div style={{ display: "flex", justifyContent: "space-between", height: 12, fontSize: 10, fontWeight: 900, letterSpacing: 0.5, color: t.text2, lineHeight: "12px", marginBottom: -2 }}>
-            <span>{left}</span>
-            {right && <span>{right}</span>}
-        </div>
-    )
-}
-
-function Tile({ on, fare, name, meta, title, disabled, onClick }: { on: boolean; fare: number | null; name: string; meta: string; title?: string; disabled?: boolean; onClick: () => void }) {
+function Tile({ on, fare, name, meta, title, disabled, star, style, onClick }: { on: boolean; fare: number | null; name: string; meta: string; title?: string; disabled?: boolean; star?: boolean; style?: React.CSSProperties; onClick: () => void }) {
     const t = useT()
     const longest = Math.max(...name.split(/\s+/).map(w => w.length))
-    const nameSize = longest > 11 ? 9.5 : longest > 9 ? 10.5 : 11.5
+    // Four tiles across 360 px leave about 66 px for the name, so long single words step down rather than split.
+    const nameSize = 13
     return (
         <button
             aria-disabled={disabled}
@@ -995,34 +999,40 @@ function Tile({ on, fare, name, meta, title, disabled, onClick }: { on: boolean;
                 ...btn,
                 background: on ? t.activeBg : disabled ? t.surface : t.tile,
                 color: on ? t.activeText : disabled ? t.text2 : t.text,
-                border: `2px ${disabled ? "dashed" : "solid"} ${on ? t.activeBg : t.tileBorder}`,
+                border: `${star ? 3 : 2}px ${disabled ? "dashed" : "solid"} ${on ? t.activeBg : t.tileBorder}`,
                 borderRadius: 12,
-                padding: "5px 5px",
+                padding: "4px 5px",
                 textAlign: "left",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
                 overflow: "hidden",
                 minWidth: 0,
+                ...style,
             }}
             onClick={onClick}
+            data-tile
         >
-            <div style={{ fontSize: fare === null ? 15 : 22, fontWeight: 900, lineHeight: 1, letterSpacing: -0.3 }}>{fare === null ? title ?? "—" : `₹${fare}`}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                <span style={{ fontSize: fare === null ? 16 : 22, fontWeight: 900, lineHeight: 1, letterSpacing: -0.3 }}>{fare === null ? title ?? "—" : `₹${fare}`}</span>
+                {star && <span style={{ fontSize: 14, lineHeight: 1 }}>★</span>}
+            </div>
             <div
                 style={{
                     fontSize: nameSize,
                     fontWeight: 800,
                     lineHeight: 1.05,
-                    letterSpacing: longest > 9 ? -0.4 : -0.2,
+                    letterSpacing: longest > 9 ? -0.3 : -0.2,
+                    hyphens: "manual",
                     overflow: "hidden",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: "vertical",
                 }}
             >
-                {name}
+                {hyphenate(name)}
             </div>
-            <div style={{ fontSize: 10, fontWeight: 900, color: on ? t.activeText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{meta}</div>
+            <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 900, letterSpacing: -0.4, color: on ? t.activeText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{meta}</div>
         </button>
     )
 }
@@ -1038,7 +1048,7 @@ function Chip({ on, onClick, children, grow, small, aria, dim, static: isStatic 
                 height: "100%",
                 minWidth: 0,
                 borderRadius: 12,
-                fontSize: small ? 15 : 22,
+                fontSize: small ? 17 : 24,
                 fontWeight: 900,
                 background: on ? t.activeBg : t.tile,
                 color: on ? t.activeText : t.text,
@@ -1055,7 +1065,7 @@ function Chip({ on, onClick, children, grow, small, aria, dim, static: isStatic 
 
 function RowLabel({ children }: { children: React.ReactNode }) {
     const t = useT()
-    return <div style={{ width: 38, flexShrink: 0, fontSize: 11, fontWeight: 900, color: t.text2, textAlign: "center" }}>{children}</div>
+    return <div style={{ width: 44, flexShrink: 0, alignSelf: "center", fontSize: 14, fontWeight: 900, color: t.text2, textAlign: "center", overflow: "hidden" }}>{children}</div>
 }
 
 function QrGlyph({ color }: { color: string }) {
@@ -1083,7 +1093,7 @@ function SheetTitle({ children, sub }: { children: React.ReactNode; sub?: React.
     return (
         <div style={{ marginBottom: 10 }}>
             <div style={{ fontSize: 20, fontWeight: 900 }}>{children}</div>
-            {sub && <div style={{ fontSize: 13, fontWeight: 600, color: t.text2, marginTop: 2 }}>{sub}</div>}
+            {sub && <div style={{ fontSize: 14, fontWeight: 600, color: t.text2, marginTop: 2 }}>{sub}</div>}
         </div>
     )
 }
@@ -1148,25 +1158,33 @@ function MoreSheet({ origin, onPick }: { origin: number; onPick: (i: number) => 
     const t = useT()
     const L = useL()
     const ahead = STOPS.map((_, i) => i).filter(i => i > origin)
+    // One header per fare stage: every stop under it costs the same.
+    const stages = Array.from(new Set(ahead.map(i => STAGE_OF[i])))
     return (
         <div>
             <SheetTitle sub={L.farSub}>{L.farStops}</SheetTitle>
-            <div style={{ display: "grid", gap: 6 }}>
-                {ahead.map(i => (
-                    <React.Fragment key={i}>
-                        {(i === ahead[0] || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
-                        <ListButton onClick={() => onPick(i)} style={{ padding: "8px 12px" }}>
-                            <span style={{ minWidth: 0 }}>
-                                <b>{FULL_NAMES[i]}</b>
-                                <div style={{ color: t.text2, fontSize: 12, fontWeight: 700 }}>
-                                    {L.stop} {i + 1} · {L.stages(stagesBetween(origin, i))}
-                                </div>
+            {stages.map(k => {
+                const stops = ahead.filter(i => STAGE_OF[i] === k)
+                const first = stops[0]
+                return (
+                    <div key={k} style={{ marginBottom: 10 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 8, padding: "6px 2px", borderBottom: `2px solid ${t.border}`, marginBottom: 6 }}>
+                            <span style={{ fontSize: 15, fontWeight: 900 }}>
+                                {L.stage} {k + 1} · {L.stages(stagesBetween(origin, first))}
+                                <span style={{ fontSize: 14, fontWeight: 700, color: t.text2 }}> · {SEGMENTS[first]}</span>
                             </span>
-                            <span style={{ fontWeight: 900, fontSize: 22, flexShrink: 0 }}>₹{fareFor(origin, i)}</span>
-                        </ListButton>
-                    </React.Fragment>
-                ))}
-            </div>
+                            <span style={{ fontSize: 22, fontWeight: 900, flexShrink: 0 }}>₹{fareFor(origin, first)}</span>
+                        </div>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                            {stops.map(i => (
+                                <ListButton key={i} onClick={() => onPick(i)} style={{ padding: "8px 10px", fontSize: 14, fontWeight: 800, minHeight: 52 }}>
+                                    <span style={{ minWidth: 0, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", lineHeight: 1.15 }}>{STOPS[i]}</span>
+                                </ListButton>
+                            ))}
+                        </div>
+                    </div>
+                )
+            })}
         </div>
     )
 }
@@ -1193,14 +1211,14 @@ function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: numb
     }, [seed, amount])
     return (
         <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: t.text2 }}>{L.scanToPay}</div>
+            <div style={{ fontSize: 14, fontWeight: 800, color: t.text2 }}>{L.scanToPay}</div>
             <div style={{ fontSize: 40, fontWeight: 900, lineHeight: 1.1 }}>₹{amount}</div>
             <div style={{ display: "inline-grid", gridTemplateColumns: "repeat(25, 7px)", background: "#FFFFFF", padding: 10, borderRadius: 10, border: "2px solid #000", marginTop: 6 }}>
                 {cells.map((on, i) => (
                     <div key={i} style={{ width: 7, height: 7, background: on ? "#000" : "#fff" }} />
                 ))}
             </div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, marginTop: 6 }}>Sample QR · new code per ticket</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: t.text2, marginTop: 6 }}>Sample QR · new code per ticket</div>
             <div style={{ fontSize: 14, fontWeight: 800, marginTop: 6 }}>{L.printsAfterBank}</div>
             <BigButton kind="pending" onClick={onPark}>
                 {L.park}
@@ -1232,11 +1250,11 @@ function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage
                                 {L.stage.toUpperCase()} {STAGE_OF[i] + 1} · {SEGMENTS[i].toUpperCase()}
                             </Label>
                         )}
-                        <ListButton on={pick === i} onClick={() => (feedback(), setPick(i))} style={{ fontSize: 13, padding: "8px 10px", marginTop: 4 }}>
+                        <ListButton on={pick === i} onClick={() => (feedback(), setPick(i))} style={{ fontSize: 14, padding: "8px 10px", marginTop: 4 }}>
                             <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {i + 1}. {FULL_NAMES[i]}
                             </span>
-                            {gpsOk && i === gpsStage && <span style={{ fontSize: 10, fontWeight: 900, flexShrink: 0 }}>GPS</span>}
+                            {gpsOk && i === gpsStage && <span style={{ fontSize: 14, fontWeight: 900, flexShrink: 0 }}>GPS</span>}
                         </ListButton>
                     </div>
                 ))}
@@ -1268,7 +1286,7 @@ function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number
             <SheetTitle sub="Logged with a reason. The depot counts slips against voids.">{L.voidTitle}</SheetTitle>
             <div style={{ display: "grid", gap: 6 }}>
                 {tickets.map(x => (
-                    <ListButton key={x.no} on={no === x.no} danger onClick={() => (feedback(), setNo(x.no))} style={{ fontSize: 13, minHeight: 44, padding: "8px 10px" }}>
+                    <ListButton key={x.no} on={no === x.no} danger onClick={() => (feedback(), setNo(x.no))} style={{ fontSize: 14, minHeight: 44, padding: "8px 10px" }}>
                         <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             #{pad(x.no)} → {STOPS[x.to]}
                         </span>
@@ -1288,7 +1306,7 @@ function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number
             </ListButton>
             <Label>3 · Hold to confirm</Label>
             <HoldButton enabled={ready} onDone={() => no !== null && reason && onVoid(no, reason)} />
-            {!ready && <div style={{ fontSize: 12, color: t.text2, marginTop: 6 }}>Pick a ticket, a reason and the slip first.</div>}
+            {!ready && <div style={{ fontSize: 14, color: t.text2, marginTop: 6 }}>Pick a ticket, a reason and the slip first.</div>}
         </div>
     )
 }
@@ -1308,10 +1326,10 @@ function TraySheet({ printQueue, pending, change, onFail, onGive }: { printQueue
             <div style={{ display: "grid", gap: 6 }}>
                 {pending.map(p => (
                     <div key={p.no} style={{ display: "flex", gap: 6, alignItems: "stretch" }}>
-                        <div style={{ flex: 1, background: t.pending, color: t.pendingText, border: `2px solid ${t.pendingBorder}`, borderRadius: 12, padding: "8px 10px", fontSize: 13, fontWeight: 800 }}>
+                        <div style={{ flex: 1, background: t.pending, color: t.pendingText, border: `2px solid ${t.pendingBorder}`, borderRadius: 12, padding: "8px 10px", fontSize: 14, fontWeight: 800 }}>
                             #{pad(p.no)} → {STOPS[p.to]} · ₹{p.amount}
                         </div>
-                        <ListButton danger onClick={() => onFail(p.no)} style={{ width: 104, justifyContent: "center", color: t.dangerText, fontSize: 13 }}>
+                        <ListButton danger onClick={() => onFail(p.no)} style={{ width: 104, justifyContent: "center", color: t.dangerText, fontSize: 14 }}>
                             {L.notPaid}
                         </ListButton>
                     </div>
@@ -1349,7 +1367,7 @@ function ShiftSheet({ counters }: { counters: { tickets: number; pax: number; fr
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
                 {rows.map(([k, v]) => (
                     <div key={k} style={{ background: t.surface, border: `2px solid ${t.border}`, borderRadius: 12, padding: "8px 10px" }}>
-                        <div style={{ fontSize: 11, fontWeight: 800, color: t.text2 }}>{k.toUpperCase()}</div>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: t.text2 }}>{k.toUpperCase()}</div>
                         <div style={{ fontSize: 22, fontWeight: 900 }}>{v}</div>
                     </div>
                 ))}
@@ -1360,14 +1378,14 @@ function ShiftSheet({ counters }: { counters: { tickets: number; pax: number; fr
 
 function Label({ children }: { children: React.ReactNode }) {
     const t = useT()
-    return <div style={{ fontSize: 12, fontWeight: 800, color: t.text2, margin: "12px 0 6px" }}>{children}</div>
+    return <div style={{ fontSize: 14, fontWeight: 800, color: t.text2, margin: "12px 0 6px" }}>{children}</div>
 }
 
 function ReasonChips({ reasons, value, onChange, danger }: { reasons: string[]; value: string | null; onChange: (r: string) => void; danger?: boolean }) {
     return (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {reasons.map(r => (
-                <ListButton key={r} on={value === r} danger={danger} onClick={() => (feedback(), onChange(r))} style={{ width: "auto", fontSize: 13, padding: "8px 12px", minHeight: 44 }}>
+                <ListButton key={r} on={value === r} danger={danger} onClick={() => (feedback(), onChange(r))} style={{ width: "auto", fontSize: 14, padding: "8px 12px", minHeight: 44 }}>
                     {r}
                 </ListButton>
             ))}
