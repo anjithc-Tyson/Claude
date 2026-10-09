@@ -2,7 +2,9 @@
   "name": "neilsen-framer",
   "version": "1.0.0",
   "scripts": {
-    "connect": "node --env-file-if-exists=.env connect.js"
+    "connect": "node --env-file-if-exists=.env connect.js",
+    "deploy": "node --env-file-if-exists=.env deploy.js",
+    "inspect": "node --env-file-if-exists=.env inspect.js"
   },
   "dependencies": {
     "framer-api": "^5.1.0"
