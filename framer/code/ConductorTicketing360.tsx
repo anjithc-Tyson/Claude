@@ -2,30 +2,70 @@ import * as React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 // Conductor ticketing v2: 360 × 640 screen with sun (light) and shade (dark) themes.
-// Sample route, stops and fares only; real tariff tables should drive the tiles.
+// Route V-335E stops from the supplied route file; fares are samples until real tariff tables are wired in.
 
 // @framerSupportedLayoutWidth any-prefer-fixed
 // @framerSupportedLayoutHeight any-prefer-fixed
 // @framerIntrinsicWidth 960
 // @framerIntrinsicHeight 760
 
-const ROUTE = "500D"
-const STOPS = [
-    "Hebbal",
-    "Veerannapalya",
-    "Nagavara",
-    "HBR Layout",
-    "Kalyan Nagar",
-    "Ramamurthy Ngr",
-    "KR Puram",
-    "Mahadevapura",
-    "Marathahalli",
-    "Kadubeesana\u00ADhalli",
-    "Bellandur",
-    "Agara",
-    "Silk Board",
+const ROUTE = "V-335E"
+// Stops from v335e_clean_route.csv: full name, segment, scenario tags.
+const ROUTE_STOPS: [string, string, string[]][] = [
+    ["Kempegowda Bus Station (Majestic)", "City core", ["boarding_rush"]],
+    ["Maharani College", "City core", ["dense_stops"]],
+    ["K.R. Circle", "City core", ["dense_stops"]],
+    ["Corporation (St Martha's Hospital)", "City core", ["dense_stops"]],
+    ["St Joseph Boys High School / Mallya Hospital", "City core", ["dense_stops"]],
+    ["Richmond Circle", "City core", ["dense_stops"]],
+    ["St Joseph College", "City core", ["dense_stops"]],
+    ["Brigade Road", "City core", ["dense_stops"]],
+    ["Mayo Hall", "City core", ["dense_stops"]],
+    ["Hosmat Hospital", "Old Airport Road", ["stop_start_jolts"]],
+    ["Military Accounts Office", "Old Airport Road", ["stop_start_jolts"]],
+    ["Commando Hospital", "Old Airport Road", ["stop_start_jolts"]],
+    ["Domlur", "Old Airport Road", ["stop_start_jolts"]],
+    ["Domlur Flyover", "Old Airport Road", ["gps_dip_candidate"]],
+    ["Kodihalli", "Old Airport Road", ["stop_start_jolts"]],
+    ["Manipal Hospital", "Old Airport Road", ["stop_start_jolts"]],
+    ["Murugeshpalya", "Old Airport Road", ["stop_start_jolts"]],
+    ["Rajarajeshwari Talkies", "Old Airport Road", ["stop_start_jolts"]],
+    ["HAL Main Gate", "HAL to Marathahalli", ["signals"]],
+    ["Helicopter Division", "HAL to Marathahalli", ["signals"]],
+    ["HAL Kalyana Mantapa", "HAL to Marathahalli", ["signals"]],
+    ["Yamalur Cross", "HAL to Marathahalli", ["signals"]],
+    ["Doddanekkundi CRS", "HAL to Marathahalli", ["signals"]],
+    ["Marathahalli", "Marathahalli junction", ["gps_dip_candidate"]],
+    ["Marathahalli Bridge", "Marathahalli junction", ["gps_dip_candidate", "long_wait"]],
+    ["Munnekolalu Cross (Spice Garden)", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["Kundalahalli Gate", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["Kundalahalli", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["BEML Layout", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["AECS Layout", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["CMRIT College", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["Kundalahalli Colony", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["Graphite India", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["SAP Labs", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["I Gate", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["KTPO", "Kundalahalli to ITPL", ["peak_crush"]],
+    ["Whitefield Bus Station (Vydehi Hospital)", "Whitefield", ["peak_crush"]],
+    ["Sathya Sai Hospital", "Whitefield", ["peak_crush"]],
+    ["ITPL Back Gate", "Whitefield", ["peak_crush"]],
+    ["Pattandur Agrahara Gate", "Whitefield", ["peak_crush"]],
+    ["ITPL Whitefield", "Whitefield", ["peak_crush"]],
+    ["GR Tech Park ITPL", "Whitefield", ["peak_crush"]],
+    ["BPL", "End of line", ["potholes"]],
+    ["Hope Farm", "End of line", ["potholes", "peak_crush"]],
+    ["Kadugodi Bridge", "End of line", ["gps_dip_candidate", "potholes"]],
+    ["Kadugodi Bus Station", "End of line", ["terminal_end"]],
 ]
-const FARES = [0, 6, 12, 18, 23, 25, 28, 30, 32, 34, 35, 36, 38]
+const FULL_NAMES = ROUTE_STOPS.map(s => s[0])
+const SEGMENTS = ROUTE_STOPS.map(s => s[1])
+const GPS_DIP = ROUTE_STOPS.map(s => s[2].includes("gps_dip_candidate"))
+// Short names for tiles and receipts: drop the bracketed alias and anything after " / ".
+const STOPS = FULL_NAMES.map(n => n.replace(/\s*\(.*\)\s*$/, "").split(" / ")[0])
+// Sample fares only (₹10, then +₹5 every two stops); real tariff tables should replace this.
+const FARES = FULL_NAMES.map((_, n) => (n === 0 ? 0 : 10 + 5 * Math.floor((n - 1) / 2)))
 const VOID_REASONS = ["Wrong stop", "Wrong count", "Passenger left", "Printer jam"]
 const STAGE_REASONS = ["GPS wrong", "GPS lost", "Route diversion"]
 const NOTES = [50, 100, 200, 500]
@@ -156,6 +196,18 @@ const btn: React.CSSProperties = {
 }
 
 export default function ConductorTicketing360() {
+    return <Ticketing mobile={false} />
+}
+
+// Phone-only build: the screen fills the device, with no frame, notes or simulation panel.
+// With no panel to press, the bank confirms a parked UPI payment after a few seconds.
+export function ConductorTicketingMobile() {
+    return <Ticketing mobile />
+}
+
+const MOBILE_BANK_DELAY_MS = 4000
+
+function Ticketing({ mobile }: { mobile: boolean }) {
     const [dark, setDark] = useState(false)
     const [leftHanded, setLeftHanded] = useState(false)
     const [busStage, setBusStage] = useState(0)
@@ -290,6 +342,12 @@ export default function ConductorTicketing360() {
         setSheet(null)
         resetSale()
     }
+    useEffect(() => {
+        if (!mobile || pendingUpi.length === 0) return
+        const id = setTimeout(confirmUpi, MOBILE_BANK_DELAY_MS)
+        return () => clearTimeout(id)
+    }, [mobile, pendingUpi])
+
     const confirmUpi = () => {
         const x = pendingUpi[0]
         if (!x) return
@@ -327,13 +385,26 @@ export default function ConductorTicketing360() {
         addLog(`Change ₹${amount} handed over for #${pad(no)}`)
     }
 
+    // Stops tagged gps_dip_candidate in the route file (flyovers, underpasses, bridges) drop GPS on arrival.
+    const autoGpsLoss = useRef(false)
     const advanceBus = () => {
         const next = Math.min(busStage + 1, STOPS.length - 2)
         setBusStage(next)
-        addLog(`Bus crossed into stage ${STOPS[next]}${gpsOk ? "" : " (GPS lost, not detected)"}`)
+        let ok = gpsOk
+        if (GPS_DIP[next] && gpsOk) {
+            ok = false
+            autoGpsLoss.current = true
+        } else if (!GPS_DIP[next] && autoGpsLoss.current) {
+            ok = true
+            autoGpsLoss.current = false
+        }
+        addLog(`Bus crossed into stage ${STOPS[next]}${ok ? "" : " (GPS lost, not detected)"}`)
+        if (ok !== gpsOk) addLog(ok ? "GPS back after the dip" : `GPS dip near ${FULL_NAMES[next]} · stage held, correct manually`)
+        setGpsOk(ok)
     }
     const toggleGps = () => {
         addLog(gpsOk ? "GPS lost · stage held, correct manually" : "GPS back")
+        autoGpsLoss.current = false
         setGpsOk(!gpsOk)
     }
     const resetAll = () => {
@@ -357,7 +428,7 @@ export default function ConductorTicketing360() {
     const changeTotal = changeOwed.reduce((s, c) => s + c.amount, 0)
 
     const screen = (
-        <div style={{ position: "relative", width: W, height: H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
+        <div style={{ position: "relative", width: mobile ? "100%" : W, height: mobile ? "100%" : H, background: t.bg, color: t.text, overflow: "hidden", display: "flex", flexDirection: "column", padding: 12, gap: 8, boxSizing: "border-box", fontFamily: FONT }}>
             {/* Hard-to-reach corner: risky actions on purpose */}
             <div style={{ display: "flex", flexDirection: dir, alignItems: "stretch", gap: 6, height: 52 }}>
                 <button
@@ -567,7 +638,7 @@ export default function ConductorTicketing360() {
                                 />
                             )}
                             {sheet === "stage" && <StageSheet stage={stage} gpsStage={busStage} gpsOk={gpsOk} onSet={setManualStage} />}
-                            {sheet === "void" && <VoidSheet tickets={tickets.filter(x => !x.voided).slice(0, 4)} onVoid={doVoid} describe={describe} />}
+                            {sheet === "void" && <VoidSheet tickets={tickets.filter(x => !x.voided).slice(0, 3)} onVoid={doVoid} />}
                             {sheet === "trays" && <TraySheet pending={pendingUpi} change={changeOwed} onFail={failUpi} onGive={giveChange} />}
                             {sheet === "shift" && <ShiftSheet counters={counters} />}
                         </div>
@@ -581,6 +652,15 @@ export default function ConductorTicketing360() {
             )}
         </div>
     )
+
+    if (mobile)
+        return (
+            <ThemeCtx.Provider value={t}>
+                <div style={{ width: "100%", height: "100%", minHeight: 600, background: t.bg, display: "flex", justifyContent: "center", overflow: "auto" }}>
+                    <div style={{ width: "100%", maxWidth: 480, height: "100%", minHeight: 600 }}>{screen}</div>
+                </div>
+            </ThemeCtx.Provider>
+        )
 
     return (
         <ThemeCtx.Provider value={t}>
@@ -799,16 +879,19 @@ function MoreSheet({ origin, onPick }: { origin: number; onPick: (i: number) => 
     const far = STOPS.map((_, i) => i).filter(i => i - origin > 5)
     return (
         <div>
-            <SheetTitle sub="Fare grows by stage. Listed nearest first.">Far stops</SheetTitle>
-            <div style={{ display: "grid", gap: 8 }}>
+            <SheetTitle sub="Grouped by road segment, nearest first.">Far stops</SheetTitle>
+            <div style={{ display: "grid", gap: 6 }}>
                 {far.map(i => (
-                    <ListButton key={i} onClick={() => onPick(i)}>
-                        <span>
-                            <b>{STOPS[i]}</b>
-                            <span style={{ color: t.text2, fontSize: 12 }}> · +{i - origin} stage</span>
-                        </span>
-                        <span style={{ fontWeight: 900, fontSize: 22 }}>₹{FARES[Math.min(i - origin, FARES.length - 1)]}</span>
-                    </ListButton>
+                    <React.Fragment key={i}>
+                        {(i === far[0] || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
+                        <ListButton onClick={() => onPick(i)}>
+                            <span style={{ minWidth: 0 }}>
+                                <b>{FULL_NAMES[i]}</b>
+                                <span style={{ color: t.text2, fontSize: 12 }}> · +{i - origin}</span>
+                            </span>
+                            <span style={{ fontWeight: 900, fontSize: 22, flexShrink: 0 }}>₹{FARES[i - origin]}</span>
+                        </ListButton>
+                    </React.Fragment>
                 ))}
             </div>
         </div>
@@ -875,17 +958,27 @@ function UpiSheet({ amount, seed, onPark, onCash }: { amount: number; seed: numb
 }
 
 function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage: number; gpsOk: boolean; onSet: (s: number, reason: string) => void }) {
+    const t = useT()
     const [pick, setPick] = useState(stage)
     const [reason, setReason] = useState(gpsOk ? STAGE_REASONS[0] : STAGE_REASONS[1])
+    const current = useRef<HTMLDivElement | null>(null)
+    useEffect(() => {
+        if (current.current) current.current.scrollIntoView({ block: "center" })
+    }, [])
     return (
         <div>
             <SheetTitle sub={`GPS ${gpsOk ? `suggests ${STOPS[gpsStage]}` : "is lost"}. Every change is logged with a reason.`}>Correct stage</SheetTitle>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+            <div style={{ maxHeight: 230, overflow: "auto", border: `2px solid ${t.border}`, borderRadius: 12, padding: "0 6px 6px" }}>
                 {STOPS.slice(0, -1).map((s, i) => (
-                    <ListButton key={s} on={pick === i} onClick={() => (feedback(), setPick(i))} style={{ fontSize: 13, padding: "8px 10px" }}>
-                        <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{s}</span>
-                        {gpsOk && i === gpsStage && <span style={{ fontSize: 10, fontWeight: 900 }}>GPS</span>}
-                    </ListButton>
+                    <div key={i} ref={i === stage ? current : undefined}>
+                        {(i === 0 || SEGMENTS[i] !== SEGMENTS[i - 1]) && <Label>{SEGMENTS[i].toUpperCase()}</Label>}
+                        <ListButton on={pick === i} onClick={() => (feedback(), setPick(i))} style={{ fontSize: 13, padding: "8px 10px", marginTop: 4 }}>
+                            <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {i + 1}. {FULL_NAMES[i]}
+                            </span>
+                            {gpsOk && i === gpsStage && <span style={{ fontSize: 10, fontWeight: 900, flexShrink: 0 }}>GPS</span>}
+                        </ListButton>
+                    </div>
                 ))}
             </div>
             <Label>Reason</Label>
@@ -897,7 +990,7 @@ function StageSheet({ stage, gpsStage, gpsOk, onSet }: { stage: number; gpsStage
     )
 }
 
-function VoidSheet({ tickets, onVoid, describe }: { tickets: Ticket[]; onVoid: (no: number, reason: string) => void; describe: (x: Ticket) => string }) {
+function VoidSheet({ tickets, onVoid }: { tickets: Ticket[]; onVoid: (no: number, reason: string) => void }) {
     const t = useT()
     const [no, setNo] = useState<number | null>(tickets[0]?.no ?? null)
     const [reason, setReason] = useState<string | null>(null)
@@ -914,8 +1007,13 @@ function VoidSheet({ tickets, onVoid, describe }: { tickets: Ticket[]; onVoid: (
             <SheetTitle sub="Logged with a reason. The depot counts slips against voids.">Void a ticket</SheetTitle>
             <div style={{ display: "grid", gap: 6 }}>
                 {tickets.map(x => (
-                    <ListButton key={x.no} on={no === x.no} danger onClick={() => (feedback(), setNo(x.no))} style={{ fontSize: 12 }}>
-                        {describe(x)}
+                    <ListButton key={x.no} on={no === x.no} danger onClick={() => (feedback(), setNo(x.no))} style={{ fontSize: 13, minHeight: 44, padding: "8px 10px" }}>
+                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            #{pad(x.no)} → {STOPS[x.to]}
+                        </span>
+                        <span style={{ flexShrink: 0, fontWeight: 900 }}>
+                            {x.paid + x.free} pax · ₹{x.amount}
+                        </span>
                     </ListButton>
                 ))}
             </div>
@@ -1079,7 +1177,7 @@ function DemoPanel(p: {
     return (
         <div style={{ width: 440, maxWidth: "100%", display: "flex", flexDirection: "column" }}>
             <div style={{ fontSize: 22, fontWeight: 900 }}>Conductor ticketing · v2</div>
-            <div style={{ fontSize: 13, color: "#333", marginTop: 4, lineHeight: 1.5 }}>360 × 640 screen with sun and shade themes. Sample route, stops and fares. Not tested with conductors yet.</div>
+            <div style={{ fontSize: 13, color: "#333", marginTop: 4, lineHeight: 1.5 }}>360 × 640 screen with sun and shade themes. Route V-335E, 46 stops; fares are samples. Not tested with conductors yet.</div>
 
             <div style={title}>Simulate</div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -1109,6 +1207,7 @@ function DemoPanel(p: {
                 <li>After ISSUE the bar turns into NEXT SALE, so a jolt-induced double tap cannot print twice. Tapping a stop skips it.</li>
                 <li>The last ticket stays on screen as proof until the next sale starts.</li>
                 <li>Pending UPI and change owed live in one tray with Not paid and Mark given actions.</li>
+                <li>Real V-335E stops, grouped by road segment. Flyovers, underpasses and bridges tagged in the route file drop GPS when the bus reaches them.</li>
                 <li>Shift totals move into a summary sheet, which frees space for larger targets on 360 × 640.</li>
             </ul>
 

@@ -5,7 +5,8 @@
     "connect": "node --env-file-if-exists=.env connect.js",
     "deploy": "node --env-file-if-exists=.env deploy.js",
     "deploy:v2": "node --env-file-if-exists=.env deploy.js v2",
-    "inspect": "node --env-file-if-exists=.env inspect.js"
+    "inspect": "node --env-file-if-exists=.env inspect.js",
+    "deploy:mobile": "node --env-file-if-exists=.env deploy.js mobile"
   },
   "dependencies": {
     "framer-api": "^5.1.0"
