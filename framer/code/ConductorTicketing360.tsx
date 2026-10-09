@@ -190,6 +190,7 @@ const STRINGS = {
         note: "NOTE",
         issue: "ISSUE",
         pickStop: "PICK A STOP",
+        addPassenger: "ADD A PASSENGER",
         nextSale: "NEXT SALE",
         orTapStop: "or tap a stop",
         change: "Change",
@@ -242,6 +243,7 @@ const STRINGS = {
         note: "ನೋಟು",
         issue: "ಟಿಕೆಟ್ ನೀಡಿ",
         pickStop: "ನಿಲ್ದಾಣ ಆರಿಸಿ",
+        addPassenger: "ಪ್ರಯಾಣಿಕರನ್ನು ಸೇರಿಸಿ",
         nextSale: "ಮುಂದಿನ ಟಿಕೆಟ್",
         orTapStop: "ಅಥವಾ ನಿಲ್ದಾಣ ಒತ್ತಿ",
         change: "ಚಿಲ್ಲರೆ",
@@ -308,6 +310,9 @@ const ThemeCtx = React.createContext<Theme>(LIGHT)
 const useT = () => React.useContext(ThemeCtx)
 const LangCtx = React.createContext<Strings>(STRINGS.en)
 const useL = () => React.useContext(LangCtx)
+// "3 × ₹45 + 2 free", "2 free" or "1 × ₹15": a group can be all free riders.
+const fareLine = (paid: number, fare: number, free: number, L: Strings) =>
+    [paid > 0 ? `${paid} × ₹${fare}` : "", free > 0 ? `${free} ${L.free.toLowerCase()}` : ""].filter(Boolean).join(" + ")
 
 const btn: React.CSSProperties = {
     fontFamily: "inherit",
@@ -422,10 +427,11 @@ function Ticketing({ mobile }: { mobile: boolean }) {
     const span = dest === null ? 0 : dest - origin
     const fare = span > 0 && dest !== null ? fareFor(origin, dest) : 0
     const total = fare * paid
-    const change = note !== null && dest !== null ? note - total : null
+    const change = note !== null && dest !== null && total > 0 ? note - total : null
     const graceLeft = sale ? GRACE_SECONDS - Math.floor((now - sale.startedAt) / 1000) : GRACE_SECONDS
     const stampHeld = sale !== null && sale.origin !== stage
-    const canIssue = dest !== null && span > 0 && !(change !== null && change < 0)
+    const canIssue = dest !== null && span > 0 && paid + free > 0 && !(change !== null && change < 0)
+    const canUpi = canIssue && total > 0
 
     const live = tickets.filter(x => !x.voided)
     const counters = {
@@ -490,11 +496,14 @@ function Ticketing({ mobile }: { mobile: boolean }) {
         }
         if (stampHeld && sale) addLog(`#${pad(x.no)} fare held at stamped stage ${STOPS[sale.origin]}`)
         addLog(`Issued ${describe(x)} · Cash`)
+        if (x.amount === 0) addLog(`#${pad(x.no)} zero-fare ticket (${x.free} free) logged for audit`)
         setReceipt({ ticket: x, seconds, change: change !== null && change > 0 ? change : null })
         resetSale()
+        // An all-free group is a one-off: never carry 0 paid into the next sale.
+        if (paid === 0) setPaid(1)
     }
     const openUpi = () => {
-        if (!canIssue || total === 0) return feedback("warn")
+        if (!canUpi) return feedback("warn")
         feedback()
         setSheet("upi")
     }
@@ -682,8 +691,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                             </span>
                         </div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                            {receipt.ticket.paid} × ₹{receipt.ticket.fare}
-                            {receipt.ticket.free ? ` + ${receipt.ticket.free} ${L.free.toLowerCase()}` : ""} = ₹{receipt.ticket.amount}
+                            {fareLine(receipt.ticket.paid, receipt.ticket.fare, receipt.ticket.free, L)} = ₹{receipt.ticket.amount}
                             {receipt.change ? ` · ${L.change} ₹${receipt.change}` : ""}
                         </div>
                     </div>
@@ -735,7 +743,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
 
             <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 46, alignItems: "center" }}>
                 <RowLabel>{L.paid}</RowLabel>
-                {[1, 2, 3, 4].map(n => (
+                {[0, 1, 2, 3, 4].map(n => (
                     <Chip key={n} on={paid === n} onClick={() => pickPaid(n)}>
                         {n}
                     </Chip>
@@ -762,7 +770,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
             <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 42, alignItems: "center" }}>
                 <RowLabel>{L.note}</RowLabel>
                 {NOTES.map(n => (
-                    <Chip key={n} on={note === n} small onClick={() => toggleNote(n)} dim={dest !== null && n < total}>
+                    <Chip key={n} on={note === n} small onClick={() => toggleNote(n)} dim={dest !== null && (total === 0 || n < total)}>
                         ₹{n}
                     </Chip>
                 ))}
@@ -772,10 +780,10 @@ function Ticketing({ mobile }: { mobile: boolean }) {
             <div style={{ display: "flex", flexDirection: dir, gap: 6, height: 80 }}>
                 <button
                     aria-label="UPI QR"
-                    style={{ ...btn, width: 72, borderRadius: 16, background: t.surface, color: canIssue ? t.text : t.text2, border: `2px ${canIssue ? "solid" : "dashed"} ${t.border}`, opacity: canIssue ? 1 : 0.6 }}
+                    style={{ ...btn, width: 72, borderRadius: 16, background: t.surface, color: canUpi ? t.text : t.text2, border: `2px ${canUpi ? "solid" : "dashed"} ${t.border}`, opacity: canUpi ? 1 : 0.6 }}
                     onClick={openUpi}
                 >
-                    <QrGlyph color={canIssue ? t.text : t.text2} />
+                    <QrGlyph color={canUpi ? t.text : t.text2} />
                     <div style={{ fontSize: 13, fontWeight: 900, marginTop: 4 }}>UPI</div>
                 </button>
                 {receipt && dest === null ? (
@@ -799,7 +807,7 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                         onClick={issueCash}
                     >
                         <div style={{ fontSize: 12, fontWeight: 900 }}>
-                            {dest === null ? L.pickStop : `${L.issue} · ${paid} × ₹${fare}${free ? ` + ${free} ${L.free.toLowerCase()}` : ""}`}
+                            {dest === null ? L.pickStop : paid + free === 0 ? L.addPassenger : `${L.issue} · ${fareLine(paid, fare, free, L)}`}
                         </div>
                         <div style={{ fontSize: 38, fontWeight: 900, lineHeight: 1.05 }}>₹{total}</div>
                         {change !== null && (
