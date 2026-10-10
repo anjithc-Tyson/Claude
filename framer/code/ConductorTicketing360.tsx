@@ -751,8 +751,9 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 )}
             </div>
 
-            <div style={row(52)}>
+            <div style={{ ...row(52), marginTop: 4 }}>
                 <RowLabel>{L.paid}</RowLabel>
+                <Segmented dir={dir}>
                 {[0, 1, 2, 3, 4].map(n => (
                     <Chip key={n} on={paid === n} onClick={() => pickPaid(n)}>
                         {n}
@@ -761,11 +762,13 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 <Chip on={paid >= 5} onClick={() => pickPaid(paid >= 5 ? Math.min(paid + 1, 20) : 5)}>
                     {paid >= 5 ? paid : "5+"}
                 </Chip>
+                </Segmented>
             </div>
 
             {/* Free riders (for example Shakti): one tap, like PAID */}
             <div style={row(52)}>
                 <RowLabel>{L.free}</RowLabel>
+                <Segmented dir={dir}>
                 {[0, 1, 2, 3].map(n => (
                     <Chip key={n} on={free === n} onClick={() => pickFree(n)} aria={`${n} free`}>
                         {n}
@@ -774,20 +777,23 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                 <Chip on={free >= 4} onClick={() => pickFree(free >= 4 ? Math.min(free + 1, 20) : 4)} aria="4 or more free">
                     {free >= 4 ? free : "4+"}
                 </Chip>
+                </Segmented>
             </div>
 
             {/* Quick note chips: the note handed over, tap again to clear. Change is computed, never typed. */}
             <div style={row(52)}>
                 <RowLabel>{L.note}</RowLabel>
+                <Segmented dir={dir}>
                 {NOTES.map(n => (
                     <Chip key={n} on={note === n} small onClick={() => toggleNote(n)} dim={dest !== null && (total === 0 || n < total)}>
                         ₹{n}
                     </Chip>
                 ))}
+                </Segmented>
             </div>
 
             {/* Commit row: ISSUE on the thumb side, UPI opposite. After issuing it shows the ticket and becomes NEXT SALE, so a double tap cannot double-issue. */}
-            <div style={row(76)}>
+            <div style={{ ...row(76), marginTop: 4 }}>
                 <button
                     aria-label="UPI QR"
                     style={{ ...btn, width: 72, borderRadius: 16, background: t.surface, color: canUpi ? t.text : t.text2, border: `2px ${canUpi ? "solid" : "dashed"} ${t.border}`, opacity: canUpi ? 1 : 0.6 }}
@@ -937,18 +943,16 @@ function StageButton({ stage, gpsOk, manual, online, alignRight, onClick }: { st
                 color: warn ? t.pendingText : t.text,
                 border: `2px solid ${warn ? t.pendingBorder : t.border}`,
                 borderRadius: 12,
-                padding: "1px 8px 3px",
+                padding: "0 10px",
                 textAlign: alignRight ? "right" : "left",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
             }}
             onClick={onClick}
         >
             <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 900, color: warn ? t.pendingText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{top}</div>
             <div style={{ fontSize: 15, lineHeight: "19px", fontWeight: 900, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{STOPS[stage]}</div>
-            <div style={{ display: "flex", gap: 1.5, marginTop: 2 }}>
-                {STAGE_STARTS.map((_, k) => (
-                    <div key={k} style={{ flex: 1, height: 3, borderRadius: 2, background: k <= STAGE_OF[stage] ? (warn ? t.pendingText : t.text) : warn ? "rgba(0,0,0,0.2)" : t.tile }} />
-                ))}
-            </div>
         </button>
     )
 }
@@ -981,7 +985,7 @@ function DeviceStatus({ battery, network }: { battery: { level: number; charging
 function SmallToggle({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
     const t = useT()
     return (
-        <button aria-label={label} style={{ ...btn, minWidth: 38, height: 30, padding: "0 6px", borderRadius: 9, background: t.surface, color: t.text, border: `2px solid ${t.border}`, fontSize: 14, fontWeight: 900 }} onClick={onClick}>
+        <button aria-label={label} style={{ ...btn, minWidth: 38, height: 30, padding: "0 6px", borderRadius: 9, background: t.surface, color: t.text, border: "none", fontSize: 14, fontWeight: 900 }} onClick={onClick}>
             {children}
         </button>
     )
@@ -1001,7 +1005,7 @@ function Tile({ on, fare, name, meta, title, disabled, star, style, onClick }: {
                 color: on ? t.activeText : disabled ? t.text2 : t.text,
                 border: `${star ? 3 : 2}px ${disabled ? "dashed" : "solid"} ${on ? t.activeBg : t.tileBorder}`,
                 borderRadius: 12,
-                padding: "4px 5px",
+                padding: "5px 6px",
                 textAlign: "left",
                 display: "flex",
                 flexDirection: "column",
@@ -1015,7 +1019,6 @@ function Tile({ on, fare, name, meta, title, disabled, star, style, onClick }: {
         >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
                 <span style={{ fontSize: fare === null ? 16 : 22, fontWeight: 900, lineHeight: 1, letterSpacing: -0.3 }}>{fare === null ? title ?? "—" : `₹${fare}`}</span>
-                {star && <span style={{ fontSize: 14, lineHeight: 1 }}>★</span>}
             </div>
             <div
                 style={{
@@ -1032,29 +1035,39 @@ function Tile({ on, fare, name, meta, title, disabled, star, style, onClick }: {
             >
                 {hyphenate(name)}
             </div>
-            <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 900, letterSpacing: -0.4, color: on ? t.activeText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{meta}</div>
+            <div style={{ fontSize: 14, lineHeight: "16px", fontWeight: 600, letterSpacing: -0.3, color: on ? t.activeText : t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{meta}</div>
         </button>
     )
 }
 
-function Chip({ on, onClick, children, grow, small, aria, dim, static: isStatic }: { on: boolean; onClick: () => void; children: React.ReactNode; grow?: number; small?: boolean; aria?: string; dim?: boolean; static?: boolean }) {
+// One outlined bar per row instead of a box per value: far fewer outlines on screen.
+// Each value still fills the full bar height, so the touch target stays 48 dp.
+function Segmented({ dir, children }: { dir: "row" | "row-reverse"; children: React.ReactNode }) {
+    const t = useT()
+    return (
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: dir, background: t.tile, border: `2px solid ${t.tileBorder}`, borderRadius: 14, overflow: "hidden" }}>
+            {children}
+        </div>
+    )
+}
+
+function Chip({ on, onClick, children, small, aria, dim }: { on: boolean; onClick: () => void; children: React.ReactNode; small?: boolean; aria?: string; dim?: boolean }) {
     const t = useT()
     return (
         <button
             aria-label={aria}
             style={{
                 ...btn,
-                flex: grow ?? 1,
+                flex: 1,
                 height: "100%",
                 minWidth: 0,
-                borderRadius: 12,
+                borderRadius: 11,
                 fontSize: small ? 17 : 24,
                 fontWeight: 900,
-                background: on ? t.activeBg : t.tile,
+                background: on ? t.activeBg : "transparent",
+                boxShadow: on ? `inset 0 0 0 3px ${t.tile}` : "none",
                 color: on ? t.activeText : t.text,
-                border: `2px solid ${on ? t.activeBg : t.tileBorder}`,
-                cursor: isStatic ? "default" : "pointer",
-                opacity: dim && !on ? 0.45 : 1,
+                opacity: dim && !on ? 0.4 : 1,
             }}
             onClick={onClick}
         >
@@ -1065,7 +1078,7 @@ function Chip({ on, onClick, children, grow, small, aria, dim, static: isStatic 
 
 function RowLabel({ children }: { children: React.ReactNode }) {
     const t = useT()
-    return <div style={{ width: 44, flexShrink: 0, alignSelf: "center", fontSize: 14, fontWeight: 900, color: t.text2, textAlign: "center", overflow: "hidden" }}>{children}</div>
+    return <div style={{ width: 44, flexShrink: 0, alignSelf: "center", fontSize: 14, fontWeight: 800, color: t.text2, textAlign: "center", overflow: "hidden" }}>{children}</div>
 }
 
 function QrGlyph({ color }: { color: string }) {
