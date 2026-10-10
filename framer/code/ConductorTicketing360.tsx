@@ -74,6 +74,13 @@ const STAGE_COUNT = STAGE_STARTS.length
 const FARE_BY_STAGES = [15, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70]
 const stagesBetween = (from: number, to: number) => STAGE_OF[to] - STAGE_OF[from]
 const fareFor = (from: number, to: number) => FARE_BY_STAGES[Math.min(Math.max(stagesBetween(from, to), 0), FARE_BY_STAGES.length - 1)]
+// "0–1", "4–6" or "5": the stage distance a band of stops covers.
+const stageRange = (from: number, stops: number[]) => {
+    if (!stops.length) return "—"
+    const d = stops.map(i => Math.max(stagesBetween(from, i), 0))
+    const a = Math.min(...d), b = Math.max(...d)
+    return a === b ? String(a) : `${a}–${b}`
+}
 // Popular stops keep a fixed tile position for the whole trip, so muscle memory works.
 const POPULAR = ["Marathahalli", "Kundalahalli Gate", "ITPL Whitefield", "Hope Farm"].map(n => FULL_NAMES.indexOf(n))
 const POPULAR_LABEL = ["Marathahalli", "Kundalahalli Gate", "ITPL", "Hope Farm"]
@@ -201,6 +208,8 @@ const STRINGS = {
         more: "MORE",
         allStops: "All stops",
         byStage: "by stage",
+        nextBand: (r: string) => `NEXT STOPS · ${r} ${r === "1" ? "STAGE" : "STAGES"}`,
+        furtherBand: (r: string) => `FURTHER · ${r} ${r === "1" ? "STAGE" : "STAGES"}`,
         held: "held",
         stopsLeft: (n: number) => (n === 1 ? "1 stop" : `${n} stops`),
         stages: (n: number) => (n <= 0 ? "0 stages" : n === 1 ? "1 stage" : `${n} stages`),
@@ -256,6 +265,8 @@ const STRINGS = {
         more: "ಇನ್ನಷ್ಟು",
         allStops: "ಎಲ್ಲಾ ನಿಲ್ದಾಣ",
         byStage: "ಹಂತವಾರು",
+        nextBand: (r: string) => `ಮುಂದಿನ ನಿಲ್ದಾಣಗಳು · ${r} ಹಂತ`,
+        furtherBand: (r: string) => `ಮುಂದೆ · ${r} ಹಂತ`,
         held: "ಹಿಡಿದಿದೆ",
         stopsLeft: (n: number) => `${n} ನಿಲ್ದಾಣ`,
         stages: (n: number) => (n <= 0 ? "ಅದೇ ಹಂತ" : `${n} ಹಂತ`),
@@ -729,27 +740,33 @@ function Ticketing({ mobile }: { mobile: boolean }) {
                     )
                 })}
             </div>
-            <div style={tileRow}>
-                {nearest.map(i => (
-                    <Tile key={i} on={dest === i} fare={fareFor(origin, i)} name={STOPS[i]} meta={L.stages(stagesBetween(origin, i))} onClick={() => pickDest(i)} />
-                ))}
-            </div>
-            <div style={tileRow}>
-                {mid.map(i => (
-                    <Tile key={i} on={dest === i} fare={fareFor(origin, i)} name={STOPS[i]} meta={L.stages(stagesBetween(origin, i))} onClick={() => pickDest(i)} />
-                ))}
-                {origin + 1 < STOPS.length && (
-                    <Tile
-                        on={farPick}
-                        fare={farPick && dest !== null ? fareFor(origin, dest) : null}
-                        title={L.more}
-                        name={farPick && dest !== null ? STOPS[dest] : L.allStops}
-                        meta={farPick && dest !== null ? L.stages(stagesBetween(origin, dest)) : L.byStage}
-                        onClick={() => (feedback(), touchSale(), setSheet("more"))}
-                        style={{ gridColumn: 4 }}
-                    />
-                )}
-            </div>
+            {/* Rows 2–3 as one panel: the stage range is stated once per band, cells carry only fare and stop. */}
+            <StopPanel
+                dir={dir}
+                bands={[
+                    {
+                        title: L.nextBand(stageRange(origin, nearest)),
+                        cells: nearest.map(i => ({ key: i, on: dest === i, fare: fareFor(origin, i), name: STOPS[i], onClick: () => pickDest(i) })),
+                    },
+                    {
+                        title: L.furtherBand(stageRange(origin, mid)),
+                        cells: [
+                            ...mid.map(i => ({ key: i, on: dest === i, fare: fareFor(origin, i) as number | null, name: STOPS[i], onClick: () => pickDest(i) })),
+                            ...Array.from({ length: 3 - mid.length }, (_, k) => null),
+                            origin + 1 < STOPS.length
+                                ? {
+                                      key: "more",
+                                      on: farPick,
+                                      fare: farPick && dest !== null ? fareFor(origin, dest) : null,
+                                      title: L.more,
+                                      name: farPick && dest !== null ? STOPS[dest] : L.allStops,
+                                      onClick: () => (feedback(), touchSale(), setSheet("more")),
+                                  }
+                                : null,
+                        ],
+                    },
+                ]}
+            />
 
             <div style={{ ...row(52), marginTop: 4 }}>
                 <RowLabel>{L.paid}</RowLabel>
@@ -958,6 +975,60 @@ function StageButton({ stage, gpsOk, manual, online, alignRight, onClick }: { st
 }
 
 // GPS state lives in the route card, which turns yellow when it drops.
+type PanelCell = { key: number | string; on: boolean; fare: number | null; name: string; title?: string; onClick: () => void } | null
+const withAlpha = (hex: string, a: number) => {
+    const n = parseInt(hex.slice(1), 16)
+    return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`
+}
+
+// One outlined panel with two bands of four cells, separated by hairlines instead of eight boxed tiles.
+function StopPanel({ dir, bands }: { dir: "row" | "row-reverse"; bands: { title: string; cells: PanelCell[] }[] }) {
+    const t = useT()
+    const hairColor = withAlpha(t.tileBorder, 0.35)
+    const hair = `1.5px solid ${hairColor}`
+    return (
+        <div style={{ flexShrink: 0, height: 177, display: "flex", flexDirection: "column", background: t.tile, border: `2px solid ${t.tileBorder}`, borderRadius: 14, overflow: "hidden", boxSizing: "border-box" }}>
+            {bands.map((band, b) => (
+                <div key={b} style={{ flex: 1, display: "flex", flexDirection: "column", borderTop: b ? hair : "none", minHeight: 0 }}>
+                    <div style={{ height: 18, lineHeight: "18px", padding: "1px 8px 0", fontSize: 14, fontWeight: 800, color: t.text2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", textAlign: dir === "row" ? "left" : "right" }}>{band.title}</div>
+                    <div style={{ flex: 1, display: "flex", flexDirection: dir, minHeight: 0 }}>
+                        {band.cells.map((c, k) => {
+                            const divider = k ? <div key={`d${k}`} style={{ width: 1.5, flexShrink: 0, background: hairColor }} /> : null
+                            if (!c) return [divider, <div key={`empty${k}`} style={{ flex: 1, minWidth: 0 }} />]
+                            return [
+                                divider,
+                                <button
+                                    key={c.key}
+                                    data-tile
+                                    onClick={c.onClick}
+                                    style={{
+                                        ...btn,
+                                        flex: 1,
+                                        minWidth: 0,
+                                        background: c.on ? t.activeBg : "transparent",
+                                        color: c.on ? t.activeText : t.text,
+                                        boxShadow: c.on ? `inset 0 0 0 3px ${t.tile}` : "none",
+                                        borderRadius: c.on ? 12 : 0,
+                                        padding: "4px 7px 6px",
+                                        textAlign: "left",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        justifyContent: "flex-start",
+                                        gap: 3,
+                                    }}
+                                >
+                                    <span style={{ fontSize: c.fare === null ? 16 : 20, lineHeight: "22px", fontWeight: 900, letterSpacing: -0.3 }}>{c.fare === null ? c.title : `₹${c.fare}`}</span>
+                                    <span style={{ fontSize: 13, lineHeight: "14px", fontWeight: 800, letterSpacing: -0.3, hyphens: "manual", overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{hyphenate(c.name)}</span>
+                                </button>,
+                            ]
+                        })}
+                    </div>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 function DeviceStatus({ battery, network }: { battery: { level: number; charging: boolean } | null; network: { online: boolean; type: string | null } }) {
     const t = useT()
     const low = battery !== null && battery.level <= 20 && !battery.charging
