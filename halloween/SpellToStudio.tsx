@@ -34,7 +34,7 @@ function openStudio(prompt: string) {
 const CSS = `.tks-spell{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;border-radius:0;background:transparent;outline:none;font:inherit;color:inherit;letter-spacing:inherit}
 .tks-spell::placeholder{color:currentColor;opacity:.62}
 .tks-spell:focus::placeholder{opacity:.38}
-.tks-spell-wrap:focus-within{box-shadow:0 1px 0 0 currentColor}`
+@media (max-width: 809.98px){.tks-spell-wrap{box-shadow:0 1px 0 0 currentColor;padding-bottom:12px}.tks-spell{height:calc(100% - 12px)}}`
 
 /** On the prompt text: becomes a real input that keeps the text's font and colour */
 export function withSpellInput(Component: ComponentType<any>): ComponentType {
@@ -52,7 +52,7 @@ export function withSpellInput(Component: ComponentType<any>): ComponentType {
             setPh(text.trim()); if (!example) example = text.trim()
         }, [])
         return (
-            <div ref={ref} className="tks-spell-wrap" style={{ ...props.style, position: "relative" }}>
+            <div ref={ref} className={"tks-spell-wrap" + (props.className ? " " + props.className : "")} style={{ ...props.style, position: "relative", flex: "1 1 0", minWidth: 0, width: "100%" }}>
                 <style>{CSS}</style>
                 <div aria-hidden style={{ visibility: "hidden" }}><Component {...props} style={{ width: "100%" }} /></div>
                 <input className="tks-spell" type="text" value={v} placeholder={ph} maxLength={600} aria-label="Describe your spell" enterKeyHint="go"
