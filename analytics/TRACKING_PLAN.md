@@ -1,5 +1,7 @@
 # Takshila — GA4 tracking plan
 
+**GA4 property:** `takshila` · property ID `499398845`
+
 Implementation: [`takshila-analytics.js`](takshila-analytics.js), wired into both pages in `showcase/`.
 It sends GA4 events through `gtag.js`. Until a Measurement ID is set in
 `<meta name="ga-measurement-id">`, it runs in debug mode: events are logged to the console and
