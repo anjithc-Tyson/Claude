@@ -103,6 +103,13 @@ header {{ display:grid; gap:16px }}
 .funnel .fl {{ font-weight:500; font-size:14px }}
 .funnel code {{ background:none; padding:0; font-size:12px; color:var(--muted); overflow-wrap:normal }}
 .rules {{ margin:0; padding-left:20px; display:grid; gap:8px; max-width:70ch }}
+.steps {{ list-style:none; margin:0; padding:0; display:grid; gap:20px; counter-reset:s }}
+.steps > li {{ counter-increment:s; display:grid; grid-template-columns:32px 1fr; gap:4px 14px }}
+.steps > li::before {{ content:counter(s); grid-row:span 3; width:28px; height:28px; border-radius:50%; border:1px solid var(--gold); color:var(--gold); font:500 13px var(--mono); display:grid; place-items:center }}
+.steps h4 {{ margin:2px 0 0; font:600 16px var(--body) }}
+.steps p {{ color:var(--muted); max-width:66ch; min-width:0 }}
+pre {{ margin:6px 0 0; padding:12px 14px; background:var(--code-bg); border-radius:8px; overflow-x:auto; font:13px/1.55 var(--mono); min-width:0 }}
+pre code {{ background:none; padding:0; overflow-wrap:normal }}
 /* filter bar */
 .bar {{ position:sticky; top:env(safe-area-inset-top, 0px); z-index:5; background:var(--bg); padding-block:12px; border-bottom:1px solid var(--line); display:grid; gap:10px }}
 body::before {{ content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top, 0px); z-index:10; background:var(--bg) }}
@@ -179,6 +186,35 @@ footer {{ color:var(--muted); font-size:13px; border-top:1px solid var(--line); 
     <li>Never send prompt text, emails, names, phone numbers or addresses as properties.</li>
     <li>Send <code>page_type</code> and <code>logged_in</code> on every event.</li>
   </ul>
+</section>
+
+<section class="sec" id="build">
+  <h2>How to build it</h2>
+  <p>The events are generated as typed functions, one per event, from the same file as this page. A misspelled event name or a missing property fails to compile. The full guide with every code sample is <code>analytics/IMPLEMENTATION.md</code> in the repo.</p>
+  <ol class="steps">
+    <li><h4>Get the API keys</h4><p>Amplitude → Settings → Projects → <b>default (814554)</b> for production. Create a second <b>Takshila (dev)</b> project for local and staging builds, so test traffic never mixes with real data.</p></li>
+    <li><h4>Install the SDKs and copy the generated files</h4><p>Copy <code>analytics/sdk/tracking.ts</code> (browser) and <code>analytics/sdk/server.ts</code> (backend) into the codebase. Don't edit them by hand: regenerate with <code>python3 analytics/build_tracking_sdk.py</code>.</p><pre><code>npm install @amplitude/analytics-browser @amplitude/analytics-node</code></pre></li>
+    <li><h4>Initialise once, and track every route change</h4><p>In the root layout. <code>page_type</code> and <code>logged_in</code> are then added to every event automatically.</p><pre><code>initAnalytics(process.env.NEXT_PUBLIC_AMPLITUDE_KEY, {{ debug: isDev }});
+
+// on every route change
+setContext({{ page_type: 'product' }});
+pageView({{ page_path: location.pathname, page_title: document.title }});</code></pre></li>
+    <li><h4>Identify users on sign-up and login</h4><p>Use your own user id, never the email. This merges the visitor's anonymous history into their account.</p><pre><code>identifyUser(user.id, {{ user_role: 'buyer' }});
+signUp({{ method: 'google', trigger_point: 'studio_save' }});
+// on logout
+resetUser();</code></pre></li>
+    <li><h4>Call one function where each action happens</h4><p>Fire it in the handler, after the action succeeds. Keep one <code>design_id</code> from the first prompt to the order.</p><pre><code>track.designPromptSubmitted({{ design_id, prompt_length: prompt.length,
+  has_reference_image: !!file, source: 'typed', location: 'studio' }});
+track.designDirectionChosen({{ design_id, direction: 'signature', batch_number: 1 }});
+track.buyNowClicked({{ context: 'studio_finalize', product_id: design_id,
+  price: 2313, currency: 'USD' }});</code></pre></li>
+    <li><h4>Send revenue from the server</h4><p><code>order_completed</code>, <code>payment_failed</code> and <code>cad_approved</code> live only in <code>server.ts</code>. Call them from the payment webhook and the CAD approval handler. The order id is used as the insert id, so a repeated webhook is counted once.</p><pre><code>await orderCompleted({{ user_id, device_id }}, {{
+  order_id: order.id, revenue: order.total, currency: 'USD' }});
+await setInternal({{ user_id }}, email.endsWith('@takshila.co'));</code></pre></li>
+    <li><h4>Respect consent in the EU and UK</h4><p>Call <code>amplitude.setOptOut(true)</code> before initialising, and <code>setOptOut(false)</code> once the visitor accepts the cookie banner.</p></li>
+    <li><h4>Test with the dev project</h4><p>Run with <code>debug: true</code>, then open User Lookup in Amplitude and watch your test user's event stream live. Walk every P0 flow end to end. Anything Amplitude marks <i>unexpected</i> is a code mistake to fix.</p></li>
+    <li><h4>Launch</h4><p>Merge the <b>new-site</b> tracking-plan branch into main, mark the key events, stop sending the deprecated events below, and switch to the production key.</p></li>
+  </ol>
 </section>
 
 <section class="sec" id="events">
