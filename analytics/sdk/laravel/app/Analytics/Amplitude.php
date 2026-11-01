@@ -18,9 +18,12 @@ class Amplitude
      */
     public function track(string $eventType, Actor $actor, array $properties = [], array $options = []): void
     {
+        $properties = array_filter($properties, fn ($v) => $v !== null);
+
         $this->dispatch(array_merge($actor->toArray(), $options, [
             'event_type' => $eventType,
-            'event_properties' => (object) array_filter($properties, fn ($v) => $v !== null),
+            // An empty array would encode as JSON [], which Amplitude rejects; send {} instead.
+            'event_properties' => $properties === [] ? new \stdClass : $properties,
             'time' => $options['time'] ?? (int) floor(microtime(true) * 1000),
             'platform' => 'Web',
             'library' => 'takshila-laravel/1.0',
