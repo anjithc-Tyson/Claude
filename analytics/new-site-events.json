@@ -1,0 +1,325 @@
+{
+  "meta": {
+    "title": "Takshila new site — Amplitude event spec",
+    "design_source": "https://takshila.framer.website/",
+    "amplitude_project": "814554",
+    "amplitude_branch": "new-site",
+    "naming": "snake_case, object_action in the past tense (design_prompt_submitted). Properties snake_case. Prices are numbers in major units (620 not 62000) with a separate currency.",
+    "priorities": {
+      "P0": "Must ship at launch: the revenue and design-studio funnel. Without these we cannot measure the business.",
+      "P1": "Ship at launch if possible: product discovery, community, account, order experience.",
+      "P2": "Nice to have: secondary interactions, seasonal campaigns, support content."
+    }
+  },
+  "user_properties": [
+    {"name": "user_role", "type": "string", "enum": ["buyer", "designer", "maker", "affiliate", "collector"], "desc": "Primary role on the platform. Set on sign-up and when it changes. A user can hold several; send the primary one."},
+    {"name": "is_internal", "type": "boolean", "desc": "True for Takshila staff, designers testing and QA accounts. Lets every chart exclude internal traffic."},
+    {"name": "signup_date", "type": "string", "desc": "ISO date the account was created."},
+    {"name": "orders_count", "type": "number", "desc": "Lifetime completed orders. Update server-side on order_completed."},
+    {"name": "lifetime_revenue", "type": "number", "desc": "Lifetime order revenue in USD. Update server-side on order_completed."},
+    {"name": "country", "type": "string", "desc": "Shipping country of the most recent order, or browser country before that."},
+    {"name": "marketing_opt_in", "type": "boolean", "desc": "Subscribed to the newsletter or marketing email."}
+  ],
+  "global_event_properties": [
+    {"name": "page_type", "type": "string", "enum": ["home", "shop", "product", "design_studio", "designer_studio", "my_activity", "community", "profile", "how_it_works", "checkout", "size_guide", "contact", "legal"], "desc": "Template of the page the event happened on. Send on every event."},
+    {"name": "logged_in", "type": "boolean", "desc": "Whether the user is signed in. Send on every event."}
+  ],
+  "events": [
+    {"name": "page_view", "category": "Navigation", "priority": "P0", "status": "existing", "page": "All pages", "trigger": "Every page load and client-side route change.", "properties": [
+      {"name": "page_path", "type": "string", "required": true, "desc": "e.g. /shop/pear-bypass-ring"},
+      {"name": "page_title", "type": "string"},
+      {"name": "referrer", "type": "string"},
+      {"name": "utm_source", "type": "string"}, {"name": "utm_medium", "type": "string"}, {"name": "utm_campaign", "type": "string"}]},
+    {"name": "nav_clicked", "category": "Navigation", "priority": "P1", "status": "new", "page": "Header, footer, mobile menu", "trigger": "A link in the header nav (SHOP, DESIGN STUDIO, MY ACTIVITY, COMMUNITY, HOW TAKSHILA WORKS) or the footer is clicked.", "properties": [
+      {"name": "item", "type": "string", "required": true, "desc": "Link label, e.g. design_studio, size_guide"},
+      {"name": "location", "type": "string", "required": true, "enum": ["header", "footer", "mobile_menu"]}]},
+    {"name": "cta_clicked", "category": "Navigation", "priority": "P1", "status": "new", "page": "All marketing pages", "trigger": "A primary button that is not covered by a more specific event is clicked (START DESIGNING, OPEN DESIGN STUDIO, BROWSE THE SHOP, START YOUR PIECE, EXPLORE COMMUNITY DESIGNS, DESIGN SOMETHING NEW…).", "properties": [
+      {"name": "cta_text", "type": "string", "required": true},
+      {"name": "section", "type": "string", "required": true, "desc": "Section the button sits in, e.g. hero, gift_edit, blank_canvas_banner"},
+      {"name": "destination", "type": "string", "desc": "Target path"}]},
+    {"name": "search_opened", "category": "Navigation", "priority": "P2", "status": "new", "page": "Header", "trigger": "The search icon is clicked.", "properties": []},
+    {"name": "search_submitted", "category": "Navigation", "priority": "P1", "status": "new", "page": "Header search", "trigger": "A search is run.", "properties": [
+      {"name": "search_term", "type": "string", "required": true},
+      {"name": "results_count", "type": "number"}]},
+    {"name": "upload_design_clicked", "category": "Design Studio", "priority": "P1", "status": "new", "page": "Header", "trigger": "UPLOAD DESIGN in the header is clicked.", "properties": [
+      {"name": "location", "type": "string", "required": true, "enum": ["header", "profile", "how_it_works"]}]},
+
+    {"name": "prompt_suggestion_clicked", "category": "Design Studio", "priority": "P1", "status": "new", "page": "Home, Design Studio, Designer Studio", "trigger": "A suggested prompt chip is clicked (\"Initial pendant in rose gold\", \"Oval ring for my mother\", \"Spider-web pendant\"…).", "properties": [
+      {"name": "suggestion", "type": "string", "required": true, "desc": "Chip text"},
+      {"name": "location", "type": "string", "required": true, "enum": ["home_hero", "home_halloween", "studio_empty_state", "designer_studio"]}]},
+    {"name": "studio_opened", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio, /designer-studio", "trigger": "The Design Studio (or Designer Studio) loads.", "properties": [
+      {"name": "studio_mode", "type": "string", "required": true, "enum": ["buyer", "designer"]},
+      {"name": "entry_point", "type": "string", "desc": "Where they came from: header_nav, home_hero, prompt_chip, community_customise, product_customize, shop_banner, direct"},
+      {"name": "is_returning_design", "type": "boolean", "desc": "Opened an existing saved design rather than a new one"}]},
+    {"name": "studio_step_viewed", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio", "trigger": "The studio advances to a step in the Describe → Direct → Refine → Finalize → Buy stepper. Fire once per step per design.", "properties": [
+      {"name": "step", "type": "string", "required": true, "enum": ["describe", "direct", "refine", "finalize", "buy"]},
+      {"name": "step_number", "type": "number", "required": true, "desc": "1–5"},
+      {"name": "design_id", "type": "string"}]},
+    {"name": "design_prompt_submitted", "category": "Design Studio", "priority": "P0", "status": "existing_planned", "page": "Home hero, /design-studio", "trigger": "The user clicks Generate, or sends a chat message in the studio. Fire on submit, before the AI responds.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "prompt_length", "type": "number", "required": true, "desc": "Character count. Do not send the prompt text."},
+      {"name": "has_reference_image", "type": "boolean", "required": true},
+      {"name": "message_index", "type": "number", "desc": "1 for the first brief, 2+ for follow-up chat messages"},
+      {"name": "source", "type": "string", "enum": ["typed", "suggestion"]},
+      {"name": "location", "type": "string", "enum": ["home_hero", "studio"]}]},
+    {"name": "design_reference_uploaded", "category": "Design Studio", "priority": "P1", "status": "new", "page": "Home hero, /design-studio", "trigger": "A sketch or photo is attached via \"Add a sketch or photo\" / UPLOAD.", "properties": [
+      {"name": "file_type", "type": "string", "enum": ["image", "pdf", "other"]},
+      {"name": "location", "type": "string", "enum": ["home_hero", "studio"]}]},
+    {"name": "design_brief_understood", "category": "Design Studio", "priority": "P1", "status": "new", "page": "/design-studio", "trigger": "The AI replies \"I have everything I need to start\" and shows the brief tags (Ring · Oval diamond · Yellow gold · Hidden halo).", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "product_type_slug", "type": "string", "desc": "ring, earrings, pendant…"},
+      {"name": "metal", "type": "string"},
+      {"name": "stone", "type": "string"},
+      {"name": "clarifying_questions", "type": "number", "desc": "How many follow-up questions the AI asked before understanding"}]},
+    {"name": "design_batch_generated", "category": "Design Studio", "priority": "P0", "status": "existing", "page": "/design-studio", "trigger": "A set of design directions (Timeless / Modern / Signature) finishes rendering.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "batch_number", "type": "number", "required": true, "desc": "1 for the first set, 2+ after SHOW 3 NEW DIRECTIONS"},
+      {"name": "directions_count", "type": "number"},
+      {"name": "product_type_slug", "type": "string"},
+      {"name": "latency_ms", "type": "number", "desc": "Time from prompt submit to render"}]},
+    {"name": "design_generation_failed", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio", "trigger": "Generation errors or times out.", "properties": [
+      {"name": "design_id", "type": "string"},
+      {"name": "error_type", "type": "string", "enum": ["timeout", "safety_filter", "server_error", "unsupported_request"]}]},
+    {"name": "design_directions_regenerated", "category": "Design Studio", "priority": "P1", "status": "new", "page": "/design-studio", "trigger": "SHOW 3 NEW DIRECTIONS or a modifier chip (Simpler, Bolder, More vintage, More classic, Something else…) is clicked.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "modifier", "type": "string", "required": true, "enum": ["none", "simpler", "bolder", "more_vintage", "more_classic", "something_else"]}]},
+    {"name": "design_direction_chosen", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio", "trigger": "CHOOSE THIS DIRECTION is clicked.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "direction", "type": "string", "required": true, "enum": ["timeless", "modern", "signature"]},
+      {"name": "batch_number", "type": "number"}]},
+    {"name": "design_version_created", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio", "trigger": "A new version (v2, v3…) is generated from a change the user asked for in Refine.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "version_number", "type": "number", "required": true},
+      {"name": "change_area", "type": "string", "enum": ["band", "stone", "setting", "size", "other"], "desc": "If the AI can classify the request"}]},
+    {"name": "design_version_restored", "category": "Design Studio", "priority": "P2", "status": "new", "page": "/design-studio", "trigger": "The user taps an earlier version to go back to it.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "version_number", "type": "number", "required": true}]},
+    {"name": "design_named", "category": "Design Studio", "priority": "P2", "status": "new", "page": "/design-studio", "trigger": "NAME IT is confirmed.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "name_source", "type": "string", "required": true, "enum": ["suggested", "custom"]}]},
+    {"name": "design_finalize_started", "category": "Design Studio", "priority": "P0", "status": "new", "page": "/design-studio", "trigger": "FINALIZE MATERIALS is clicked.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "version_number", "type": "number", "required": true},
+      {"name": "versions_created", "type": "number", "desc": "Total versions before finalizing"}]},
+    {"name": "saved_designs_opened", "category": "Design Studio", "priority": "P2", "status": "new", "page": "/design-studio sidebar", "trigger": "The saved-designs drawer is expanded, or a saved design is opened from it.", "properties": [
+      {"name": "action", "type": "string", "enum": ["expanded", "design_opened", "new_design"]}]},
+    {"name": "studio_exited", "category": "Design Studio", "priority": "P1", "status": "new", "page": "/design-studio", "trigger": "The studio exit (X) is clicked. Shows where people abandon.", "properties": [
+      {"name": "step", "type": "string", "required": true, "enum": ["describe", "direct", "refine", "finalize", "buy"]},
+      {"name": "design_id", "type": "string"},
+      {"name": "versions_created", "type": "number"}]},
+    {"name": "design_posted_to_community", "category": "Community", "priority": "P1", "status": "existing", "page": "/design-studio, /my-activity", "trigger": "A design is shared to the Community feed.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "product_type_slug", "type": "string"}]},
+
+    {"name": "product_list_viewed", "category": "Shop", "priority": "P1", "status": "new", "page": "Home, /shop, product pages", "trigger": "A product grid or rail scrolls into view (once per list per page view).", "properties": [
+      {"name": "list_name", "type": "string", "required": true, "desc": "shop_all, shop_by_category, halloween_picks, gift_edit, first_fine_jewelry, engagement, you_might_also_like, made_for_you"},
+      {"name": "category", "type": "string"},
+      {"name": "product_count", "type": "number"}]},
+    {"name": "product_list_filtered", "category": "Shop", "priority": "P1", "status": "new", "page": "/shop, home tabs", "trigger": "A category tile, filter or tab (For Her / For Him, SOLITAIRE / TOI ET MOI) changes the product list.", "properties": [
+      {"name": "filter_type", "type": "string", "required": true, "enum": ["category", "recipient", "style", "price"]},
+      {"name": "filter_value", "type": "string", "required": true},
+      {"name": "list_name", "type": "string"}]},
+    {"name": "product_clicked", "category": "Shop", "priority": "P0", "status": "new", "page": "Any product card", "trigger": "A product card (image, name or CUSTOMIZE) is clicked.", "properties": [
+      {"name": "product_id", "type": "string", "required": true, "desc": "Slug, e.g. pear-bypass-ring"},
+      {"name": "product_name", "type": "string", "required": true},
+      {"name": "price", "type": "number", "required": true},
+      {"name": "list_name", "type": "string", "required": true},
+      {"name": "position", "type": "number", "desc": "0-based position in the list"},
+      {"name": "click_target", "type": "string", "enum": ["card", "customize_button"]}]},
+    {"name": "product_viewed", "category": "Shop", "priority": "P0", "status": "new", "page": "/shop/{product}", "trigger": "A product page loads.", "properties": [
+      {"name": "product_id", "type": "string", "required": true},
+      {"name": "product_name", "type": "string", "required": true},
+      {"name": "product_type_slug", "type": "string", "required": true, "desc": "ring, necklace, earrings, bracelet, pendant, cufflinks, wedding_band, set"},
+      {"name": "price", "type": "number", "required": true, "desc": "Starting price as shown"},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "designer_id", "type": "string", "desc": "Designer credited on the page, if any"}]},
+    {"name": "product_option_selected", "category": "Shop", "priority": "P0", "status": "new", "page": "Product pages, studio Finalize step", "trigger": "A configurable option changes: metal, karat, gold colour, ring size, length, centre stone, carat, shape, quality, side stones.", "properties": [
+      {"name": "context", "type": "string", "required": true, "enum": ["product_page", "studio_finalize"]},
+      {"name": "option_type", "type": "string", "required": true, "enum": ["metal", "karat", "metal_color", "ring_size", "length", "centre_stone", "carat", "shape", "quality", "side_stones"]},
+      {"name": "option_value", "type": "string", "required": true},
+      {"name": "product_id", "type": "string", "desc": "Product slug, or design_id in the studio"},
+      {"name": "price_after", "type": "number", "desc": "Price shown after the change"}]},
+    {"name": "price_breakdown_viewed", "category": "Shop", "priority": "P1", "status": "new", "page": "Product pages, studio Finalize", "trigger": "View price breakdown / Price breakdown is opened. The site's transparency promise (\"Every dollar, on the receipt\").", "properties": [
+      {"name": "context", "type": "string", "required": true, "enum": ["product_page", "studio_finalize", "checkout"]},
+      {"name": "product_id", "type": "string"},
+      {"name": "price", "type": "number"}]},
+    {"name": "product_info_opened", "category": "Shop", "priority": "P2", "status": "new", "page": "Product pages", "trigger": "PRODUCT JOURNEY, RETURN POLICY, \"See how big they look\", \"See where each length sits\" or similar info panels are opened.", "properties": [
+      {"name": "panel", "type": "string", "required": true, "enum": ["product_journey", "return_policy", "size_visualiser", "length_guide", "stone_info"]},
+      {"name": "product_id", "type": "string"}]},
+    {"name": "delivery_estimate_checked", "category": "Shop", "priority": "P2", "status": "new", "page": "Product pages", "trigger": "A ZIP code is entered and Check is clicked.", "properties": [
+      {"name": "product_id", "type": "string"},
+      {"name": "estimate_days", "type": "number"},
+      {"name": "country", "type": "string"}]},
+    {"name": "size_guide_opened", "category": "Shop", "priority": "P1", "status": "new", "page": "Product pages, studio, /size-guide", "trigger": "Find your ring size / Find your bracelet length / Size guide is opened.", "properties": [
+      {"name": "context", "type": "string", "required": true, "enum": ["product_page", "studio_finalize", "footer", "direct"]},
+      {"name": "product_type_slug", "type": "string"}]},
+    {"name": "size_guide_method_selected", "category": "Shop", "priority": "P2", "status": "new", "page": "/size-guide", "trigger": "A sizing path is chosen.", "properties": [
+      {"name": "method", "type": "string", "required": true, "enum": ["know_my_size", "measure_ring", "measure_finger", "gift", "all_sizes"]},
+      {"name": "product_type_slug", "type": "string"}]},
+    {"name": "wishlist_item_added", "category": "Shop", "priority": "P1", "status": "new", "page": "Product cards, product pages", "trigger": "Save to wishlist / heart is turned on.", "properties": [
+      {"name": "product_id", "type": "string", "required": true},
+      {"name": "price", "type": "number"},
+      {"name": "context", "type": "string", "enum": ["product_page", "product_card", "community"]}]},
+    {"name": "wishlist_item_removed", "category": "Shop", "priority": "P2", "status": "new", "page": "Product cards, product pages, My Activity › Wishlist", "trigger": "A saved item is un-saved.", "properties": [
+      {"name": "product_id", "type": "string", "required": true}]},
+    {"name": "content_shared", "category": "Shop", "priority": "P2", "status": "new", "page": "Product pages, community, profile", "trigger": "Share is clicked on a product, community post or design.", "properties": [
+      {"name": "content_type", "type": "string", "required": true, "enum": ["product", "community_post", "design"]},
+      {"name": "content_id", "type": "string", "required": true},
+      {"name": "channel", "type": "string", "desc": "copy_link, whatsapp, pinterest, instagram, native_share"}]},
+
+    {"name": "cart_item_added", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "Product pages, studio", "trigger": "Add to cart or Add set is clicked.", "properties": [
+      {"name": "product_id", "type": "string", "required": true},
+      {"name": "product_name", "type": "string"},
+      {"name": "price", "type": "number", "required": true},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "quantity", "type": "number"},
+      {"name": "is_set", "type": "boolean"},
+      {"name": "metal", "type": "string"}, {"name": "size", "type": "string"}, {"name": "centre_stone", "type": "string"}]},
+    {"name": "buy_now_clicked", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "Product pages, studio Finalize", "trigger": "BUY NOW is clicked.", "properties": [
+      {"name": "context", "type": "string", "required": true, "enum": ["product_page", "studio_finalize"]},
+      {"name": "product_id", "type": "string", "desc": "Product slug, or design_id in the studio"},
+      {"name": "price", "type": "number", "required": true},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "financing_shown", "type": "boolean", "desc": "Whether the monthly-payment option was displayed"}]},
+    {"name": "cart_viewed", "category": "Checkout & Orders", "priority": "P1", "status": "new", "page": "Header bag", "trigger": "The bag opens.", "properties": [
+      {"name": "item_count", "type": "number"}, {"name": "cart_value", "type": "number"}]},
+    {"name": "cart_item_removed", "category": "Checkout & Orders", "priority": "P1", "status": "new", "page": "Bag, checkout", "trigger": "Remove is clicked, or quantity goes to 0.", "properties": [
+      {"name": "product_id", "type": "string", "required": true}, {"name": "price", "type": "number"}]},
+    {"name": "checkout_started", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "/checkout", "trigger": "The checkout page loads with at least one item. Replaces design_checkout_started, which only covered the studio.", "properties": [
+      {"name": "source", "type": "string", "required": true, "enum": ["cart", "buy_now_product", "buy_now_studio"]},
+      {"name": "value", "type": "number", "required": true},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "item_count", "type": "number", "required": true},
+      {"name": "has_custom_design", "type": "boolean", "desc": "Cart contains a studio-designed piece"}]},
+    {"name": "checkout_step_completed", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "/checkout", "trigger": "A checkout section is completed and validated.", "properties": [
+      {"name": "step", "type": "string", "required": true, "enum": ["contact", "shipping_address", "delivery", "gifting"]},
+      {"name": "step_number", "type": "number", "required": true}]},
+    {"name": "delivery_option_selected", "category": "Checkout & Orders", "priority": "P1", "status": "new", "page": "/checkout", "trigger": "A delivery option is chosen.", "properties": [
+      {"name": "option", "type": "string", "required": true, "enum": ["insured_standard", "express_insured"]},
+      {"name": "cost", "type": "number"}]},
+    {"name": "promo_code_applied", "category": "Checkout & Orders", "priority": "P1", "status": "new", "page": "/checkout", "trigger": "APPLY is clicked on a gift card or promo code (fire for success and failure).", "properties": [
+      {"name": "code", "type": "string", "required": true, "desc": "Campaign codes only (e.g. SPELL13). Hash or omit unique gift-card numbers."},
+      {"name": "code_type", "type": "string", "enum": ["promo", "gift_card"]},
+      {"name": "success", "type": "boolean", "required": true},
+      {"name": "discount_value", "type": "number"}]},
+    {"name": "gift_options_set", "category": "Checkout & Orders", "priority": "P2", "status": "new", "page": "/checkout › Gifting", "trigger": "Gifting is turned on or the gift note is saved.", "properties": [
+      {"name": "gift_wrap", "type": "boolean"}, {"name": "has_note", "type": "boolean"}]},
+    {"name": "progress_updates_opted_in", "category": "Checkout & Orders", "priority": "P2", "status": "new", "page": "/checkout › Contact", "trigger": "\"Text and email me progress photos\" is ticked.", "properties": [
+      {"name": "opted_in", "type": "boolean", "required": true}]},
+    {"name": "payment_started", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "/checkout", "trigger": "CONTINUE TO PAYMENT is clicked.", "properties": [
+      {"name": "value", "type": "number", "required": true},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "delivery_option", "type": "string"},
+      {"name": "has_promo", "type": "boolean"}]},
+    {"name": "order_completed", "category": "Checkout & Orders", "priority": "P0", "status": "existing_planned", "page": "Server (payment webhook)", "trigger": "Payment succeeds. Send from the server once per order, with revenue, so Amplitude revenue charts work.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "revenue", "type": "number", "required": true},
+      {"name": "currency", "type": "string", "required": true},
+      {"name": "item_count", "type": "number"},
+      {"name": "product_type_slug", "type": "string"},
+      {"name": "has_custom_design", "type": "boolean"},
+      {"name": "coupon", "type": "string"},
+      {"name": "delivery_option", "type": "string"},
+      {"name": "payment_method", "type": "string", "desc": "card, paypal, apple_pay, klarna, financing"}]},
+    {"name": "payment_failed", "category": "Checkout & Orders", "priority": "P0", "status": "new", "page": "Server / payment page", "trigger": "A payment attempt is declined or errors.", "properties": [
+      {"name": "order_id", "type": "string"}, {"name": "reason", "type": "string"}, {"name": "payment_method", "type": "string"}]},
+
+    {"name": "activity_tab_viewed", "category": "My Activity", "priority": "P1", "status": "new", "page": "/my-activity", "trigger": "A My Activity tab is opened.", "properties": [
+      {"name": "tab", "type": "string", "required": true, "enum": ["messages", "orders", "earnings", "referrals", "wishlist", "designs"]}]},
+    {"name": "order_tracking_expanded", "category": "My Activity", "priority": "P1", "status": "existing", "page": "/my-activity › Orders", "trigger": "An order card is expanded.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "current_step", "type": "number", "desc": "Step N of 7"}]},
+    {"name": "order_stage_details_viewed", "category": "My Activity", "priority": "P2", "status": "existing", "page": "/my-activity › Orders", "trigger": "A production stage (Idea, Design, CAD, Gemstone, Crafting, Certified, Delivered) is opened.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "stage", "type": "string", "required": true}]},
+    {"name": "cad_review_opened", "category": "My Activity", "priority": "P0", "status": "new", "page": "/my-activity", "trigger": "REVIEW CAD is clicked on an order that needs approval.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "revision_number", "type": "number"}]},
+    {"name": "cad_approved", "category": "My Activity", "priority": "P0", "status": "new", "page": "/my-activity", "trigger": "The customer approves the CAD (production can start).", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "revision_number", "type": "number", "required": true},
+      {"name": "hours_to_approve", "type": "number", "desc": "Hours since the CAD was sent"}]},
+    {"name": "cad_changes_requested", "category": "My Activity", "priority": "P0", "status": "new", "page": "/my-activity", "trigger": "The customer asks for changes to the CAD.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "revision_number", "type": "number", "required": true}]},
+    {"name": "message_sent", "category": "My Activity", "priority": "P1", "status": "new", "page": "/my-activity", "trigger": "A message is sent via Message the studio / MESSAGE ABOUT THIS ORDER.", "properties": [
+      {"name": "thread_type", "type": "string", "required": true, "enum": ["studio", "order", "designer"]},
+      {"name": "order_id", "type": "string"}]},
+    {"name": "order_document_downloaded", "category": "My Activity", "priority": "P2", "status": "new", "page": "/my-activity", "trigger": "An invoice or certificate is downloaded.", "properties": [
+      {"name": "order_id", "type": "string", "required": true},
+      {"name": "document_type", "type": "string", "required": true, "enum": ["invoice", "certificate"]}]},
+    {"name": "order_payment_retry_clicked", "category": "My Activity", "priority": "P1", "status": "existing", "page": "/my-activity", "trigger": "A failed payment is retried.", "properties": [
+      {"name": "order_id", "type": "string", "required": true}]},
+    {"name": "activity_design_edited", "category": "My Activity", "priority": "P2", "status": "existing", "page": "/my-activity", "trigger": "A saved design is reopened for editing.", "properties": [{"name": "design_id", "type": "string", "required": true}]},
+    {"name": "activity_design_removed", "category": "My Activity", "priority": "P2", "status": "existing", "page": "/my-activity", "trigger": "A saved design is deleted.", "properties": [{"name": "design_id", "type": "string", "required": true}]},
+    {"name": "activity_community_status_toggled", "category": "My Activity", "priority": "P2", "status": "existing", "page": "/my-activity", "trigger": "A saved design is made public or private.", "properties": [{"name": "design_id", "type": "string", "required": true}, {"name": "is_public", "type": "boolean", "required": true}]},
+
+    {"name": "community_feed_viewed", "category": "Community", "priority": "P1", "status": "new", "page": "/community", "trigger": "The feed loads or a feed tab is switched.", "properties": [
+      {"name": "feed", "type": "string", "required": true, "enum": ["for_you", "following", "latest"]}]},
+    {"name": "community_filter_applied", "category": "Community", "priority": "P2", "status": "existing", "page": "/community", "trigger": "A category (Rings, Earrings…) or content filter (Designed in the studio, Behind the bench, Worn by you) is chosen.", "properties": [
+      {"name": "filter_type", "type": "string", "required": true, "enum": ["category", "content_type"]},
+      {"name": "filter_value", "type": "string", "required": true}]},
+    {"name": "community_post_opened", "category": "Community", "priority": "P1", "status": "new", "page": "/community, profiles", "trigger": "A post is opened.", "properties": [
+      {"name": "post_id", "type": "string", "required": true},
+      {"name": "post_type", "type": "string", "enum": ["studio_design", "behind_the_bench", "worn_by_you", "product"]},
+      {"name": "author_role", "type": "string"},
+      {"name": "position", "type": "number"}]},
+    {"name": "community_like_toggled", "category": "Community", "priority": "P1", "status": "existing", "page": "/community, profiles", "trigger": "A post is liked or unliked.", "properties": [
+      {"name": "post_id", "type": "string", "required": true},
+      {"name": "liked", "type": "boolean", "required": true}]},
+    {"name": "community_design_customised", "category": "Community", "priority": "P0", "status": "new", "page": "/community", "trigger": "CUSTOMISE is clicked on a community post: the community-to-studio handoff.", "properties": [
+      {"name": "post_id", "type": "string", "required": true},
+      {"name": "product_type_slug", "type": "string"}]},
+    {"name": "community_post_created", "category": "Community", "priority": "P1", "status": "new", "page": "/community, /profile", "trigger": "SHARE YOUR WORK / Share something is published.", "properties": [
+      {"name": "post_type", "type": "string", "required": true, "enum": ["studio_design", "behind_the_bench", "worn_by_you"]},
+      {"name": "has_image", "type": "boolean"}]},
+    {"name": "user_followed", "category": "Community", "priority": "P2", "status": "new", "page": "Profiles, community", "trigger": "FOLLOW is clicked (fire unfollow with following=false).", "properties": [
+      {"name": "target_user_role", "type": "string"},
+      {"name": "following", "type": "boolean", "required": true}]},
+
+    {"name": "profile_viewed", "category": "Account", "priority": "P2", "status": "new", "page": "/profile", "trigger": "A profile page loads.", "properties": [
+      {"name": "is_own_profile", "type": "boolean", "required": true},
+      {"name": "profile_role", "type": "string", "desc": "designer, maker, collector, affiliate"}]},
+    {"name": "profile_tab_viewed", "category": "Account", "priority": "P2", "status": "new", "page": "/profile", "trigger": "Feed / Salon / Store / About tab is opened.", "properties": [
+      {"name": "tab", "type": "string", "required": true, "enum": ["feed", "salon", "store", "about"]},
+      {"name": "is_own_profile", "type": "boolean"}]},
+    {"name": "profile_edit_saved", "category": "Account", "priority": "P2", "status": "existing", "page": "/profile", "trigger": "Profile edits are saved.", "properties": []},
+    {"name": "profile_share_clicked", "category": "Account", "priority": "P2", "status": "existing", "page": "/profile", "trigger": "SHARE / Share profile is clicked.", "properties": [{"name": "is_own_profile", "type": "boolean"}]},
+    {"name": "referral_link_shared", "category": "Account", "priority": "P1", "status": "new", "page": "/profile, /my-activity › Referrals", "trigger": "SHARE AND EARN / a referral link is copied or shared.", "properties": [
+      {"name": "channel", "type": "string"}, {"name": "location", "type": "string", "enum": ["profile", "my_activity"]}]},
+    {"name": "sign_up", "category": "Account", "priority": "P0", "status": "existing_planned", "page": "Sign-up flow", "trigger": "An account is created. Call setUserId at the same moment.", "properties": [
+      {"name": "method", "type": "string", "required": true, "enum": ["email", "google", "apple"]},
+      {"name": "trigger_point", "type": "string", "desc": "What prompted it: studio_save, checkout, community_like, header"}]},
+    {"name": "login", "category": "Account", "priority": "P1", "status": "new", "page": "Login", "trigger": "A user signs in.", "properties": [
+      {"name": "method", "type": "string", "required": true, "enum": ["email", "google", "apple"]}]},
+    {"name": "newsletter_signed_up", "category": "Account", "priority": "P1", "status": "existing_planned", "page": "Footer \"Takshila in your mailbox\" on every page", "trigger": "Subscribe succeeds with a valid email. Never send the email.", "properties": [
+      {"name": "source", "type": "string", "required": true, "desc": "footer, popup, checkout"}]},
+
+    {"name": "designer_cta_clicked", "category": "Supply", "priority": "P1", "status": "new", "page": "/how-takshila-works, /profile, /design-studio", "trigger": "A supply-side CTA is clicked: OPEN DESIGNER STUDIO, SELL YOUR DESIGNS, APPLY AS A MAKER, MAKE WITH US, \"Designing to earn?\".", "properties": [
+      {"name": "cta", "type": "string", "required": true, "enum": ["open_designer_studio", "sell_your_designs", "apply_as_maker", "make_with_us"]},
+      {"name": "location", "type": "string", "required": true}]},
+    {"name": "designer_design_published", "category": "Supply", "priority": "P1", "status": "new", "page": "/designer-studio", "trigger": "A designer publishes a design for sale.", "properties": [
+      {"name": "design_id", "type": "string", "required": true},
+      {"name": "product_type_slug", "type": "string"},
+      {"name": "price", "type": "number"}]},
+
+    {"name": "contact_form_submitted", "category": "Support", "priority": "P1", "status": "new", "page": "/contact", "trigger": "SEND MESSAGE succeeds.", "properties": [
+      {"name": "topic", "type": "string", "required": true, "desc": "Value of the topic dropdown"},
+      {"name": "has_order_number", "type": "boolean"}]},
+    {"name": "faq_opened", "category": "Support", "priority": "P2", "status": "new", "page": "/contact", "trigger": "A FAQ question is expanded.", "properties": [
+      {"name": "question", "type": "string", "required": true}]},
+    {"name": "process_stage_viewed", "category": "Support", "priority": "P2", "status": "new", "page": "Home, /how-takshila-works", "trigger": "A stage in the 01 Idea → 07 Delivered explainer is clicked.", "properties": [
+      {"name": "stage", "type": "string", "required": true, "enum": ["idea", "design", "cad", "gemstone", "crafting", "certified", "delivered"]}]},
+    {"name": "campaign_interacted", "category": "Marketing", "priority": "P2", "status": "new", "page": "Home seasonal sections", "trigger": "An interactive seasonal element is used (Halloween lights switch, Pick a pumpkin).", "properties": [
+      {"name": "campaign", "type": "string", "required": true, "desc": "e.g. halloween_2026"},
+      {"name": "action", "type": "string", "required": true, "desc": "e.g. lights_toggled, pumpkin_picked"}]}
+  ],
+  "deprecated": [
+    {"name": "design_category_selected", "reason": "The new studio is prompt-first; there is no category picker. The product type now comes from design_brief_understood.product_type_slug."},
+    {"name": "design_product_type_selected", "reason": "Same as above."},
+    {"name": "design_checkout_started", "reason": "Replaced by checkout_started with source = buy_now_studio, which also covers shop purchases."},
+    {"name": "design_localized", "reason": "Replaced by design_version_created (each requested change creates a new version)."},
+    {"name": "design_tab_switched", "reason": "The new studio uses a step flow; replaced by studio_step_viewed."},
+    {"name": "community_rated", "reason": "The new design has likes, no ratings."}
+  ]
+}
