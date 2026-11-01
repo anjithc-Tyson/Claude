@@ -190,30 +190,29 @@ footer {{ color:var(--muted); font-size:13px; border-top:1px solid var(--line); 
 
 <section class="sec" id="build">
   <h2>How to build it</h2>
-  <p>The events are generated as typed functions, one per event, from the same file as this page. A misspelled event name or a missing property fails to compile. The full guide with every code sample is <code>analytics/IMPLEMENTATION.md</code> in the repo.</p>
+  <p>For the Next.js frontend and Laravel backend. The events are generated as typed functions from the same file as this page: in TypeScript a misspelled event or missing property fails to compile, and in PHP it throws. Every file and code sample is in <code>analytics/sdk/</code> and <code>analytics/IMPLEMENTATION.md</code> in the repo.</p>
   <ol class="steps">
-    <li><h4>Get the API keys</h4><p>Amplitude → Settings → Projects → <b>default (814554)</b> for production. Create a second <b>Takshila (dev)</b> project for local and staging builds, so test traffic never mixes with real data.</p></li>
-    <li><h4>Install the SDKs and copy the generated files</h4><p>Copy <code>analytics/sdk/tracking.ts</code> (browser) and <code>analytics/sdk/server.ts</code> (backend) into the codebase. Don't edit them by hand: regenerate with <code>python3 analytics/build_tracking_sdk.py</code>.</p><pre><code>npm install @amplitude/analytics-browser @amplitude/analytics-node</code></pre></li>
-    <li><h4>Initialise once, and track every route change</h4><p>In the root layout. <code>page_type</code> and <code>logged_in</code> are then added to every event automatically.</p><pre><code>initAnalytics(process.env.NEXT_PUBLIC_AMPLITUDE_KEY, {{ debug: isDev }});
+    <li><h4>Get the API keys</h4><p>Amplitude → Settings → Projects → <b>default (814554)</b> for production, plus a separate <b>Takshila (dev)</b> project for local and staging. The same project key goes in both apps.</p><pre><code># Next.js .env.local
+NEXT_PUBLIC_AMPLITUDE_KEY=...
+# Laravel .env
+AMPLITUDE_API_KEY=...</code></pre></li>
+    <li><h4>Next.js: install and wrap the layout</h4><p>Copy <code>tracking.ts</code> and the two files in <code>sdk/nextjs/</code> into <code>src/lib/analytics/</code>. The provider starts Amplitude and sends <code>page_view</code> with the right <code>page_type</code> on every route change.</p><pre><code>npm install @amplitude/analytics-browser
 
-// on every route change
-setContext({{ page_type: 'product' }});
-pageView({{ page_path: location.pathname, page_title: document.title }});</code></pre></li>
-    <li><h4>Identify users on sign-up and login</h4><p>Use your own user id, never the email. This merges the visitor's anonymous history into their account.</p><pre><code>identifyUser(user.id, {{ user_role: 'buyer' }});
+// app/layout.tsx
+&lt;AnalyticsProvider loggedIn={{loggedIn}}&gt;{{children}}&lt;/AnalyticsProvider&gt;</code></pre></li>
+    <li><h4>Call the Laravel API through <code>apiFetch</code></h4><p>It adds the <code>X-Amplitude-Device-Id</code> header so server events join the visitor's browser session. Using axios? Add the interceptor shown in <code>api.ts</code>.</p></li>
+    <li><h4>Identify users after Sanctum login</h4><p>Use your user id, never the email. Anonymous history merges into the account.</p><pre><code>identifyUser(String(user.id), {{ user_role: 'buyer' }});
 signUp({{ method: 'google', trigger_point: 'studio_save' }});
-// on logout
-resetUser();</code></pre></li>
-    <li><h4>Call one function where each action happens</h4><p>Fire it in the handler, after the action succeeds. Keep one <code>design_id</code> from the first prompt to the order.</p><pre><code>track.designPromptSubmitted({{ design_id, prompt_length: prompt.length,
+resetUser(); // on logout</code></pre></li>
+    <li><h4>Call one function where each action happens</h4><p>Only in client components or event handlers, after the action succeeds. Keep one <code>design_id</code> from the first prompt to the order.</p><pre><code>track.designPromptSubmitted({{ design_id, prompt_length: prompt.length,
   has_reference_image: !!file, source: 'typed', location: 'studio' }});
-track.designDirectionChosen({{ design_id, direction: 'signature', batch_number: 1 }});
 track.buyNowClicked({{ context: 'studio_finalize', product_id: design_id,
   price: 2313, currency: 'USD' }});</code></pre></li>
-    <li><h4>Send revenue from the server</h4><p><code>order_completed</code>, <code>payment_failed</code> and <code>cad_approved</code> live only in <code>server.ts</code>. Call them from the payment webhook and the CAD approval handler. The order id is used as the insert id, so a repeated webhook is counted once.</p><pre><code>await orderCompleted({{ user_id, device_id }}, {{
-  order_id: order.id, revenue: order.total, currency: 'USD' }});
-await setInternal({{ user_id }}, email.endsWith('@takshila.co'));</code></pre></li>
-    <li><h4>Respect consent in the EU and UK</h4><p>Call <code>amplitude.setOptOut(true)</code> before initialising, and <code>setOptOut(false)</code> once the visitor accepts the cookie banner.</p></li>
-    <li><h4>Test with the dev project</h4><p>Run with <code>debug: true</code>, then open User Lookup in Amplitude and watch your test user's event stream live. Walk every P0 flow end to end. Anything Amplitude marks <i>unexpected</i> is a code mistake to fix.</p></li>
-    <li><h4>Launch</h4><p>Merge the <b>new-site</b> tracking-plan branch into main, mark the key events, stop sending the deprecated events below, and switch to the production key.</p></li>
+    <li><h4>Laravel: copy the files and start the queue</h4><p>Copy <code>sdk/laravel/</code> into the project, register <code>CaptureAmplitudeDevice</code> on the API middleware group, and add an <code>amplitude_device_id</code> column to <code>orders</code>. Events are sent by a queued job that retries outages and logs rejected events.</p><pre><code>pm2 start "php artisan queue:work --queue=default,analytics" --name laravel-queue</code></pre></li>
+    <li><h4>Send revenue from Laravel</h4><p><code>order_completed</code>, <code>payment_failed</code> and <code>cad_approved</code> are sent only from the backend: the payment webhook and the CAD approval endpoint. The order number is the dedup id, so a repeated webhook counts once. Staff accounts are flagged <code>is_internal</code> automatically on registration.</p><pre><code>$events-&gt;orderCompleted(Actor::user($order-&gt;user_id, $order-&gt;amplitude_device_id),
+    orderId: $order-&gt;number, revenue: $order-&gt;total, currency: 'USD');</code></pre></li>
+    <li><h4>Test</h4><p>Run <code>php artisan test --filter=AmplitudeTest</code> in CI. Then use the dev project's User Lookup to watch a test user's events live while walking every P0 flow. Anything Amplitude marks <i>unexpected</i> is a code mistake to fix.</p></li>
+    <li><h4>Launch</h4><p>Respect cookie consent for EU and UK visitors, merge the <b>new-site</b> tracking-plan branch into main, mark the key events, stop the deprecated events below, and switch both apps to the production key.</p></li>
   </ol>
 </section>
 

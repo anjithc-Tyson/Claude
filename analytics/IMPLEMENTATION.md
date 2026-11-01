@@ -1,102 +1,131 @@
-# Implementing Takshila analytics on the new site
+# Implementing Takshila analytics: Next.js + Laravel
 
-For the developers building the new takshila.co. The event list itself is in
-[NEW_SITE_EVENTS.md](NEW_SITE_EVENTS.md) (also published as a web page). This guide covers how to wire it up.
+For the developers building the new takshila.co (Next.js / React frontend, Laravel API backend).
+The event list itself is in [NEW_SITE_EVENTS.md](NEW_SITE_EVENTS.md), also published as a web page.
 
-**The short version:** install the Amplitude SDK, copy the two generated files in `analytics/sdk/`, call `initAnalytics()` once, then call one typed function per user action. The functions come from the spec, so a misspelled event name or a missing property fails to compile.
+**The short version:**
+- **Frontend:** install the Amplitude browser SDK, copy the generated `tracking.ts` and the two Next.js files, wrap the layout in `<AnalyticsProvider>`, and call one typed function per user action.
+- **Backend:** copy the Laravel files, set two `.env` keys, and call `ServerEvents` from the payment webhook and the CAD approval handler. Events go out on a queue, so they never slow down a request.
+
+Everything in `analytics/sdk/` is generated from `analytics/new-site-events.json` or written to match it. A misspelled event name or a missing required property fails to compile (TypeScript) or throws (PHP).
+
+```
+analytics/sdk/
+├── tracking.ts                 generated: one typed function per browser event
+├── nextjs/
+│   ├── AnalyticsProvider.tsx   starts Amplitude, sends page_view on every route change
+│   └── api.ts                  sends the Amplitude device id to Laravel on every API call
+├── laravel/
+│   ├── config/amplitude.php
+│   ├── app/Analytics/Actor.php
+│   ├── app/Analytics/Amplitude.php
+│   ├── app/Analytics/ServerEvents.php        generated: order_completed, payment_failed, cad_approved
+│   ├── app/Jobs/SendToAmplitude.php          queued, retries rate limits and outages
+│   ├── app/Http/Middleware/CaptureAmplitudeDevice.php
+│   ├── app/Listeners/MarkInternalUser.php    flags staff accounts is_internal
+│   └── tests/Feature/AmplitudeTest.php
+└── server.ts                   Node version of the server events (not needed with Laravel)
+```
 
 ---
 
 ## 1. Get the API keys
 
-1. In Amplitude, go to **Settings → Projects → default (814554)** and copy the **API key**. This is the production key.
-2. Create a second project, e.g. **Takshila (dev)**, and use its key for local, preview and staging builds. Test traffic then never mixes with real customer data.
-3. Store them as environment variables, e.g. `NEXT_PUBLIC_AMPLITUDE_KEY` (browser) and `AMPLITUDE_KEY` (server). The browser key is public by design. Don't put the Amplitude *secret* key in the frontend.
-
-## 2. Install the SDKs
+1. In Amplitude, go to **Settings → Projects → default (814554)** and copy the **API key**. This is production.
+2. Create a second project, **Takshila (dev)**, and use its key for local, preview and staging. Test traffic then never mixes with customer data.
+3. The same project key goes in both apps. It is safe in the browser by design. Never put Amplitude's *secret* key in the frontend.
 
 ```bash
-npm install @amplitude/analytics-browser @amplitude/analytics-node
+# Next.js .env.local
+NEXT_PUBLIC_AMPLITUDE_KEY=...
+NEXT_PUBLIC_API_URL=https://api.takshila.co
 ```
-
-Copy `analytics/sdk/tracking.ts` (browser) and `analytics/sdk/server.ts` (backend) into the codebase, e.g. `src/lib/analytics/`.
-
-Both files are **generated** from `analytics/new-site-events.json`. Don't edit them by hand. To change an event, edit the JSON and run:
 
 ```bash
-python3 analytics/build_tracking_sdk.py
+# Laravel .env
+AMPLITUDE_API_KEY=...
+AMPLITUDE_QUEUE=analytics
+# EU data residency only: AMPLITUDE_ENDPOINT=https://api.eu.amplitude.com
 ```
 
-Then copy the regenerated files in again.
+---
 
-## 3. Initialise once
+## Frontend (Next.js)
 
-In the root layout or app entry point:
+### 2. Install and copy
 
-```ts
-import { initAnalytics, setContext, pageView } from '@/lib/analytics/tracking';
-
-initAnalytics(process.env.NEXT_PUBLIC_AMPLITUDE_KEY!, { debug: process.env.NODE_ENV !== 'production' });
+```bash
+npm install @amplitude/analytics-browser
 ```
 
-On **every route change**, set the page context and send `page_view`. The context (`page_type`, `logged_in`) is added to every event automatically.
+Copy `analytics/sdk/tracking.ts`, `analytics/sdk/nextjs/AnalyticsProvider.tsx` and `analytics/sdk/nextjs/api.ts` into one folder, e.g. `src/lib/analytics/`.
 
-```ts
-setContext({ page_type: 'product' });            // home | shop | product | design_studio | checkout | …
-pageView({ page_path: location.pathname, page_title: document.title });
+### 3. Wrap the root layout
+
+```tsx
+// app/layout.tsx (a server component; AnalyticsProvider is a client component)
+import { AnalyticsProvider } from '@/lib/analytics/AnalyticsProvider';
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const loggedIn = /* from your Sanctum session */ false;
+  return (
+    <html lang="en">
+      <body>
+        <AnalyticsProvider loggedIn={loggedIn}>{children}</AnalyticsProvider>
+      </body>
+    </html>
+  );
+}
 ```
 
-Amplitude's autocapture stays on (sessions, clicks, form interactions, session replay). The typed events add the business meaning on top.
+This starts Amplitude once and sends `page_view` with the right `page_type` on every route change. If you add routes, update `pageTypeFor()` in `AnalyticsProvider.tsx`.
 
-## 4. Identify users
+**Client vs. server components:** Amplitude runs in the browser. Call `track.*` only in client components (`'use client'`) or event handlers, never in server components or route handlers.
+
+### 4. Call the Laravel API through `apiFetch`
 
 ```ts
-import { identifyUser, resetUser } from '@/lib/analytics/tracking';
+import { apiFetch } from '@/lib/analytics/api';
 
-// after sign-up or login — use your own user id, never the email
-identifyUser(user.id, { user_role: 'buyer', signup_date: user.createdAt.slice(0, 10) });
-signUp({ method: 'google', trigger_point: 'studio_save' });   // only on sign-up
-login({ method: 'google' });                                   // only on login
+await apiFetch('/api/checkout', { method: 'POST', body: JSON.stringify(cart) });
+```
+
+It adds the `X-Amplitude-Device-Id` header, which lets Laravel tie server events to the same visitor. Using axios? Add the interceptor shown at the bottom of `api.ts`.
+
+### 5. Identify users
+
+```ts
+import { identifyUser, resetUser, signUp, login } from '@/lib/analytics/tracking';
+
+// after Sanctum login / registration succeeds. Use your user id, never the email.
+identifyUser(String(user.id), { user_role: 'buyer', signup_date: user.created_at.slice(0, 10) });
+signUp({ method: 'google', trigger_point: 'studio_save' });  // registration only
+login({ method: 'google' });                                  // login only
 
 // on logout
 resetUser();
 ```
 
-Calling `identifyUser` merges everything the visitor did while anonymous into their account.
+This merges everything the visitor did while anonymous into their account.
 
-## 5. Fire events where the action happens
+### 6. Fire events where the action happens
 
-Call the function in the handler that performs the action, after it succeeds. Each function's comment says exactly when it fires.
-
-**Design Studio**
+Call the function in the handler, after the action succeeds. Each function's comment says exactly when it fires. With Redux Toolkit, a thunk's `fulfilled` branch is a good place.
 
 ```ts
 import * as track from '@/lib/analytics/tracking';
 
-// studio page mounts
+// Design Studio
 track.studioOpened({ studio_mode: 'buyer', entry_point: searchParams.get('from') ?? 'direct' });
-
-// stepper moves to a new step (once per step per design)
 track.studioStepViewed({ step: 'direct', step_number: 2, design_id });
-
-// user clicks Generate / sends a chat message — before the AI answers
 track.designPromptSubmitted({ design_id, prompt_length: prompt.length, has_reference_image: !!file, source: 'typed', location: 'studio' });
-
-// directions finished rendering
 track.designBatchGenerated({ design_id, batch_number, directions_count: 3, product_type_slug, latency_ms: Date.now() - startedAt });
-
-// CHOOSE THIS DIRECTION
 track.designDirectionChosen({ design_id, direction: 'signature', batch_number });
-
-// FINALIZE MATERIALS, then each option change, then BUY NOW
 track.designFinalizeStarted({ design_id, version_number, versions_created });
 track.productOptionSelected({ context: 'studio_finalize', option_type: 'ring_size', option_value: '6', product_id: design_id, price_after: 2313 });
 track.buyNowClicked({ context: 'studio_finalize', product_id: design_id, price: 2313, currency: 'USD', financing_shown: true });
-```
 
-**Shop and checkout**
-
-```ts
+// Shop and checkout
 track.productViewed({ product_id: 'pear-bypass-ring', product_name: 'Pear Bypass Ring', product_type_slug: 'ring', price: 620, currency: 'USD' });
 track.cartItemAdded({ product_id: 'pear-bypass-ring', price: 620, currency: 'USD', quantity: 1, metal: '14k_yellow', size: '6' });
 track.checkoutStarted({ source: 'cart', value: 620, currency: 'USD', item_count: 1, has_custom_design: false });
@@ -104,70 +133,128 @@ track.checkoutStepCompleted({ step: 'shipping_address', step_number: 2 });
 track.paymentStarted({ value: 620, currency: 'USD', delivery_option: 'insured_standard', has_promo: false });
 ```
 
-**`design_id` rule:** create it when the first prompt is submitted, and keep the same id on every studio event, in the cart, on the order and on the CAD. That's what lets us connect studio activity to revenue.
+**`design_id` rule:** create it (or have Laravel return it) when the first prompt is submitted, store it on the design, cart line and order, and send the same id on every event. That's what connects studio activity to revenue.
 
-## 6. Server-side events
+---
 
-Send these three from the backend, never the browser, so ad blockers and closed tabs can't lose them:
+## Backend (Laravel)
 
-```ts
-import { initServerAnalytics, orderCompleted, updateCustomerTotals, paymentFailed, cadApproved, setInternal, flushAnalytics } from '@/lib/analytics/server';
+### 7. Copy the files and register them
 
-initServerAnalytics(process.env.AMPLITUDE_KEY!);   // at server start-up
+Copy everything under `analytics/sdk/laravel/` into the Laravel project at the same paths (`config/`, `app/`, `tests/`). Then register the middleware on the API group:
 
-// payment provider webhook: payment succeeded
-await orderCompleted({ user_id: order.userId, device_id: order.amplitudeDeviceId }, {
-  order_id: order.id, revenue: order.total, currency: order.currency, item_count: order.items.length,
-  has_custom_design: order.hasCustomDesign, coupon: order.coupon, payment_method: order.paymentMethod,
-});
-await updateCustomerTotals({ user_id: order.userId }, { orders_count, lifetime_revenue, country: order.shippingCountry });
-
-// payment declined
-await paymentFailed({ user_id: order.userId }, { order_id: order.id, reason: err.code, payment_method: 'card' });
-
-// customer approves the CAD in My Activity (the API handler, not the button)
-await cadApproved({ user_id }, { order_id, revision_number, hours_to_approve });
-
-// on account creation
-await setInternal({ user_id }, email.endsWith('@takshila.co'));
-
-await flushAnalytics();   // at the end of serverless functions
+```php
+// bootstrap/app.php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->appendToGroup('api', \App\Http\Middleware\CaptureAmplitudeDevice::class);
+})
 ```
 
-- `order_completed` uses the order id as its insert id, so a webhook delivered twice is counted once.
-- To join server events to the visitor's browser session, save Amplitude's device id with the order at checkout (`amplitude.getDeviceId()`) and pass it as `device_id`.
+`MarkInternalUser` is discovered automatically (Laravel 11+) and flags staff accounts on registration: `@takshila.co` emails, or Spatie roles `admin`, `staff` or `qa` (configurable in `config/amplitude.php`).
 
-## 7. Privacy and consent
+### 8. Run a queue worker for analytics
 
-- **Never** send prompt text, emails, names, phone numbers or addresses as properties. The generated types only expose safe fields, e.g. `prompt_length` instead of the prompt.
-- For visitors in the EU, UK and Switzerland, keep tracking off until they accept the cookie banner: call `amplitude.setOptOut(true)` before `initAnalytics`, then `amplitude.setOptOut(false)` when they consent. Have whoever handles legal confirm the banner wording.
+Events are sent by `SendToAmplitude` jobs on the `analytics` queue, so a slow or failing Amplitude never blocks a checkout or webhook. Add the queue to your worker. With PM2 on the VPS:
 
-## 8. Test before launch
+```bash
+pm2 start "php artisan queue:work --queue=default,analytics --tries=5" --name laravel-queue
+```
 
-1. Run the site with `debug: true` and the **dev** project key. Every event is logged in the browser console.
+The job retries rate limits and outages (10 s, 1 min, 5 min, 15 min). If Amplitude rejects an event as invalid, it logs `Amplitude rejected event` with the reason in `storage/logs` (or CloudWatch) and doesn't retry.
+
+### 9. Send the server-side events
+
+Send these three from Laravel, never the browser, so ad blockers and closed tabs can't lose them.
+
+```php
+use App\Analytics\Actor;
+use App\Analytics\ServerEvents;
+
+// At checkout (a request from the Next.js app): remember the device id on the order
+$order->amplitude_device_id = $request->header('X-Amplitude-Device-Id');
+
+// Payment provider webhook: payment succeeded (no browser here, so use the stored device id)
+public function paymentSucceeded(Order $order, ServerEvents $events)
+{
+    $actor = Actor::user($order->user_id, $order->amplitude_device_id);
+
+    $events->orderCompleted($actor,
+        orderId: $order->number,
+        revenue: $order->total,
+        currency: $order->currency,
+        itemCount: $order->items()->count(),
+        hasCustomDesign: $order->has_custom_design,
+        coupon: $order->coupon_code,
+        deliveryOption: $order->delivery_option,
+        paymentMethod: $order->payment_method,
+    );
+
+    $user = $order->user;
+    $events->updateCustomerTotals($actor,
+        ordersCount: $user->orders()->paid()->count(),
+        lifetimeRevenue: $user->orders()->paid()->sum('total'),
+        country: $order->shipping_country,
+    );
+}
+
+// Payment declined
+$events->paymentFailed(Actor::user($order->user_id, $order->amplitude_device_id),
+    orderId: $order->number, reason: $exception->getCode(), paymentMethod: 'card');
+
+// CAD approval endpoint (the API handler, not the button)
+$events->cadApproved(Actor::fromRequest($request),
+    orderId: $order->number,
+    revisionNumber: $cad->revision,
+    hoursToApprove: $cad->sent_at->diffInHours(now()),
+);
+```
+
+- `order_completed` uses the order number as its insert id, so a webhook delivered twice is counted once.
+- Add an `amplitude_device_id` (nullable string) column to `orders` with a migration.
+- For events that aren't in the spec yet, use `app(\App\Analytics\Amplitude::class)->track('event_name', $actor, [...])`, and add the event to the spec.
+
+### 10. Run the tests
+
+```bash
+php artisan test --filter=AmplitudeTest
+```
+
+They check the payload sent to Amplitude (revenue, insert id, user and device ids), queueing, retries, invalid-payload handling and the staff flag, without calling Amplitude. Add them to CI.
+
+---
+
+## 11. Privacy and consent
+
+- **Never** send prompt text, emails, names, phone numbers or addresses as properties. The generated functions only accept safe fields, e.g. `prompt_length` instead of the prompt.
+- For EU, UK and Swiss visitors, keep tracking off until they accept the cookie banner: call `amplitude.setOptOut(true)` before the provider starts, then `amplitude.setOptOut(false)` on consent. Have whoever handles legal confirm the banner wording.
+
+## 12. Test before launch
+
+1. Run both apps with the **dev** project key. The browser console logs every event in development.
 2. In Amplitude (dev project), open **User Lookup**, find your test user and watch the event stream live.
-3. Walk through each P0 flow end to end and tick it off:
+3. Walk each P0 flow end to end:
    - [ ] Studio: open → prompt → directions → choose → refine → finalize → buy now
    - [ ] Shop: product page → option change → add to cart → checkout → each step → payment
-   - [ ] `order_completed` arrives once per order, from the server, with revenue
+   - [ ] `order_completed` arrives once per order, from Laravel, with revenue and the same device id as the browser events
    - [ ] `cad_approved` and `cad_changes_requested` from My Activity
    - [ ] `design_id` is the same from prompt to order
    - [ ] Sign-up and login merge the anonymous history; logout resets
-   - [ ] Staff accounts have `is_internal = true`
+   - [ ] Staff accounts show `is_internal = true`
 4. In **Data → Events**, anything marked *unexpected* is a name or property not in the plan: fix the code, not the plan.
 
-## 9. At launch
+## 13. At launch
 
 1. In Amplitude, merge the **`new-site`** tracking-plan branch into main.
 2. Mark the key events: `order_completed`, `checkout_started`, `design_prompt_submitted`, `design_direction_chosen`, `cad_approved`, `sign_up`, `newsletter_signed_up`.
-3. Stop sending the deprecated events listed in the spec (`design_category_selected`, `design_product_type_selected`, `design_checkout_started`, `design_localized`, `design_tab_switched`, `community_rated`).
-4. Switch the production build to the production API key.
+3. Stop sending the deprecated events listed in the spec.
+4. Switch both apps to the production key.
 
 ## Changing an event later
 
 1. Edit `analytics/new-site-events.json`.
-2. Regenerate everything:
+2. Regenerate:
    ```bash
    python3 analytics/build_tracking_sdk.py && python3 analytics/build_spec.py && python3 analytics/build_spec_page.py
    ```
-3. Update the event in Amplitude's tracking plan on a branch, and merge it when the code ships.
+3. Copy the regenerated `tracking.ts` and `ServerEvents.php` into the apps.
+4. Update the event in Amplitude's tracking plan on a branch, and merge it when the code ships.

@@ -194,4 +194,82 @@ srv += [
 OUT.parent.mkdir(exist_ok=True)
 (OUT.parent / "server.ts").write_text("\n".join(srv) + "\n")
 OUT.write_text("\n".join(lines) + "\n")
-print(f"wrote {OUT.relative_to(HERE.parent)} ({len(spec['events']) - len(server_events)} browser events) and sdk/server.ts ({len(server_events)} server events)")
+# ---------------- Laravel: app/Analytics/ServerEvents.php ----------------
+PHPT = {"string": "string", "number": "int|float", "boolean": "bool"}
+
+
+def php_param(p):
+    t = PHPT[p["type"]] if not p.get("enum") else "string"
+    return f"{t} ${camel(p['name'])}" if p.get("required") else f"{t}|null ${camel(p['name'])} = null"
+
+
+php = [
+    "<?php",
+    "",
+    "// GENERATED FILE. Do not edit by hand.",
+    "// Source: analytics/new-site-events.json  ·  Regenerate: python3 analytics/build_tracking_sdk.py",
+    "",
+    "namespace App\\Analytics;",
+    "",
+    "/**",
+    " * Server-side Takshila events. Inject this class (or resolve it with app(ServerEvents::class))",
+    " * and call it from the payment webhook, the CAD approval handler and account creation.",
+    " * Everything is queued; nothing here blocks the request.",
+    " */",
+    "class ServerEvents",
+    "{",
+    "    public function __construct(private Amplitude $amplitude) {}",
+    "",
+]
+for ev in server_events:
+    ps = sorted(ev["properties"], key=lambda p: not p.get("required"))
+    params = ",\n        ".join(["Actor $actor"] + [php_param(p) for p in ps])
+    props = "\n".join(f"            '{p['name']}' => ${camel(p['name'])}," for p in ev["properties"])
+    checks = []
+    for p in ev["properties"]:
+        if p.get("enum"):
+            vals = ", ".join(f"'{v}'" for v in p["enum"])
+            checks.append(f"        if (${camel(p['name'])} !== null && ! in_array(${camel(p['name'])}, [{vals}], true)) {{\n            throw new \\InvalidArgumentException('{p['name']} must be one of: {', '.join(p['enum'])}');\n        }}")
+    php += ["    /**", f"     * **{ev['priority']}** · {ev['trigger']}"]
+    php += [f"     * @param {PHPT[p['type']] if not p.get('enum') else 'string'} ${camel(p['name'])} {p.get('desc', '')}".rstrip() for p in ps if p.get("desc")]
+    php += ["     */", f"    public function {camel(ev['name'])}(\n        {params},\n    ): void {{"]
+    php += checks
+    if ev["name"] == "order_completed":
+        php += [
+            f"        $this->amplitude->track('{ev['name']}', $actor, [\n{props}\n        ], [",
+            "            // Same order id = same event: a webhook delivered twice is counted once.",
+            "            'insert_id' => 'order_completed:'.$orderId,",
+            "            // Top-level revenue fields make the order appear in Amplitude revenue charts.",
+            "            'revenue' => $revenue,",
+            "            'price' => $revenue,",
+            "            'quantity' => 1,",
+            "            'revenueType' => 'purchase',",
+            "        ]);",
+            "    }",
+            "",
+        ]
+    else:
+        php += [f"        $this->amplitude->track('{ev['name']}', $actor, [\n{props}\n        ]);", "    }", ""]
+php += [
+    "    /** Call right after orderCompleted with the customer's new totals from the database. */",
+    "    public function updateCustomerTotals(Actor $actor, int $ordersCount, int|float $lifetimeRevenue, ?string $country = null): void",
+    "    {",
+    "        $this->amplitude->identify($actor, [",
+    "            'orders_count' => $ordersCount,",
+    "            'lifetime_revenue' => $lifetimeRevenue,",
+    "            'country' => $country,",
+    "        ]);",
+    "    }",
+    "",
+    "    /** Flag staff and test accounts so dashboards can exclude them. */",
+    "    public function setInternal(Actor $actor, bool $isInternal): void",
+    "    {",
+    "        $this->amplitude->identify($actor, ['is_internal' => $isInternal]);",
+    "    }",
+    "}",
+]
+lp = HERE / "sdk" / "laravel" / "app" / "Analytics" / "ServerEvents.php"
+lp.parent.mkdir(parents=True, exist_ok=True)
+lp.write_text("\n".join(php) + "\n")
+
+print(f"wrote {OUT.relative_to(HERE.parent)} ({len(spec['events']) - len(server_events)} browser events) sdk/server.ts and sdk/laravel/.../ServerEvents.php ({len(server_events)} server events)")
