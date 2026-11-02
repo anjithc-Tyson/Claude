@@ -48,7 +48,7 @@ export const META_PIXEL_ID = '1628258889097316';
 export default function MetaPixel() {
   const pathname = usePathname();
 
-  // Track PageView on client-side route changes (initial PageView is fired by the snippet below)
+  // Fires PageView on first load and on every client-side route change
   useEffect(() => {
     if (typeof window !== 'undefined' && (window as any).fbq) {
       (window as any).fbq('track', 'PageView');
