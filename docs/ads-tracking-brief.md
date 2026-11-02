@@ -41,18 +41,18 @@ Load once, site-wide (e.g. App Router `app/layout.tsx`, or Pages Router `pages/_
 'use client';
 import Script from 'next/script';
 import { usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export const META_PIXEL_ID = '1628258889097316';
 
 export default function MetaPixel() {
   const pathname = usePathname();
+  const firstLoad = useRef(true);
 
-  // Fires PageView on first load and on every client-side route change
+  // The snippet fires the first PageView; this fires it on later client-side route changes
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).fbq) {
-      (window as any).fbq('track', 'PageView');
-    }
+    if (firstLoad.current) { firstLoad.current = false; return; }
+    (window as any).fbq?.('track', 'PageView');
   }, [pathname]);
 
   return (
@@ -63,12 +63,13 @@ export default function MetaPixel() {
       t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
       document,'script','https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', '${META_PIXEL_ID}');
+      fbq('track', 'PageView');
     `}</Script>
   );
 }
 ```
 
-Add `<MetaPixel />` inside `<body>` in the root layout. (The `useEffect` fires the first `PageView` on mount, so don't add a second `fbq('track','PageView')` in the snippet.)
+Add `<MetaPixel />` inside `<body>` in the root layout, once.
 
 If the site has a cookie-consent banner, only load the Pixel after consent where required.
 
