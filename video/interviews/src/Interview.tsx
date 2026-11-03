@@ -1,7 +1,7 @@
 // Takshila street-interview edit, shared by both videos (data in src/data/*.json, built by build_edl.py).
 // Framing stays fixed and centred; the Design Studio recording is shown whole (never cropped).
 import React from 'react';
-import {AbsoluteFill, Easing, Freeze, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import {SERIF, SANS} from './fonts';
 
@@ -87,7 +87,6 @@ const Title: React.FC<{text: string}> = ({text}) => {
 const Hook: React.FC<{d: Data}> = ({d}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const first = d.segments[0];
 	const l1 = interpolate(frame, [3, 15], [0, 1], {...clamp, easing: ease});
 	const l2 = interpolate(frame, [12, 26], [0, 1], {...clamp, easing: ease});
 	const out = interpolate(frame, [d.hookDur * fps - 6, d.hookDur * fps], [1, 0], clamp);
@@ -97,9 +96,7 @@ const Hook: React.FC<{d: Data}> = ({d}) => {
 	const head = last.slice(0, -2).join(' ');
 	return (
 		<AbsoluteFill>
-			<Freeze frame={Math.round(first.a * fps)}>
-				<OffthreadVideo src={staticFile(`media/${d.name === 'street' ? 'p3' : 'p1'}/interview.mp4`)} muted style={{width: 1080, height: 1920, filter: 'brightness(0.62) saturate(0.9)'}} />
-			</Freeze>
+			<Img src={staticFile(`img/${d.name}_hook.jpg`)} style={{width: 1080, height: 1920, filter: 'brightness(0.62) saturate(0.9)'}} />
 			<AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 42%, rgba(20,24,16,0.1), rgba(20,24,16,0.55))'}} />
 			<AbsoluteFill style={{justifyContent: 'center', alignItems: 'center', textAlign: 'center', opacity: out, paddingBottom: 180}}>
 				<div style={{fontFamily: SANS, fontWeight: 600, fontSize: 30, letterSpacing: '0.5em', color: SAP_LIGHT, marginBottom: 26, opacity: l1}}>STREET INTERVIEW</div>
@@ -191,19 +188,24 @@ const NameTag: React.FC<{name: string; sub: string}> = ({name, sub}) => {
 };
 
 // ------------------------------------------------------------------ jewel: hold on the phone showing the result
-const PHONE = {x: 360, y: 1145};
 const PhoneReveal: React.FC<{d: Data}> = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const z = interpolate(frame, [0, PHONE_DUR * fps], [1.7, 1.9], clamp);
+	const z = interpolate(frame, [0, PHONE_DUR * fps], [1, 1.06], clamp);
+	const t = interpolate(frame, [6, 18], [0, 1], {...clamp, easing: ease});
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', backgroundColor: '#111'}}>
-			<Freeze frame={Math.round(224.5 * fps)}>
-				<OffthreadVideo src={staticFile('media/p1/interview.mp4')} muted style={{width: 1080, height: 1920, scale: z, transformOrigin: `${PHONE.x}px ${PHONE.y}px`, translate: `${540 - PHONE.x}px ${960 - PHONE.y}px`}} />
-			</Freeze>
-			<div style={{position: 'absolute', left: 0, right: 0, top: 1600, textAlign: 'center'}}>
+			{/* the phone already fills the shot here: play into it, then hold */}
+			<Sequence durationInFrames={Math.round(0.7 * fps)} layout="none">
+				<OffthreadVideo src={staticFile('media/p1/interview.mp4')} muted trimBefore={Math.round(223.5 * fps)} style={{width: 1080, height: 1920, scale: z}} />
+			</Sequence>
+			<Sequence from={Math.round(0.7 * fps)} layout="none">
+				<Img src={staticFile('img/jewel_phone.jpg')} style={{width: 1080, height: 1920, scale: z}} />
+			</Sequence>
+			<AbsoluteFill style={{background: 'linear-gradient(180deg, transparent 62%, rgba(20,24,16,0.65) 100%)'}} />
+			<div style={{position: 'absolute', left: 0, right: 0, top: 1600, textAlign: 'center', opacity: t, translate: `0px ${(1 - t) * 20}px`}}>
 				<div style={{fontFamily: SANS, fontWeight: 600, fontSize: 30, letterSpacing: '0.42em', color: SAP_LIGHT}}>THEIR DESIGN</div>
-				<div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 110, color: '#fffdf8', textShadow: '0 3px 4px rgba(0,0,0,0.5), 0 0 20px rgba(0,0,0,0.4)'}}>Cross necklace</div>
+				<div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 110, color: '#fffdf8', textShadow: SHADOW}}>Cross necklace</div>
 			</div>
 		</AbsoluteFill>
 	);
@@ -223,9 +225,7 @@ const EndCard: React.FC<{d: Data}> = ({d}) => {
 				{d.name === 'street' ? (
 					<Img src={staticFile('img/street_result.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
 				) : (
-					<Freeze frame={Math.round(224.5 * fps)}>
-						<OffthreadVideo src={staticFile('media/p1/interview.mp4')} muted style={{position: 'absolute', width: 1080 * 1.3, height: 1920 * 1.3, left: 250 - PHONE.x * 1.3, top: 320 - PHONE.y * 1.3, scale: z}} />
-					</Freeze>
+					<Img src={staticFile('img/jewel_result.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
 				)}
 			</div>
 			<AbsoluteFill style={{alignItems: 'center', top: 1030, textAlign: 'center'}}>
