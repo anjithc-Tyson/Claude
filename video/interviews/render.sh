@@ -6,9 +6,14 @@ export REMOTION_CHROME=${REMOTION_CHROME:-/opt/pw-browsers/chromium_headless_she
 mkdir -p out
 for comp in Street Jewel; do
   name=$(echo "$comp" | tr 'A-Z' 'a-z')
-  npx remotion render "$comp" "out/${name}_master.mp4" --concurrency=4 --crf=15 --audio-bitrate=320k --log=error
-  ffmpeg -v error -y -i "out/${name}_master.mp4" -c:v copy -af "loudnorm=I=-14:TP=-1.5:LRA=11" -ar 48000 -c:a aac -b:a 320k \
-    -movflags +faststart "out/takshila_${name}.mp4"
+  if [ "${AUDIO_ONLY:-}" != "1" ] || [ ! -f "out/${name}_master.mp4" ]; then
+    npx remotion render "$comp" "out/${name}_master.mp4" --concurrency=4 --crf=15 --audio-bitrate=320k --log=error
+  fi
+  npx remotion render "$comp" "out/${name}_mix.wav" --codec=wav --log=error
+  # even out the dialogue (gentle), then normalise to -14 LUFS
+  ffmpeg -v error -y -i "out/${name}_master.mp4" -i "out/${name}_mix.wav" -map 0:v -map 1:a -c:v copy \
+    -af "dynaudnorm=f=300:g=21:p=0.9:m=6,acompressor=threshold=-18dB:ratio=2.5:attack=8:release=160,loudnorm=I=-14:TP=-1.5:LRA=9" \
+    -ar 48000 -c:a aac -b:a 320k -movflags +faststart "out/takshila_${name}.mp4"
   ffmpeg -v error -i "out/takshila_${name}.mp4" -f null -
   echo "rendered out/takshila_${name}.mp4"
 done

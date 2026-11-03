@@ -304,21 +304,21 @@ export const Interview: React.FC<{d: Data}> = ({d}) => {
 				trimBefore={f(d.music.start)}
 				volume={(fr) => interpolate(fr, [0, f(0.6), f(d.hookDur), f(d.hookDur) + 12, durationInFrames - f(2), durationInFrames], [0, 0.32, 0.32, 0.13, 0.13, 0], clamp)}
 			/>
-			<Sfx d={d} t={0.1} file="hook" vol={0.55} />
+			<Sfx d={d} t={0.1} file="hook" vol={0.4} />
 			{d.segments.filter((s) => s.chapter).map((s) => (
-				<Sfx key={`ct${s.o}`} d={d} t={s.o} file="tag" vol={0.8} />
+				<Sfx key={`ct${s.o}`} d={d} t={s.o} file="tag" vol={0.55} />
 			))}
 			{d.pops.map((p) => (
-				<Sfx key={`ps${p.t}`} d={d} t={p.t - 0.05} file="pop" vol={0.55} />
+				<Sfx key={`ps${p.t}`} d={d} t={p.t - 0.05} file="pop" vol={0.4} />
 			))}
 			{screens.filter((s, i) => i === 0 || s.overlay!.reveal).map((s) => (
-				<Sfx key={`sw${s.o}`} d={d} t={s.o - 0.05} file={s.overlay!.reveal ? 'sparkle' : 'swish'} vol={s.overlay!.reveal ? 0.5 : 0.45} />
+				<Sfx key={`sw${s.o}`} d={d} t={s.o - 0.05} file={s.overlay!.reveal ? 'sparkle' : 'swish'} vol={s.overlay!.reveal ? 0.36 : 0.32} />
 			))}
 			{titled.map((s) => (
-				<Sfx key={`tt${s.o}`} d={d} t={s.o + 0.1} file="sparkle" vol={0.5} />
+				<Sfx key={`tt${s.o}`} d={d} t={s.o + 0.1} file="sparkle" vol={0.36} />
 			))}
-			{hasPhone ? <Sfx d={d} t={d.total + 0.05} file="sparkle" vol={0.5} /> : null}
-			<Sfx d={d} t={endAt + 0.3} file="end" vol={0.5} />
+			{hasPhone ? <Sfx d={d} t={d.total + 0.02} file="sparkle" vol={0.36} /> : null}
+			<Sfx d={d} t={endAt + 0.02} file="end" vol={0.4} />
 		</AbsoluteFill>
 	);
 };
