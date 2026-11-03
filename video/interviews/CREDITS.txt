@@ -20,3 +20,6 @@ f102eb5d-b008-4a74-aa3d-1120fba29d08.mp3: "Lofi House" by AstroShroom is license
   source: https://www.jamendo.com/track/1356703
 
 Sound effects: earshot sound bank (MIT), rendered with earshot sfx.
+
+Quiz edit sounds: earshot bank (pop/0, pro_notify/ding_2045, swish/blade); coin: Kenney RPG Audio "handleCoins" (CC0, kenney.nl).
+Music and product images as above.

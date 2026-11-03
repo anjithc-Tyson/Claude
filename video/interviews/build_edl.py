@@ -36,6 +36,9 @@ P = {
                  ('maybe', 132.86, 'rings.jpg', 'One-of-one')],
         'name_tag': (108.96, 'Amanda', "DESIGNED ‘VICTORIA’"),
         'end': {'top': 'DESIGN YOURS AT', 'brand': 'Takshila.co', 'sub': '& earn when your design sells'},
+        'answers': [(122.82, 'ON THE SHELF'), (132.86, 'ONE-ON-ONE'), (16.00, 'SOLITAIRE'), (28.72, 'YES!'), (112.14, 'PASS IT DOWN')],
+        'punch': [132.85, 112.10],      # source starts of the big answers (zoom + green flash)
+        'coin': [133.70, 146.10],       # one-of-one, 'commission'
         'fix': {'solitary': 'solitaire', 'solitary.': 'solitaire.'},
         'drop': [],
         'add': [],
@@ -168,11 +171,22 @@ def main(name, words_path, out):
         if t is not None:
             pops.append({'t': t, 'img': img, 'label': label})
 
+    # every word on its own (quiz style), in output order
+    word_caps = []
+    for o, w in timed:
+        word_caps.append({'w': w['w'].strip(',.?!'), 't': o, 'key': norm(w['w']).strip("'") in KEY})
+    for c, n in zip(word_caps, word_caps[1:] + [None]):
+        c['e'] = round(min(n['t'] if n else c['t'] + 0.6, c['t'] + 0.7), 3)
+    answers = [{'t': to_out(t), 'label': lab} for t, lab in plan.get('answers', []) if to_out(t) is not None]
+    punch = [i for i, sg in enumerate(segs) if any(abs(sg['a'] - p) < 0.05 for p in plan.get('punch', []))]
+    coins = [to_out(t) for t in plan.get('coin', []) if to_out(t) is not None]
+
     nt = plan['name_tag']
     data = {
         'name': name, 'total': total, 'hook': plan['hook'], 'hookDur': HOOK, 'music': plan['music'], 'segments': segs,
         'captions': caps, 'pops': pops, 'end': plan['end'],
         'nameTag': {'t': to_out(nt[0]), 'name': nt[1], 'sub': nt[2]} if nt else None,
+        'words': word_caps, 'answers': answers, 'punch': punch, 'coins': coins,
     }
     json.dump(data, open(out, 'w'), indent=1)
     print(name, 'total', total, 'segments', len(segs), 'captions', len(caps), 'pops', [(p['label'], p['t']) for p in pops])

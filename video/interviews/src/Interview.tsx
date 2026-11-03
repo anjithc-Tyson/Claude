@@ -14,7 +14,7 @@ const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const SHADOW = '0 2px 2px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.45)';
 
 type Overlay = {src?: number; rate?: number; reveal?: boolean; title?: string; keep_video?: boolean; phone?: boolean};
-type Seg = {a: number; b: number; o: number; chapter?: string; overlay?: Overlay};
+export type Seg = {a: number; b: number; o: number; chapter?: string; overlay?: Overlay};
 type Cap = {t: number; e: number; words: string[]; key: number};
 export type Data = {
 	name: string;
@@ -56,7 +56,7 @@ const Shot: React.FC<{d: Data; seg: Seg}> = ({d, seg}) => {
 };
 
 // ------------------------------------------------------------------ Design Studio recording, shown whole on cream
-const Screen: React.FC<{seg: Seg}> = ({seg}) => {
+export const Screen: React.FC<{seg: Seg}> = ({seg}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const ov = seg.overlay!;
@@ -72,7 +72,7 @@ const Screen: React.FC<{seg: Seg}> = ({seg}) => {
 	);
 };
 
-const Title: React.FC<{text: string}> = ({text}) => {
+export const Title: React.FC<{text: string}> = ({text}) => {
 	const frame = useCurrentFrame();
 	const a = interpolate(frame, [2, 14], [0, 1], {...clamp, easing: ease});
 	return (
@@ -84,7 +84,7 @@ const Title: React.FC<{text: string}> = ({text}) => {
 };
 
 // ------------------------------------------------------------------ hook: the opening question over the first shot
-const Hook: React.FC<{d: Data}> = ({d}) => {
+export const Hook: React.FC<{d: Data}> = ({d}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const l1 = interpolate(frame, [3, 15], [0, 1], {...clamp, easing: ease});
@@ -110,7 +110,7 @@ const Hook: React.FC<{d: Data}> = ({d}) => {
 };
 
 // ------------------------------------------------------------------ chapter tag (RAPID FIRE / HER DREAM PIECE / THE DESIGN)
-const Chapter: React.FC<{text: string}> = ({text}) => {
+export const Chapter: React.FC<{text: string}> = ({text}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const a = interpolate(frame, [0, 10, 1.9 * fps - 8, 1.9 * fps], [0, 1, 1, 0], clamp);
@@ -157,7 +157,7 @@ const Captions: React.FC<{d: Data; hide: (t: number) => boolean; onScreen: (t: n
 };
 
 // ------------------------------------------------------------------ product pop-up: framed photo above their heads
-const Pop: React.FC<{img: string; label: string}> = ({img, label}) => {
+export const Pop: React.FC<{img: string; label: string}> = ({img, label}) => {
 	const frame = useCurrentFrame();
 	const {durationInFrames: dur} = useVideoConfig();
 	const s = interpolate(frame, [0, 10], [0.7, 1], {...clamp, easing: Easing.bezier(0.2, 1.5, 0.4, 1)});
@@ -173,7 +173,7 @@ const Pop: React.FC<{img: string; label: string}> = ({img, label}) => {
 	);
 };
 
-const NameTag: React.FC<{name: string; sub: string}> = ({name, sub}) => {
+export const NameTag: React.FC<{name: string; sub: string}> = ({name, sub}) => {
 	const frame = useCurrentFrame();
 	const {fps, durationInFrames} = useVideoConfig();
 	const a = interpolate(frame, [0, 10, durationInFrames - 10, durationInFrames], [0, 1, 1, 0], clamp);
@@ -211,7 +211,7 @@ const PhoneReveal: React.FC<{d: Data}> = () => {
 	);
 };
 
-const EndCard: React.FC<{d: Data}> = ({d}) => {
+export const EndCard: React.FC<{d: Data}> = ({d}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const a = interpolate(frame, [0, 10], [0, 1], clamp);

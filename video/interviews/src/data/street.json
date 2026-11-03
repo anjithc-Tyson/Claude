@@ -857,5 +857,1105 @@
   "t": 45.39,
   "name": "Amanda",
   "sub": "DESIGNED \u2018VICTORIA\u2019"
- }
+ },
+ "words": [
+  {
+   "w": "And",
+   "t": 2.24,
+   "key": false,
+   "e": 2.24
+  },
+  {
+   "w": "the",
+   "t": 2.24,
+   "key": false,
+   "e": 2.6
+  },
+  {
+   "w": "rapid",
+   "t": 2.6,
+   "key": true,
+   "e": 2.92
+  },
+  {
+   "w": "fire",
+   "t": 2.92,
+   "key": true,
+   "e": 3.14
+  },
+  {
+   "w": "question",
+   "t": 3.14,
+   "key": false,
+   "e": 3.46
+  },
+  {
+   "w": "is",
+   "t": 3.46,
+   "key": false,
+   "e": 3.66
+  },
+  {
+   "w": "would",
+   "t": 3.66,
+   "key": false,
+   "e": 3.92
+  },
+  {
+   "w": "you",
+   "t": 3.92,
+   "key": false,
+   "e": 4.04
+  },
+  {
+   "w": "rather",
+   "t": 4.04,
+   "key": false,
+   "e": 4.74
+  },
+  {
+   "w": "have",
+   "t": 5.06,
+   "key": false,
+   "e": 5.5
+  },
+  {
+   "w": "like",
+   "t": 5.5,
+   "key": false,
+   "e": 5.64
+  },
+  {
+   "w": "off",
+   "t": 5.64,
+   "key": false,
+   "e": 5.94
+  },
+  {
+   "w": "the",
+   "t": 5.94,
+   "key": false,
+   "e": 6.14
+  },
+  {
+   "w": "shelf",
+   "t": 6.14,
+   "key": true,
+   "e": 6.36
+  },
+  {
+   "w": "jewelry",
+   "t": 6.36,
+   "key": false,
+   "e": 6.64
+  },
+  {
+   "w": "or",
+   "t": 6.64,
+   "key": false,
+   "e": 7.02
+  },
+  {
+   "w": "your",
+   "t": 7.02,
+   "key": false,
+   "e": 7.28
+  },
+  {
+   "w": "own",
+   "t": 7.28,
+   "key": false,
+   "e": 7.44
+  },
+  {
+   "w": "design",
+   "t": 7.44,
+   "key": true,
+   "e": 7.7
+  },
+  {
+   "w": "jewelry",
+   "t": 7.7,
+   "key": false,
+   "e": 7.82
+  },
+  {
+   "w": "I",
+   "t": 7.82,
+   "key": false,
+   "e": 8.3
+  },
+  {
+   "w": "think",
+   "t": 8.3,
+   "key": false,
+   "e": 8.68
+  },
+  {
+   "w": "on",
+   "t": 8.68,
+   "key": false,
+   "e": 9.12
+  },
+  {
+   "w": "the",
+   "t": 9.12,
+   "key": false,
+   "e": 9.3
+  },
+  {
+   "w": "shelf",
+   "t": 9.3,
+   "key": true,
+   "e": 9.58
+  },
+  {
+   "w": "On",
+   "t": 9.58,
+   "key": false,
+   "e": 9.82
+  },
+  {
+   "w": "the",
+   "t": 9.82,
+   "key": false,
+   "e": 10.02
+  },
+  {
+   "w": "shelf",
+   "t": 10.02,
+   "key": true,
+   "e": 10.14
+  },
+  {
+   "w": "Because",
+   "t": 10.14,
+   "key": false,
+   "e": 10.32
+  },
+  {
+   "w": "I",
+   "t": 10.32,
+   "key": false,
+   "e": 10.48
+  },
+  {
+   "w": "can",
+   "t": 10.48,
+   "key": false,
+   "e": 10.86
+  },
+  {
+   "w": "already",
+   "t": 10.86,
+   "key": false,
+   "e": 11.54
+  },
+  {
+   "w": "try",
+   "t": 11.54,
+   "key": false,
+   "e": 11.82
+  },
+  {
+   "w": "it",
+   "t": 11.82,
+   "key": false,
+   "e": 11.91
+  },
+  {
+   "w": "And",
+   "t": 11.91,
+   "key": false,
+   "e": 11.99
+  },
+  {
+   "w": "then",
+   "t": 11.99,
+   "key": false,
+   "e": 12.23
+  },
+  {
+   "w": "would",
+   "t": 12.23,
+   "key": false,
+   "e": 12.39
+  },
+  {
+   "w": "you",
+   "t": 12.39,
+   "key": false,
+   "e": 12.63
+  },
+  {
+   "w": "like",
+   "t": 12.63,
+   "key": false,
+   "e": 12.95
+  },
+  {
+   "w": "jewelry",
+   "t": 12.95,
+   "key": false,
+   "e": 13.19
+  },
+  {
+   "w": "that's",
+   "t": 13.19,
+   "key": false,
+   "e": 13.57
+  },
+  {
+   "w": "mass",
+   "t": 13.57,
+   "key": false,
+   "e": 13.75
+  },
+  {
+   "w": "produced",
+   "t": 13.75,
+   "key": false,
+   "e": 14.15
+  },
+  {
+   "w": "or",
+   "t": 14.15,
+   "key": false,
+   "e": 14.51
+  },
+  {
+   "w": "a",
+   "t": 14.51,
+   "key": false,
+   "e": 14.65
+  },
+  {
+   "w": "one-on-one",
+   "t": 14.65,
+   "key": true,
+   "e": 15.01
+  },
+  {
+   "w": "piece",
+   "t": 15.01,
+   "key": false,
+   "e": 15.09
+  },
+  {
+   "w": "Maybe",
+   "t": 15.09,
+   "key": false,
+   "e": 15.57
+  },
+  {
+   "w": "a",
+   "t": 15.57,
+   "key": false,
+   "e": 15.93
+  },
+  {
+   "w": "one-on-one",
+   "t": 15.93,
+   "key": true,
+   "e": 16.33
+  },
+  {
+   "w": "One-on-one",
+   "t": 16.33,
+   "key": true,
+   "e": 16.39
+  },
+  {
+   "w": "what",
+   "t": 16.39,
+   "key": false,
+   "e": 16.55
+  },
+  {
+   "w": "does",
+   "t": 16.55,
+   "key": false,
+   "e": 16.75
+  },
+  {
+   "w": "your",
+   "t": 16.75,
+   "key": false,
+   "e": 17.01
+  },
+  {
+   "w": "dream",
+   "t": 17.01,
+   "key": true,
+   "e": 17.17
+  },
+  {
+   "w": "jewelry",
+   "t": 17.17,
+   "key": false,
+   "e": 17.51
+  },
+  {
+   "w": "look",
+   "t": 17.51,
+   "key": false,
+   "e": 17.83
+  },
+  {
+   "w": "like",
+   "t": 17.83,
+   "key": false,
+   "e": 18.5
+  },
+  {
+   "w": "Oh",
+   "t": 18.5,
+   "key": false,
+   "e": 18.72
+  },
+  {
+   "w": "I",
+   "t": 18.72,
+   "key": false,
+   "e": 18.78
+  },
+  {
+   "w": "don't",
+   "t": 18.78,
+   "key": false,
+   "e": 18.98
+  },
+  {
+   "w": "know",
+   "t": 18.98,
+   "key": false,
+   "e": 19.28
+  },
+  {
+   "w": "Maybe",
+   "t": 19.28,
+   "key": false,
+   "e": 19.76
+  },
+  {
+   "w": "those",
+   "t": 19.76,
+   "key": false,
+   "e": 20.34
+  },
+  {
+   "w": "solitaire",
+   "t": 20.34,
+   "key": true,
+   "e": 21.0
+  },
+  {
+   "w": "rings",
+   "t": 21.0,
+   "key": false,
+   "e": 21.7
+  },
+  {
+   "w": "with",
+   "t": 21.8,
+   "key": false,
+   "e": 22.5
+  },
+  {
+   "w": "those",
+   "t": 22.84,
+   "key": false,
+   "e": 23.14
+  },
+  {
+   "w": "diamonds",
+   "t": 23.14,
+   "key": true,
+   "e": 23.84
+  },
+  {
+   "w": "on",
+   "t": 23.98,
+   "key": false,
+   "e": 24.68
+  },
+  {
+   "w": "the",
+   "t": 24.86,
+   "key": false,
+   "e": 25.56
+  },
+  {
+   "w": "band",
+   "t": 26.04,
+   "key": false,
+   "e": 26.37
+  },
+  {
+   "w": "Do",
+   "t": 26.37,
+   "key": false,
+   "e": 26.51
+  },
+  {
+   "w": "you",
+   "t": 26.51,
+   "key": false,
+   "e": 26.59
+  },
+  {
+   "w": "want",
+   "t": 26.59,
+   "key": false,
+   "e": 26.71
+  },
+  {
+   "w": "to",
+   "t": 26.71,
+   "key": false,
+   "e": 26.83
+  },
+  {
+   "w": "try",
+   "t": 26.83,
+   "key": false,
+   "e": 26.93
+  },
+  {
+   "w": "to",
+   "t": 26.93,
+   "key": false,
+   "e": 27.45
+  },
+  {
+   "w": "design",
+   "t": 27.45,
+   "key": true,
+   "e": 27.67
+  },
+  {
+   "w": "your",
+   "t": 27.67,
+   "key": false,
+   "e": 27.91
+  },
+  {
+   "w": "own",
+   "t": 27.91,
+   "key": false,
+   "e": 28.13
+  },
+  {
+   "w": "ring",
+   "t": 28.13,
+   "key": true,
+   "e": 28.41
+  },
+  {
+   "w": "Yeah",
+   "t": 28.41,
+   "key": false,
+   "e": 28.63
+  },
+  {
+   "w": "you",
+   "t": 28.63,
+   "key": false,
+   "e": 28.81
+  },
+  {
+   "w": "just",
+   "t": 28.81,
+   "key": false,
+   "e": 29.07
+  },
+  {
+   "w": "type",
+   "t": 29.07,
+   "key": false,
+   "e": 29.21
+  },
+  {
+   "w": "in",
+   "t": 29.21,
+   "key": false,
+   "e": 29.39
+  },
+  {
+   "w": "your",
+   "t": 29.39,
+   "key": false,
+   "e": 29.67
+  },
+  {
+   "w": "prompts",
+   "t": 29.67,
+   "key": false,
+   "e": 30.13
+  },
+  {
+   "w": "whatever",
+   "t": 30.13,
+   "key": false,
+   "e": 30.69
+  },
+  {
+   "w": "you",
+   "t": 30.69,
+   "key": false,
+   "e": 30.99
+  },
+  {
+   "w": "want",
+   "t": 30.99,
+   "key": false,
+   "e": 31.17
+  },
+  {
+   "w": "for",
+   "t": 31.17,
+   "key": false,
+   "e": 31.37
+  },
+  {
+   "w": "the",
+   "t": 31.37,
+   "key": false,
+   "e": 31.53
+  },
+  {
+   "w": "rings",
+   "t": 31.53,
+   "key": false,
+   "e": 31.67
+  },
+  {
+   "w": "to",
+   "t": 31.67,
+   "key": false,
+   "e": 31.83
+  },
+  {
+   "w": "look",
+   "t": 31.83,
+   "key": false,
+   "e": 31.99
+  },
+  {
+   "w": "like",
+   "t": 31.99,
+   "key": false,
+   "e": 32.23
+  },
+  {
+   "w": "and",
+   "t": 32.23,
+   "key": false,
+   "e": 32.43
+  },
+  {
+   "w": "then",
+   "t": 32.43,
+   "key": false,
+   "e": 32.85
+  },
+  {
+   "w": "you'll",
+   "t": 32.85,
+   "key": false,
+   "e": 33.05
+  },
+  {
+   "w": "hit",
+   "t": 33.05,
+   "key": false,
+   "e": 33.19
+  },
+  {
+   "w": "generate",
+   "t": 33.19,
+   "key": true,
+   "e": 33.55
+  },
+  {
+   "w": "and",
+   "t": 33.55,
+   "key": false,
+   "e": 33.65
+  },
+  {
+   "w": "Platinum",
+   "t": 33.65,
+   "key": true,
+   "e": 34.13
+  },
+  {
+   "w": "solitaire",
+   "t": 34.13,
+   "key": true,
+   "e": 34.81
+  },
+  {
+   "w": "with",
+   "t": 34.81,
+   "key": false,
+   "e": 35.17
+  },
+  {
+   "w": "diamonds",
+   "t": 35.17,
+   "key": true,
+   "e": 35.51
+  },
+  {
+   "w": "on",
+   "t": 35.51,
+   "key": false,
+   "e": 35.75
+  },
+  {
+   "w": "the",
+   "t": 35.75,
+   "key": false,
+   "e": 35.93
+  },
+  {
+   "w": "band",
+   "t": 35.93,
+   "key": false,
+   "e": 36.15
+  },
+  {
+   "w": "It's",
+   "t": 36.15,
+   "key": false,
+   "e": 36.63
+  },
+  {
+   "w": "generating",
+   "t": 36.63,
+   "key": true,
+   "e": 36.65
+  },
+  {
+   "w": "Yeah",
+   "t": 36.65,
+   "key": false,
+   "e": 36.91
+  },
+  {
+   "w": "generating",
+   "t": 36.91,
+   "key": true,
+   "e": 37.61
+  },
+  {
+   "w": "Oh",
+   "t": 39.32,
+   "key": false,
+   "e": 39.68
+  },
+  {
+   "w": "that's",
+   "t": 39.68,
+   "key": false,
+   "e": 40.14
+  },
+  {
+   "w": "beautiful",
+   "t": 40.14,
+   "key": true,
+   "e": 40.58
+  },
+  {
+   "w": "I",
+   "t": 40.58,
+   "key": false,
+   "e": 40.78
+  },
+  {
+   "w": "love",
+   "t": 40.78,
+   "key": false,
+   "e": 41.04
+  },
+  {
+   "w": "that",
+   "t": 41.04,
+   "key": false,
+   "e": 41.46
+  },
+  {
+   "w": "What",
+   "t": 41.46,
+   "key": false,
+   "e": 41.72
+  },
+  {
+   "w": "would",
+   "t": 41.72,
+   "key": false,
+   "e": 41.9
+  },
+  {
+   "w": "you",
+   "t": 41.9,
+   "key": false,
+   "e": 42.08
+  },
+  {
+   "w": "name",
+   "t": 42.08,
+   "key": false,
+   "e": 42.22
+  },
+  {
+   "w": "this",
+   "t": 42.22,
+   "key": false,
+   "e": 42.5
+  },
+  {
+   "w": "piece",
+   "t": 42.5,
+   "key": false,
+   "e": 42.64
+  },
+  {
+   "w": "if",
+   "t": 42.64,
+   "key": false,
+   "e": 42.76
+  },
+  {
+   "w": "you",
+   "t": 42.76,
+   "key": false,
+   "e": 42.88
+  },
+  {
+   "w": "could",
+   "t": 42.88,
+   "key": false,
+   "e": 43.02
+  },
+  {
+   "w": "name",
+   "t": 43.02,
+   "key": false,
+   "e": 43.2
+  },
+  {
+   "w": "it",
+   "t": 43.2,
+   "key": false,
+   "e": 43.57
+  },
+  {
+   "w": "Victoria",
+   "t": 43.57,
+   "key": true,
+   "e": 44.27
+  },
+  {
+   "w": "Yeah",
+   "t": 44.97,
+   "key": false,
+   "e": 45.39
+  },
+  {
+   "w": "And",
+   "t": 45.39,
+   "key": false,
+   "e": 45.79
+  },
+  {
+   "w": "would",
+   "t": 45.79,
+   "key": false,
+   "e": 45.95
+  },
+  {
+   "w": "you",
+   "t": 45.95,
+   "key": false,
+   "e": 46.13
+  },
+  {
+   "w": "pass",
+   "t": 46.13,
+   "key": false,
+   "e": 46.29
+  },
+  {
+   "w": "this",
+   "t": 46.29,
+   "key": false,
+   "e": 46.51
+  },
+  {
+   "w": "piece",
+   "t": 46.51,
+   "key": false,
+   "e": 46.63
+  },
+  {
+   "w": "down",
+   "t": 46.63,
+   "key": false,
+   "e": 46.83
+  },
+  {
+   "w": "or",
+   "t": 46.83,
+   "key": false,
+   "e": 46.93
+  },
+  {
+   "w": "is",
+   "t": 46.93,
+   "key": false,
+   "e": 47.05
+  },
+  {
+   "w": "this",
+   "t": 47.05,
+   "key": false,
+   "e": 47.13
+  },
+  {
+   "w": "something",
+   "t": 47.13,
+   "key": false,
+   "e": 47.37
+  },
+  {
+   "w": "just",
+   "t": 47.37,
+   "key": false,
+   "e": 47.59
+  },
+  {
+   "w": "for",
+   "t": 47.59,
+   "key": false,
+   "e": 47.75
+  },
+  {
+   "w": "you",
+   "t": 47.75,
+   "key": false,
+   "e": 48.05
+  },
+  {
+   "w": "No",
+   "t": 48.05,
+   "key": false,
+   "e": 48.39
+  },
+  {
+   "w": "I'd",
+   "t": 48.39,
+   "key": false,
+   "e": 48.55
+  },
+  {
+   "w": "pass",
+   "t": 48.55,
+   "key": false,
+   "e": 48.77
+  },
+  {
+   "w": "it",
+   "t": 48.77,
+   "key": false,
+   "e": 48.95
+  },
+  {
+   "w": "down",
+   "t": 48.95,
+   "key": false,
+   "e": 49.09
+  },
+  {
+   "w": "Thank",
+   "t": 49.09,
+   "key": false,
+   "e": 49.33
+  },
+  {
+   "w": "you",
+   "t": 49.33,
+   "key": false,
+   "e": 49.43
+  },
+  {
+   "w": "so",
+   "t": 49.43,
+   "key": false,
+   "e": 49.57
+  },
+  {
+   "w": "much",
+   "t": 49.57,
+   "key": false,
+   "e": 49.83
+  },
+  {
+   "w": "Amanda",
+   "t": 49.83,
+   "key": false,
+   "e": 50.53
+  },
+  {
+   "w": "I",
+   "t": 50.53,
+   "key": false,
+   "e": 50.59
+  },
+  {
+   "w": "love",
+   "t": 50.59,
+   "key": false,
+   "e": 50.75
+  },
+  {
+   "w": "your",
+   "t": 50.75,
+   "key": false,
+   "e": 51.01
+  },
+  {
+   "w": "piece",
+   "t": 51.01,
+   "key": false,
+   "e": 51.4
+  },
+  {
+   "w": "then",
+   "t": 51.4,
+   "key": false,
+   "e": 51.62
+  },
+  {
+   "w": "if",
+   "t": 51.62,
+   "key": false,
+   "e": 51.78
+  },
+  {
+   "w": "you",
+   "t": 51.78,
+   "key": false,
+   "e": 52.04
+  },
+  {
+   "w": "create",
+   "t": 52.04,
+   "key": false,
+   "e": 52.28
+  },
+  {
+   "w": "your",
+   "t": 52.28,
+   "key": false,
+   "e": 52.54
+  },
+  {
+   "w": "own",
+   "t": 52.54,
+   "key": false,
+   "e": 52.74
+  },
+  {
+   "w": "pieces",
+   "t": 52.74,
+   "key": false,
+   "e": 53.04
+  },
+  {
+   "w": "you",
+   "t": 53.04,
+   "key": false,
+   "e": 53.28
+  },
+  {
+   "w": "could",
+   "t": 53.28,
+   "key": false,
+   "e": 53.46
+  },
+  {
+   "w": "get",
+   "t": 53.46,
+   "key": false,
+   "e": 53.66
+  },
+  {
+   "w": "commission",
+   "t": 53.66,
+   "key": true,
+   "e": 54.02
+  },
+  {
+   "w": "if",
+   "t": 54.02,
+   "key": false,
+   "e": 54.28
+  },
+  {
+   "w": "somebody",
+   "t": 54.28,
+   "key": false,
+   "e": 54.56
+  },
+  {
+   "w": "buys",
+   "t": 54.56,
+   "key": false,
+   "e": 54.88
+  },
+  {
+   "w": "your",
+   "t": 54.88,
+   "key": false,
+   "e": 55.22
+  },
+  {
+   "w": "design",
+   "t": 55.22,
+   "key": true,
+   "e": 55.82
+  }
+ ],
+ "answers": [
+  {
+   "t": 8.68,
+   "label": "ON THE SHELF"
+  },
+  {
+   "t": 15.09,
+   "label": "ONE-ON-ONE"
+  },
+  {
+   "t": 19.28,
+   "label": "SOLITAIRE"
+  },
+  {
+   "t": 28.41,
+   "label": "YES!"
+  },
+  {
+   "t": 48.05,
+   "label": "PASS IT DOWN"
+  }
+ ],
+ "punch": [
+  3,
+  16
+ ],
+ "coins": [
+  15.93,
+  53.66
+ ]
 }
