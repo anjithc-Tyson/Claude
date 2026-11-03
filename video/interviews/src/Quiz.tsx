@@ -84,7 +84,8 @@ const Answer: React.FC<{label: string; x: number; y: number}> = ({label, x, y}) 
 	const frame = useCurrentFrame();
 	const {durationInFrames: dur} = useVideoConfig();
 	const s = interpolate(frame, [0, 7], [0.4, 1], {...clamp, easing: springy});
-	const a = interpolate(frame, [0, 3, dur - 5, dur], [0, 1, 1, 0], clamp);
+	const out = Math.max(4, dur - 5);
+	const a = interpolate(frame, [0, 3, out, Math.max(out + 1, dur)], [0, 1, 1, 0], clamp);
 	const left = Math.min(Math.max(x, 250), 830);
 	return (
 		<div style={{position: 'absolute', left: left - 400, width: 800, top: y - 330, textAlign: 'center', opacity: a, scale: s}}>
@@ -129,7 +130,7 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 				const seg = d.segments[segAt(a.t)];
 				const left = seg.o + seg.b - seg.a - a.t;
 				return (
-					<Sequence key={`a${a.t}`} name={`answer ${a.label}`} from={f(a.t)} durationInFrames={Math.max(8, f(Math.min(1.6, left)))}>
+					<Sequence key={`a${a.t}`} name={`answer ${a.label}`} from={f(a.t)} durationInFrames={Math.max(10, f(Math.min(1.6, left)))}>
 						<Answer label={a.label} x={x} y={y} />
 					</Sequence>
 				);
