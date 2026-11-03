@@ -1,0 +1,861 @@
+{
+ "name": "street",
+ "total": 55.31,
+ "hook": [
+  "Would you design",
+  "your own ring?"
+ ],
+ "hookDur": 2.2,
+ "music": {
+  "file": "music/street.mp3",
+  "start": 10.77,
+  "credit": "\"Other Dimension (Chill Pill Mix)\" by Mazelo Nostra, CC BY-SA 3.0"
+ },
+ "segments": [
+  {
+   "a": 114.2,
+   "b": 119.76,
+   "o": 2.2,
+   "chapter": "RAPID FIRE"
+  },
+  {
+   "a": 121.9,
+   "b": 126.02,
+   "o": 7.76
+  },
+  {
+   "a": 127.35,
+   "b": 130.55,
+   "o": 11.88
+  },
+  {
+   "a": 132.85,
+   "b": 134.1,
+   "o": 15.08
+  },
+  {
+   "a": 11.78,
+   "b": 13.88,
+   "o": 16.33,
+   "chapter": "HER DREAM PIECE"
+  },
+  {
+   "a": 14.45,
+   "b": 15.25,
+   "o": 18.43
+  },
+  {
+   "a": 15.95,
+   "b": 23.04,
+   "o": 19.23
+  },
+  {
+   "a": 26.05,
+   "b": 28.08,
+   "o": 26.32,
+   "chapter": "THE DESIGN"
+  },
+  {
+   "a": 28.66,
+   "b": 28.91,
+   "o": 28.35
+  },
+  {
+   "a": 33.85,
+   "b": 38.85,
+   "o": 28.6,
+   "overlay": {
+    "src": 12.0,
+    "rate": 1.6
+   }
+  },
+  {
+   "a": 71.95,
+   "b": 74.45,
+   "o": 33.6,
+   "overlay": {
+    "src": 90.5,
+    "rate": 3.4
+   }
+  },
+  {
+   "a": 80.25,
+   "b": 83.4,
+   "o": 36.1,
+   "overlay": {
+    "src": 101.6,
+    "rate": 3.6
+   }
+  },
+  {
+   "a": 83.45,
+   "b": 85.62,
+   "o": 39.25,
+   "overlay": {
+    "src": 122.8,
+    "rate": 1.0,
+    "reveal": true
+   }
+  },
+  {
+   "a": 85.78,
+   "b": 87.85,
+   "o": 41.42
+  },
+  {
+   "a": 90.12,
+   "b": 91.98,
+   "o": 43.49,
+   "overlay": {
+    "src": 126.5,
+    "rate": 1.0,
+    "title": "Victoria"
+   }
+  },
+  {
+   "a": 108.92,
+   "b": 111.58,
+   "o": 45.35
+  },
+  {
+   "a": 112.1,
+   "b": 113.15,
+   "o": 48.01
+  },
+  {
+   "a": 137.35,
+   "b": 139.65,
+   "o": 49.06
+  },
+  {
+   "a": 143.8,
+   "b": 147.75,
+   "o": 51.36
+  }
+ ],
+ "captions": [
+  {
+   "t": 2.24,
+   "e": 2.92,
+   "words": [
+    "And",
+    "the",
+    "rapid"
+   ],
+   "key": 2
+  },
+  {
+   "t": 2.92,
+   "e": 3.66,
+   "words": [
+    "fire",
+    "question",
+    "is"
+   ],
+   "key": 0
+  },
+  {
+   "t": 3.66,
+   "e": 5.06,
+   "words": [
+    "would",
+    "you",
+    "rather"
+   ],
+   "key": -1
+  },
+  {
+   "t": 5.06,
+   "e": 5.94,
+   "words": [
+    "have",
+    "like",
+    "off"
+   ],
+   "key": -1
+  },
+  {
+   "t": 5.94,
+   "e": 6.64,
+   "words": [
+    "the",
+    "shelf",
+    "jewelry"
+   ],
+   "key": 1
+  },
+  {
+   "t": 6.64,
+   "e": 7.44,
+   "words": [
+    "or",
+    "your",
+    "own"
+   ],
+   "key": -1
+  },
+  {
+   "t": 7.44,
+   "e": 7.82,
+   "words": [
+    "design",
+    "jewelry"
+   ],
+   "key": 0
+  },
+  {
+   "t": 7.82,
+   "e": 9.12,
+   "words": [
+    "I",
+    "think",
+    "on"
+   ],
+   "key": -1
+  },
+  {
+   "t": 9.12,
+   "e": 9.58,
+   "words": [
+    "the",
+    "shelf"
+   ],
+   "key": 1
+  },
+  {
+   "t": 9.58,
+   "e": 10.14,
+   "words": [
+    "On",
+    "the",
+    "shelf"
+   ],
+   "key": 2
+  },
+  {
+   "t": 10.14,
+   "e": 10.86,
+   "words": [
+    "Because",
+    "I",
+    "can"
+   ],
+   "key": -1
+  },
+  {
+   "t": 10.86,
+   "e": 11.91,
+   "words": [
+    "already",
+    "try",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 11.91,
+   "e": 12.39,
+   "words": [
+    "And",
+    "then",
+    "would"
+   ],
+   "key": -1
+  },
+  {
+   "t": 12.39,
+   "e": 13.19,
+   "words": [
+    "you",
+    "like",
+    "jewelry"
+   ],
+   "key": -1
+  },
+  {
+   "t": 13.19,
+   "e": 14.15,
+   "words": [
+    "that's",
+    "mass",
+    "produced"
+   ],
+   "key": -1
+  },
+  {
+   "t": 14.15,
+   "e": 15.01,
+   "words": [
+    "or",
+    "a",
+    "one-on-one"
+   ],
+   "key": 2
+  },
+  {
+   "t": 15.01,
+   "e": 15.09,
+   "words": [
+    "piece"
+   ],
+   "key": -1
+  },
+  {
+   "t": 15.09,
+   "e": 16.33,
+   "words": [
+    "Maybe",
+    "a",
+    "one-on-one"
+   ],
+   "key": 2
+  },
+  {
+   "t": 16.33,
+   "e": 16.39,
+   "words": [
+    "One-on-one"
+   ],
+   "key": 0
+  },
+  {
+   "t": 16.39,
+   "e": 17.01,
+   "words": [
+    "what",
+    "does",
+    "your"
+   ],
+   "key": -1
+  },
+  {
+   "t": 17.01,
+   "e": 17.83,
+   "words": [
+    "dream",
+    "jewelry",
+    "look"
+   ],
+   "key": 0
+  },
+  {
+   "t": 17.83,
+   "e": 18.5,
+   "words": [
+    "like"
+   ],
+   "key": -1
+  },
+  {
+   "t": 18.5,
+   "e": 18.72,
+   "words": [
+    "Oh"
+   ],
+   "key": -1
+  },
+  {
+   "t": 18.72,
+   "e": 19.28,
+   "words": [
+    "I",
+    "don't",
+    "know"
+   ],
+   "key": -1
+  },
+  {
+   "t": 19.28,
+   "e": 21.0,
+   "words": [
+    "Maybe",
+    "those",
+    "solitaire"
+   ],
+   "key": 2
+  },
+  {
+   "t": 21.0,
+   "e": 23.14,
+   "words": [
+    "rings",
+    "with",
+    "those"
+   ],
+   "key": -1
+  },
+  {
+   "t": 23.14,
+   "e": 26.04,
+   "words": [
+    "diamonds",
+    "on",
+    "the"
+   ],
+   "key": 0
+  },
+  {
+   "t": 26.04,
+   "e": 26.37,
+   "words": [
+    "band"
+   ],
+   "key": -1
+  },
+  {
+   "t": 26.37,
+   "e": 26.71,
+   "words": [
+    "Do",
+    "you",
+    "want"
+   ],
+   "key": -1
+  },
+  {
+   "t": 26.71,
+   "e": 27.45,
+   "words": [
+    "to",
+    "try",
+    "to"
+   ],
+   "key": -1
+  },
+  {
+   "t": 27.45,
+   "e": 28.13,
+   "words": [
+    "design",
+    "your",
+    "own"
+   ],
+   "key": 0
+  },
+  {
+   "t": 28.13,
+   "e": 28.41,
+   "words": [
+    "ring"
+   ],
+   "key": 0
+  },
+  {
+   "t": 28.41,
+   "e": 28.63,
+   "words": [
+    "Yeah"
+   ],
+   "key": -1
+  },
+  {
+   "t": 28.63,
+   "e": 29.21,
+   "words": [
+    "you",
+    "just",
+    "type"
+   ],
+   "key": -1
+  },
+  {
+   "t": 29.21,
+   "e": 30.13,
+   "words": [
+    "in",
+    "your",
+    "prompts"
+   ],
+   "key": -1
+  },
+  {
+   "t": 30.13,
+   "e": 31.17,
+   "words": [
+    "whatever",
+    "you",
+    "want"
+   ],
+   "key": -1
+  },
+  {
+   "t": 31.17,
+   "e": 31.67,
+   "words": [
+    "for",
+    "the",
+    "rings"
+   ],
+   "key": -1
+  },
+  {
+   "t": 31.67,
+   "e": 32.23,
+   "words": [
+    "to",
+    "look",
+    "like"
+   ],
+   "key": -1
+  },
+  {
+   "t": 32.23,
+   "e": 33.05,
+   "words": [
+    "and",
+    "then",
+    "you'll"
+   ],
+   "key": -1
+  },
+  {
+   "t": 33.05,
+   "e": 33.65,
+   "words": [
+    "hit",
+    "generate",
+    "and"
+   ],
+   "key": 1
+  },
+  {
+   "t": 33.65,
+   "e": 34.13,
+   "words": [
+    "Platinum"
+   ],
+   "key": 0
+  },
+  {
+   "t": 34.13,
+   "e": 35.51,
+   "words": [
+    "solitaire",
+    "with",
+    "diamonds"
+   ],
+   "key": 0
+  },
+  {
+   "t": 35.51,
+   "e": 36.15,
+   "words": [
+    "on",
+    "the",
+    "band"
+   ],
+   "key": -1
+  },
+  {
+   "t": 36.15,
+   "e": 36.65,
+   "words": [
+    "It's",
+    "generating"
+   ],
+   "key": 1
+  },
+  {
+   "t": 36.65,
+   "e": 36.91,
+   "words": [
+    "Yeah"
+   ],
+   "key": -1
+  },
+  {
+   "t": 36.91,
+   "e": 38.025,
+   "words": [
+    "generating"
+   ],
+   "key": 0
+  },
+  {
+   "t": 39.32,
+   "e": 39.68,
+   "words": [
+    "Oh"
+   ],
+   "key": -1
+  },
+  {
+   "t": 39.68,
+   "e": 40.58,
+   "words": [
+    "that's",
+    "beautiful"
+   ],
+   "key": 1
+  },
+  {
+   "t": 40.58,
+   "e": 41.46,
+   "words": [
+    "I",
+    "love",
+    "that"
+   ],
+   "key": -1
+  },
+  {
+   "t": 41.46,
+   "e": 42.08,
+   "words": [
+    "What",
+    "would",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 42.08,
+   "e": 42.64,
+   "words": [
+    "name",
+    "this",
+    "piece"
+   ],
+   "key": -1
+  },
+  {
+   "t": 42.64,
+   "e": 43.02,
+   "words": [
+    "if",
+    "you",
+    "could"
+   ],
+   "key": -1
+  },
+  {
+   "t": 43.02,
+   "e": 43.57,
+   "words": [
+    "name",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 43.57,
+   "e": 44.465,
+   "words": [
+    "Victoria"
+   ],
+   "key": 0
+  },
+  {
+   "t": 44.97,
+   "e": 45.39,
+   "words": [
+    "Yeah"
+   ],
+   "key": -1
+  },
+  {
+   "t": 45.39,
+   "e": 46.13,
+   "words": [
+    "And",
+    "would",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 46.13,
+   "e": 46.63,
+   "words": [
+    "pass",
+    "this",
+    "piece"
+   ],
+   "key": -1
+  },
+  {
+   "t": 46.63,
+   "e": 47.05,
+   "words": [
+    "down",
+    "or",
+    "is"
+   ],
+   "key": -1
+  },
+  {
+   "t": 47.05,
+   "e": 47.59,
+   "words": [
+    "this",
+    "something",
+    "just"
+   ],
+   "key": -1
+  },
+  {
+   "t": 47.59,
+   "e": 48.05,
+   "words": [
+    "for",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 48.05,
+   "e": 48.39,
+   "words": [
+    "No"
+   ],
+   "key": -1
+  },
+  {
+   "t": 48.39,
+   "e": 48.95,
+   "words": [
+    "I'd",
+    "pass",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 48.95,
+   "e": 49.09,
+   "words": [
+    "down"
+   ],
+   "key": -1
+  },
+  {
+   "t": 49.09,
+   "e": 49.57,
+   "words": [
+    "Thank",
+    "you",
+    "so"
+   ],
+   "key": -1
+  },
+  {
+   "t": 49.57,
+   "e": 49.83,
+   "words": [
+    "much"
+   ],
+   "key": -1
+  },
+  {
+   "t": 49.83,
+   "e": 50.53,
+   "words": [
+    "Amanda"
+   ],
+   "key": -1
+  },
+  {
+   "t": 50.53,
+   "e": 51.01,
+   "words": [
+    "I",
+    "love",
+    "your"
+   ],
+   "key": -1
+  },
+  {
+   "t": 51.01,
+   "e": 51.4,
+   "words": [
+    "piece"
+   ],
+   "key": -1
+  },
+  {
+   "t": 51.4,
+   "e": 52.04,
+   "words": [
+    "then",
+    "if",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 52.04,
+   "e": 52.74,
+   "words": [
+    "create",
+    "your",
+    "own"
+   ],
+   "key": -1
+  },
+  {
+   "t": 52.74,
+   "e": 53.46,
+   "words": [
+    "pieces",
+    "you",
+    "could"
+   ],
+   "key": -1
+  },
+  {
+   "t": 53.46,
+   "e": 54.28,
+   "words": [
+    "get",
+    "commission",
+    "if"
+   ],
+   "key": 1
+  },
+  {
+   "t": 54.28,
+   "e": 55.22,
+   "words": [
+    "somebody",
+    "buys",
+    "your"
+   ],
+   "key": -1
+  },
+  {
+   "t": 55.22,
+   "e": 56.02,
+   "words": [
+    "design"
+   ],
+   "key": 0
+  }
+ ],
+ "pops": [
+  {
+   "t": 20.34,
+   "img": "solitaire.jpg",
+   "label": "Solitaire"
+  },
+  {
+   "t": 23.14,
+   "img": "diamonds.jpg",
+   "label": "Diamonds on the band"
+  },
+  {
+   "t": 15.93,
+   "img": "rings.jpg",
+   "label": "One-of-one"
+  }
+ ],
+ "end": {
+  "top": "DESIGN YOURS AT",
+  "brand": "Takshila.co",
+  "sub": "& earn when your design sells"
+ },
+ "nameTag": {
+  "t": 45.39,
+  "name": "Amanda",
+  "sub": "DESIGNED \u2018VICTORIA\u2019"
+ }
+}

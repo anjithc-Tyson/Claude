@@ -1,0 +1,860 @@
+{
+ "name": "jewel",
+ "total": 55.26,
+ "hook": [
+  "Would you design",
+  "your own jewellery?"
+ ],
+ "hookDur": 2.2,
+ "music": {
+  "file": "music/jewel.mp3",
+  "start": 34.36,
+  "credit": "\"Lofi House\" by AstroShroom, CC BY-SA 3.0"
+ },
+ "segments": [
+  {
+   "a": 175.76,
+   "b": 181.2,
+   "o": 2.2,
+   "chapter": "RAPID FIRE"
+  },
+  {
+   "a": 181.66,
+   "b": 182.22,
+   "o": 7.64
+  },
+  {
+   "a": 183.2,
+   "b": 184.66,
+   "o": 8.2
+  },
+  {
+   "a": 185.44,
+   "b": 188.16,
+   "o": 9.66
+  },
+  {
+   "a": 188.9,
+   "b": 189.52,
+   "o": 12.38
+  },
+  {
+   "a": 10.68,
+   "b": 12.6,
+   "o": 13.0,
+   "chapter": "HER DREAM PIECE"
+  },
+  {
+   "a": 13.5,
+   "b": 14.7,
+   "o": 14.92
+  },
+  {
+   "a": 19.4,
+   "b": 21.5,
+   "o": 16.12
+  },
+  {
+   "a": 22.0,
+   "b": 29.8,
+   "o": 18.22,
+   "chapter": "THE DESIGN"
+  },
+  {
+   "a": 63.8,
+   "b": 67.2,
+   "o": 26.02
+  },
+  {
+   "a": 81.4,
+   "b": 83.22,
+   "o": 29.42
+  },
+  {
+   "a": 110.18,
+   "b": 114.1,
+   "o": 31.24
+  },
+  {
+   "a": 114.4,
+   "b": 116.4,
+   "o": 35.16
+  },
+  {
+   "a": 121.26,
+   "b": 123.26,
+   "o": 37.16
+  },
+  {
+   "a": 131.9,
+   "b": 132.7,
+   "o": 39.16
+  },
+  {
+   "a": 134.0,
+   "b": 138.78,
+   "o": 39.96
+  },
+  {
+   "a": 152.66,
+   "b": 154.66,
+   "o": 44.74
+  },
+  {
+   "a": 160.56,
+   "b": 161.48,
+   "o": 46.74,
+   "overlay": {
+    "title": "Jesus is Lord",
+    "keep_video": true
+   }
+  },
+  {
+   "a": 162.44,
+   "b": 163.6,
+   "o": 47.66
+  },
+  {
+   "a": 208.36,
+   "b": 209.8,
+   "o": 48.82
+  },
+  {
+   "a": 218.4,
+   "b": 223.4,
+   "o": 50.26,
+   "overlay": {
+    "phone": true
+   }
+  }
+ ],
+ "captions": [
+  {
+   "t": 2.2,
+   "e": 3.12,
+   "words": [
+    "now",
+    "rapid",
+    "fire"
+   ],
+   "key": 1
+  },
+  {
+   "t": 3.12,
+   "e": 3.48,
+   "words": [
+    "would",
+    "you",
+    "rather"
+   ],
+   "key": -1
+  },
+  {
+   "t": 3.48,
+   "e": 5.24,
+   "words": [
+    "have",
+    "off-the-shelf",
+    "jewelry"
+   ],
+   "key": -1
+  },
+  {
+   "t": 5.24,
+   "e": 6.54,
+   "words": [
+    "or",
+    "you",
+    "could"
+   ],
+   "key": -1
+  },
+  {
+   "t": 6.54,
+   "e": 7.68,
+   "words": [
+    "customize",
+    "yourself"
+   ],
+   "key": 0
+  },
+  {
+   "t": 7.68,
+   "e": 8.22,
+   "words": [
+    "Customize"
+   ],
+   "key": 0
+  },
+  {
+   "t": 8.22,
+   "e": 8.54,
+   "words": [
+    "And",
+    "would",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 8.54,
+   "e": 9.68,
+   "words": [
+    "like",
+    "mass-produced",
+    "jewelry"
+   ],
+   "key": -1
+  },
+  {
+   "t": 9.68,
+   "e": 11.08,
+   "words": [
+    "or",
+    "one-on-one",
+    "pieces"
+   ],
+   "key": 1
+  },
+  {
+   "t": 11.08,
+   "e": 11.84,
+   "words": [
+    "like",
+    "what",
+    "we"
+   ],
+   "key": -1
+  },
+  {
+   "t": 11.84,
+   "e": 12.42,
+   "words": [
+    "just",
+    "created"
+   ],
+   "key": -1
+  },
+  {
+   "t": 12.42,
+   "e": 13.04,
+   "words": [
+    "One-on-one"
+   ],
+   "key": 0
+  },
+  {
+   "t": 13.04,
+   "e": 13.7,
+   "words": [
+    "what",
+    "does",
+    "your"
+   ],
+   "key": -1
+  },
+  {
+   "t": 13.7,
+   "e": 14.56,
+   "words": [
+    "dream",
+    "jewelry",
+    "look"
+   ],
+   "key": 0
+  },
+  {
+   "t": 14.56,
+   "e": 15.0,
+   "words": [
+    "like"
+   ],
+   "key": -1
+  },
+  {
+   "t": 15.0,
+   "e": 15.0,
+   "words": [
+    "Oh"
+   ],
+   "key": -1
+  },
+  {
+   "t": 15.0,
+   "e": 15.62,
+   "words": [
+    "gold"
+   ],
+   "key": 0
+  },
+  {
+   "t": 15.62,
+   "e": 16.2,
+   "words": [
+    "diamonds"
+   ],
+   "key": 0
+  },
+  {
+   "t": 16.2,
+   "e": 16.7,
+   "words": [
+    "she",
+    "said",
+    "I"
+   ],
+   "key": -1
+  },
+  {
+   "t": 16.7,
+   "e": 17.34,
+   "words": [
+    "love",
+    "gold"
+   ],
+   "key": 1
+  },
+  {
+   "t": 17.34,
+   "e": 18.26,
+   "words": [
+    "so",
+    "anything",
+    "gold"
+   ],
+   "key": 2
+  },
+  {
+   "t": 18.26,
+   "e": 19.48,
+   "words": [
+    "On",
+    "our",
+    "website"
+   ],
+   "key": -1
+  },
+  {
+   "t": 19.48,
+   "e": 20.02,
+   "words": [
+    "you",
+    "can",
+    "type"
+   ],
+   "key": -1
+  },
+  {
+   "t": 20.02,
+   "e": 20.46,
+   "words": [
+    "in"
+   ],
+   "key": -1
+  },
+  {
+   "t": 20.46,
+   "e": 20.82,
+   "words": [
+    "you",
+    "can",
+    "pick"
+   ],
+   "key": -1
+  },
+  {
+   "t": 20.82,
+   "e": 21.34,
+   "words": [
+    "what",
+    "you",
+    "want"
+   ],
+   "key": -1
+  },
+  {
+   "t": 21.34,
+   "e": 21.82,
+   "words": [
+    "to",
+    "ring"
+   ],
+   "key": 1
+  },
+  {
+   "t": 21.82,
+   "e": 22.17,
+   "words": [
+    "earrings"
+   ],
+   "key": -1
+  },
+  {
+   "t": 22.17,
+   "e": 22.91,
+   "words": [
+    "and",
+    "then",
+    "AI"
+   ],
+   "key": 2
+  },
+  {
+   "t": 22.91,
+   "e": 24.27,
+   "words": [
+    "will",
+    "customize",
+    "the"
+   ],
+   "key": 1
+  },
+  {
+   "t": 24.27,
+   "e": 24.87,
+   "words": [
+    "jewelry",
+    "how",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 24.87,
+   "e": 25.15,
+   "words": [
+    "want",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 25.15,
+   "e": 25.47,
+   "words": [
+    "Do",
+    "you",
+    "want"
+   ],
+   "key": -1
+  },
+  {
+   "t": 25.47,
+   "e": 25.89,
+   "words": [
+    "to",
+    "try",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 25.89,
+   "e": 26.08,
+   "words": [
+    "out"
+   ],
+   "key": -1
+  },
+  {
+   "t": 26.08,
+   "e": 26.58,
+   "words": [
+    "she",
+    "was",
+    "doing"
+   ],
+   "key": -1
+  },
+  {
+   "t": 26.58,
+   "e": 27.8,
+   "words": [
+    "a",
+    "necklace",
+    "okay"
+   ],
+   "key": 1
+  },
+  {
+   "t": 27.8,
+   "e": 28.36,
+   "words": [
+    "oh",
+    "you",
+    "could"
+   ],
+   "key": -1
+  },
+  {
+   "t": 28.36,
+   "e": 28.84,
+   "words": [
+    "do",
+    "a",
+    "necklace"
+   ],
+   "key": 2
+  },
+  {
+   "t": 28.84,
+   "e": 29.26,
+   "words": [
+    "too",
+    "if",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 29.26,
+   "e": 29.7,
+   "words": [
+    "want",
+    "to",
+    "do"
+   ],
+   "key": -1
+  },
+  {
+   "t": 29.7,
+   "e": 30.56,
+   "words": [
+    "i",
+    "generate",
+    "it"
+   ],
+   "key": 1
+  },
+  {
+   "t": 30.56,
+   "e": 31.34,
+   "words": [
+    "yeah",
+    "generate",
+    "Okay"
+   ],
+   "key": 1
+  },
+  {
+   "t": 31.34,
+   "e": 32.46,
+   "words": [
+    "here",
+    "goes",
+    "generating"
+   ],
+   "key": 2
+  },
+  {
+   "t": 32.46,
+   "e": 32.76,
+   "words": [
+    "That's",
+    "how",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 32.76,
+   "e": 33.26,
+   "words": [
+    "looks",
+    "when",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 33.26,
+   "e": 33.72,
+   "words": [
+    "generates"
+   ],
+   "key": -1
+  },
+  {
+   "t": 33.72,
+   "e": 34.14,
+   "words": [
+    "It",
+    "does",
+    "like"
+   ],
+   "key": -1
+  },
+  {
+   "t": 34.14,
+   "e": 34.7,
+   "words": [
+    "a",
+    "little",
+    "cute"
+   ],
+   "key": 2
+  },
+  {
+   "t": 34.7,
+   "e": 35.18,
+   "words": [
+    "video"
+   ],
+   "key": -1
+  },
+  {
+   "t": 35.18,
+   "e": 35.58,
+   "words": [
+    "Okay"
+   ],
+   "key": -1
+  },
+  {
+   "t": 35.58,
+   "e": 35.98,
+   "words": [
+    "okay"
+   ],
+   "key": -1
+  },
+  {
+   "t": 35.98,
+   "e": 37.2,
+   "words": [
+    "that's",
+    "so",
+    "cute"
+   ],
+   "key": 2
+  },
+  {
+   "t": 37.2,
+   "e": 37.6,
+   "words": [
+    "Yo"
+   ],
+   "key": -1
+  },
+  {
+   "t": 37.6,
+   "e": 38.36,
+   "words": [
+    "that",
+    "looks",
+    "like"
+   ],
+   "key": -1
+  },
+  {
+   "t": 38.36,
+   "e": 39.2,
+   "words": [
+    "my",
+    "dream",
+    "thing"
+   ],
+   "key": 1
+  },
+  {
+   "t": 39.2,
+   "e": 39.8,
+   "words": [
+    "What",
+    "was",
+    "the"
+   ],
+   "key": -1
+  },
+  {
+   "t": 39.8,
+   "e": 40.16,
+   "words": [
+    "prompt"
+   ],
+   "key": -1
+  },
+  {
+   "t": 40.16,
+   "e": 40.74,
+   "words": [
+    "did",
+    "a",
+    "cross"
+   ],
+   "key": 2
+  },
+  {
+   "t": 40.74,
+   "e": 42.36,
+   "words": [
+    "necklace",
+    "with",
+    "diamonds"
+   ],
+   "key": 0
+  },
+  {
+   "t": 42.36,
+   "e": 43.88,
+   "words": [
+    "and",
+    "gold",
+    "and"
+   ],
+   "key": 1
+  },
+  {
+   "t": 43.88,
+   "e": 44.3,
+   "words": [
+    "here's",
+    "how",
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 44.3,
+   "e": 44.78,
+   "words": [
+    "came",
+    "out"
+   ],
+   "key": -1
+  },
+  {
+   "t": 44.78,
+   "e": 45.34,
+   "words": [
+    "what",
+    "would",
+    "you"
+   ],
+   "key": -1
+  },
+  {
+   "t": 45.34,
+   "e": 45.8,
+   "words": [
+    "name",
+    "this",
+    "if"
+   ],
+   "key": -1
+  },
+  {
+   "t": 45.8,
+   "e": 46.28,
+   "words": [
+    "you",
+    "could",
+    "name"
+   ],
+   "key": -1
+  },
+  {
+   "t": 46.28,
+   "e": 46.78,
+   "words": [
+    "it"
+   ],
+   "key": -1
+  },
+  {
+   "t": 46.78,
+   "e": 47.7,
+   "words": [
+    "Jesus",
+    "is",
+    "Lord"
+   ],
+   "key": 0
+  },
+  {
+   "t": 47.7,
+   "e": 48.86,
+   "words": [
+    "That's",
+    "very",
+    "cute"
+   ],
+   "key": 2
+  },
+  {
+   "t": 48.86,
+   "e": 49.4,
+   "words": [
+    "Thank",
+    "you",
+    "ladies"
+   ],
+   "key": -1
+  },
+  {
+   "t": 49.4,
+   "e": 50.3,
+   "words": [
+    "so",
+    "much"
+   ],
+   "key": -1
+  },
+  {
+   "t": 50.3,
+   "e": 51.24,
+   "words": [
+    "we",
+    "put",
+    "cross"
+   ],
+   "key": 2
+  },
+  {
+   "t": 51.24,
+   "e": 52.42,
+   "words": [
+    "necklace",
+    "with",
+    "diamonds"
+   ],
+   "key": 0
+  },
+  {
+   "t": 52.42,
+   "e": 53.855,
+   "words": [
+    "gold"
+   ],
+   "key": 0
+  }
+ ],
+ "pops": [
+  {
+   "t": 15.0,
+   "img": "gold.jpg",
+   "label": "Gold"
+  },
+  {
+   "t": 15.62,
+   "img": "diamonds.jpg",
+   "label": "Diamonds"
+  },
+  {
+   "t": 40.58,
+   "img": "cross.jpg",
+   "label": "Cross necklace"
+  },
+  {
+   "t": 12.42,
+   "img": "rings.jpg",
+   "label": "One-of-one"
+  }
+ ],
+ "end": {
+  "top": "DESIGN YOURS AT",
+  "brand": "Takshila.co",
+  "sub": "one-of-one pieces, made with AI"
+ },
+ "nameTag": null
+}

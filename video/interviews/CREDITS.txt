@@ -1,0 +1,22 @@
+Product images (Openverse):
+ffa8ee27-b5a9-466c-8bd1-40b1d8cdd4d5.jpg: "Diamond ring" by AMagill is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/85473033@N00/263628038
+3b1d3f01-09df-463c-b581-84379276ac8c.jpg: "Gold and diamonds pendant" by Mauro Cateb is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/69102917@N06/6414392035
+--
+75da0d30-04e2-4d57-8635-4665dcc1a094.jpg: "Wedding Rings 2" by firemedic58 is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/50841708@N00/408909324
+--
+4e55bbc9-3478-41b6-b6c9-5e21ea5787c5.jpg: "Diamond cross pendant" by loxy681 is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/142911002@N05/27286154085
+234889d2-5877-4821-8532-8e3c591cb8f5.jpg: "Full Bezel Diamond Pendant" by TVZ Design is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/22059842@N02/3181012370
+
+Music (Openverse/Jamendo):
+a3acc808-b78a-4230-9170-cde2ff326cbf.mp3: "Other Dimension(Chill Pill Mix) - (The Diventa Project)" by Mazelo Nostra is licensed under CC BY-SA 3.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/3.0/.
+  source: https://www.jamendo.com/track/1439562
+--
+f102eb5d-b008-4a74-aa3d-1120fba29d08.mp3: "Lofi House" by AstroShroom is licensed under CC BY-SA 3.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/3.0/.
+  source: https://www.jamendo.com/track/1356703
+
+Sound effects: earshot sound bank (MIT), rendered with earshot sfx.
