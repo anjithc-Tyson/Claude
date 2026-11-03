@@ -11,6 +11,7 @@ const CREAM = '#f5f0e6';
 const INK = '#1f241b';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
+const SHADOW = '0 2px 2px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.45)';
 
 type Overlay = {src?: number; rate?: number; reveal?: boolean; title?: string; keep_video?: boolean; phone?: boolean};
 type Seg = {a: number; b: number; o: number; chapter?: string; overlay?: Overlay};
@@ -75,9 +76,9 @@ const Title: React.FC<{text: string}> = ({text}) => {
 	const frame = useCurrentFrame();
 	const a = interpolate(frame, [2, 14], [0, 1], {...clamp, easing: ease});
 	return (
-		<div style={{position: 'absolute', left: 0, right: 0, top: 1660, textAlign: 'center', opacity: a, translate: `0px ${(1 - a) * 24}px`}}>
-			<div style={{fontFamily: SANS, fontWeight: 600, fontSize: 30, letterSpacing: '0.42em', color: SAP}}>HER DESIGN, NAMED</div>
-			<div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 150, lineHeight: 1, color: INK}}>{text}</div>
+		<div style={{position: 'absolute', left: 0, right: 0, top: 1712, textAlign: 'center', opacity: a, translate: `0px ${(1 - a) * 24}px`}}>
+			<div style={{fontFamily: SANS, fontWeight: 600, fontSize: 24, letterSpacing: '0.42em', color: SAP}}>HER DESIGN, NAMED</div>
+			<div style={{fontFamily: SERIF, fontStyle: 'italic', fontWeight: 700, fontSize: 116, lineHeight: 1, color: INK}}>{text}</div>
 		</div>
 	);
 };
@@ -128,7 +129,7 @@ const Chapter: React.FC<{text: string}> = ({text}) => {
 };
 
 // ------------------------------------------------------------------ captions: bold serif phrases, one highlighted word
-const Captions: React.FC<{d: Data; hide: (t: number) => boolean}> = ({d, hide}) => {
+const Captions: React.FC<{d: Data; hide: (t: number) => boolean; onScreen: (t: number) => boolean}> = ({d, hide, onScreen}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
@@ -138,17 +139,16 @@ const Captions: React.FC<{d: Data; hide: (t: number) => boolean}> = ({d, hide}) 
 	const age = t - c.t;
 	const a = interpolate(age, [0, 0.08], [0, 1], clamp);
 	const y = interpolate(age, [0, 0.16], [14, 0], {...clamp, easing: ease});
+	const light = onScreen(t);
+	const plain = light ? {color: INK} : {color: '#fffdf8', textShadow: SHADOW};
+	const hi = light ? {fontStyle: 'italic' as const, color: SAP} : {fontStyle: 'italic' as const, color: SAP_LIGHT, textShadow: SHADOW};
 	return (
-		<AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', top: 1300}}>
-			<div style={{fontFamily: SERIF, fontWeight: 700, fontSize: 96, lineHeight: 1.0, letterSpacing: '-0.01em', textAlign: 'center', maxWidth: 960, opacity: a, translate: `0px ${y}px`}}>
+		<AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', top: light ? 1742 : 1300}}>
+			<div style={{fontFamily: SERIF, fontWeight: 700, fontSize: light ? 84 : 96, lineHeight: 1.0, letterSpacing: '-0.01em', textAlign: 'center', maxWidth: 960, opacity: a, translate: `0px ${y}px`}}>
 				{c.words.map((w, i) => (
 					<span
 						key={i}
-						style={
-							i === c.key
-								? {fontStyle: 'italic', color: SAP_LIGHT, textShadow: '0 3px 4px rgba(0,0,0,0.55), 0 0 22px rgba(0,0,0,0.45)'}
-								: {color: '#fffdf8', textShadow: '0 3px 4px rgba(0,0,0,0.55), 0 0 22px rgba(0,0,0,0.45)'}
-						}
+						style={i === c.key ? hi : plain}
 					>
 						{w}
 						{i < c.words.length - 1 ? ' ' : ''}
@@ -162,8 +162,7 @@ const Captions: React.FC<{d: Data; hide: (t: number) => boolean}> = ({d, hide}) 
 // ------------------------------------------------------------------ product pop-up: framed photo above their heads
 const Pop: React.FC<{img: string; label: string}> = ({img, label}) => {
 	const frame = useCurrentFrame();
-	const {fps} = useVideoConfig();
-	const dur = 1.8 * fps;
+	const {durationInFrames: dur} = useVideoConfig();
 	const s = interpolate(frame, [0, 10], [0.7, 1], {...clamp, easing: Easing.bezier(0.2, 1.5, 0.4, 1)});
 	const a = interpolate(frame, [0, 5, dur - 6, dur], [0, 1, 1, 0], clamp);
 	const r = interpolate(frame, [0, 12], [-6, -2], {...clamp, easing: ease});
@@ -222,9 +221,7 @@ const EndCard: React.FC<{d: Data}> = ({d}) => {
 			<div style={{position: 'absolute', inset: 46, border: `2px solid ${SAP}`, opacity: 0.5}} />
 			<div style={{position: 'absolute', left: 290, top: 300, width: 500, height: 640, borderRadius: '250px 250px 0 0', overflow: 'hidden', boxShadow: '0 30px 60px rgba(40,50,30,0.25)'}}>
 				{d.name === 'street' ? (
-					<Freeze frame={Math.round(126 * fps)}>
-						<OffthreadVideo src={staticFile('media/p3/screen.mp4')} muted style={{position: 'absolute', width: 1640 * 0.62, height: 2360 * 0.62, left: 250 - 820 * 0.62, top: 320 - 1230 * 0.62, scale: z}} />
-					</Freeze>
+					<Img src={staticFile('img/street_result.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
 				) : (
 					<Freeze frame={Math.round(224.5 * fps)}>
 						<OffthreadVideo src={staticFile('media/p1/interview.mp4')} muted style={{position: 'absolute', width: 1080 * 1.3, height: 1920 * 1.3, left: 250 - PHONE.x * 1.3, top: 320 - PHONE.y * 1.3, scale: z}} />
@@ -248,6 +245,11 @@ export const Interview: React.FC<{d: Data}> = ({d}) => {
 	const endAt = d.total + (hasPhone ? PHONE_DUR : 0);
 	const screens = d.segments.filter((s) => s.overlay?.src !== undefined);
 	const titled = d.segments.filter((s) => s.overlay?.title);
+	// a pop-up ends before the next chapter tag (they share the top of the frame)
+	const popDur = (t: number) => {
+		const next = d.segments.filter((s) => s.chapter && s.o > t).map((s) => s.o)[0] ?? 1e9;
+		return f(Math.max(0.9, Math.min(1.8, next - t - 0.1)));
+	};
 	const hide = (t: number) => t < d.hookDur || t >= d.total || titled.some((s) => t >= s.o && t < s.o + s.b - s.a);
 	return (
 		<AbsoluteFill style={{backgroundColor: 'black'}}>
@@ -267,14 +269,14 @@ export const Interview: React.FC<{d: Data}> = ({d}) => {
 					<Title text={s.overlay!.title!} />
 				</Sequence>
 			))}
-			<Captions d={d} hide={hide} />
+			<Captions d={d} hide={hide} onScreen={(t) => screens.some((s) => t >= s.o && t < s.o + s.b - s.a)} />
 			{d.segments.filter((s) => s.chapter).map((s) => (
 				<Sequence key={`c${s.o}`} name={`chapter ${s.chapter}`} from={f(s.o)} durationInFrames={f(1.9)}>
 					<Chapter text={s.chapter!} />
 				</Sequence>
 			))}
 			{d.pops.map((p) => (
-				<Sequence key={`p${p.t}`} name={`pop ${p.label}`} from={f(p.t - 0.05)} durationInFrames={f(1.8)}>
+				<Sequence key={`p${p.t}`} name={`pop ${p.label}`} from={f(p.t - 0.05)} durationInFrames={popDur(p.t)}>
 					<Pop img={p.img} label={p.label} />
 				</Sequence>
 			))}

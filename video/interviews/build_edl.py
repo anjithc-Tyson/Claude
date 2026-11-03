@@ -33,7 +33,7 @@ P = {
             (143.80, 147.75, None, None),                  # create your own pieces -> commission
         ],
         'pops': [('solitaire', 17.06, 'solitaire.jpg', 'Solitaire'), ('diamonds', 19.86, 'diamonds.jpg', 'Diamonds on the band'),
-                 ('one-on-one', 132.9, 'rings.jpg', 'One-of-one')],
+                 ('maybe', 132.86, 'rings.jpg', 'One-of-one')],
         'name_tag': (108.96, 'Amanda', "DESIGNED ‘VICTORIA’"),
         'end': {'top': 'DESIGN YOURS AT', 'brand': 'Takshila.co', 'sub': '& earn when your design sells'},
         'fix': {'solitary': 'solitaire', 'solitary.': 'solitaire.'},
