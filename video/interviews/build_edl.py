@@ -90,8 +90,11 @@ def norm(w):
     return re.sub(r"[^a-z\-']", '', w.lower())
 
 
-def main(name, words_path, out):
-    plan = P[name]
+def main(name, words_path, out, mode='full'):
+    plan = dict(P[name])
+    if mode == 'quiz':
+        # open straight on the anchor's question (no title card), from 'would you rather'
+        plan['clips'] = [((115.60, *c[1:]) if i == 0 else c) for i, c in enumerate(plan['clips'])]
     raw = json.load(open(words_path))
     words = []
     for w in raw:
@@ -128,7 +131,7 @@ def main(name, words_path, out):
                 seg['overlay'] = ov
             segs.append(seg)
             t0 += rb - ra
-    HOOK = 2.2  # the opening question card plays over the first shot; its audio starts after it
+    HOOK = 0.0 if mode == 'quiz' else 2.2  # the opening question card plays over the first shot (full edit only)
     for s in segs:
         s['o'] = round(s['o'] + HOOK, 3)
     total = round(t0 + HOOK, 3)
@@ -193,4 +196,4 @@ def main(name, words_path, out):
 
 
 if __name__ == '__main__':
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])

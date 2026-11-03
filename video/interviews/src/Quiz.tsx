@@ -4,14 +4,16 @@ import React from 'react';
 import {AbsoluteFill, Easing, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import faces from './data/street_faces.json';
+import quizData from './data/street_quiz.json';
 import {ROUND} from './fonts';
-import {Data, EndCard, Hook, NameTag, Pop, Screen, Seg, Title, END_DUR} from './Interview';
+import {Data, EndCard, NameTag, Pop, Screen, Seg, Title, END_DUR} from './Interview';
 
 const SAP_DARK = '#2f4a17';
 const SAP_LIGHT = '#b6d68c';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const springy = Easing.bezier(0.2, 1.6, 0.4, 1);
+export const QUIZ = quizData as unknown as Data;
 
 type Q = Data & {words: {w: string; t: number; e: number; key: boolean}[]; answers: {t: number; label: string}[]; punch: number[]; coins: number[]};
 const face = (i: number) => (faces as Record<string, number[] | null>)[String(i)] ?? [680, 1000, 92];
@@ -80,20 +82,6 @@ const Word: React.FC<{d: Q; hide: (t: number) => boolean; onScreen: (t: number) 
 	);
 };
 
-const Answer: React.FC<{label: string; x: number; y: number}> = ({label, x, y}) => {
-	const frame = useCurrentFrame();
-	const {durationInFrames: dur} = useVideoConfig();
-	const s = interpolate(frame, [0, 7], [0.4, 1], {...clamp, easing: springy});
-	const out = Math.max(4, dur - 5);
-	const a = interpolate(frame, [0, 3, out, Math.max(out + 1, dur)], [0, 1, 1, 0], clamp);
-	const left = Math.min(Math.max(x, 250), 830);
-	return (
-		<div style={{position: 'absolute', left: left - 400, width: 800, top: y - 330, textAlign: 'center', opacity: a, scale: s}}>
-			<span style={{fontFamily: ROUND, fontWeight: 900, fontSize: 86, color: SAP_LIGHT, WebkitTextStroke: `14px ${SAP_DARK}`, paintOrder: 'stroke fill', textShadow: '0 6px 14px rgba(0,0,0,0.35)', whiteSpace: 'nowrap'}}>{label}</span>
-		</div>
-	);
-};
-
 export const Quiz: React.FC<{d: Q}> = ({d}) => {
 	const {fps, durationInFrames} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
@@ -101,7 +89,6 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 	const titled = d.segments.filter((s) => s.overlay?.title);
 	const onScreen = (t: number) => screens.some((s) => t >= s.o && t < s.o + s.b - s.a);
 	const hide = (t: number) => t < d.hookDur || t >= d.total || titled.some((s) => t >= s.o && t < s.o + s.b - s.a);
-	const segAt = (t: number) => Math.max(0, d.segments.findIndex((s) => t >= s.o && t < s.o + s.b - s.a));
 	return (
 		<AbsoluteFill style={{backgroundColor: 'black'}}>
 			{d.segments.map((s, i) => (
@@ -125,19 +112,9 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 				</Sequence>
 			))}
 			<Word d={d} hide={hide} onScreen={onScreen} />
-			{d.answers.map((a) => {
-				const [x, y] = face(segAt(a.t));
-				const seg = d.segments[segAt(a.t)];
-				const left = seg.o + seg.b - seg.a - a.t;
-				return (
-					<Sequence key={`a${a.t}`} name={`answer ${a.label}`} from={f(a.t)} durationInFrames={Math.max(10, f(Math.min(1.6, left)))}>
-						<Answer label={a.label} x={x} y={y} />
-					</Sequence>
-				);
-			})}
 			{d.pops.map((p) => (
 				<Sequence key={`p${p.t}`} name={`sticker ${p.label}`} from={f(p.t - 0.05)} durationInFrames={f(1.5)}>
-					<div style={{position: 'absolute', left: -250, top: -30, width: 1080, height: 1920, scale: 0.72, transformOrigin: '0px 0px'}}>
+					<div style={{position: 'absolute', left: -190, top: -30, width: 1080, height: 1920, scale: 0.72, transformOrigin: '0px 0px'}}>
 						<Pop img={p.img} label={p.label} />
 					</div>
 				</Sequence>
@@ -147,24 +124,14 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 					<NameTag name={d.nameTag.name} sub={d.nameTag.sub} />
 				</Sequence>
 			) : null}
-			<Sequence name="hook" durationInFrames={f(d.hookDur)}>
-				<Hook d={d} />
-			</Sequence>
 			<Sequence name="end card" from={f(d.total)}>
 				<EndCard d={d} />
 			</Sequence>
 
 			<Audio name="music" src={staticFile(`media/${d.music.file}`)} trimBefore={f(d.music.start)}
-				volume={(fr) => interpolate(fr, [0, f(0.6), f(d.hookDur), f(d.hookDur) + 12, durationInFrames - f(2), durationInFrames], [0, 0.32, 0.32, 0.12, 0.12, 0], clamp)} />
-			<Hit t={0.08} file="whoosh" vol={0.7} />
-			{d.answers.map((a) => (
-				<React.Fragment key={`h${a.t}`}>
-					<Hit t={a.t} file="pop" vol={0.85} />
-					<Hit t={a.t + 0.12} file="ding" vol={0.55} />
-				</React.Fragment>
-			))}
+				volume={(fr) => interpolate(fr, [0, 12, durationInFrames - f(2), durationInFrames], [0, 0.12, 0.12, 0], clamp)} />
 			{d.pops.map((p) => (
-				<Hit key={`hp${p.t}`} t={p.t - 0.05} file="pop" vol={0.75} />
+				<Hit key={`hp${p.t}`} t={p.t - 0.05} file="pop" vol={0.9} />
 			))}
 			{screens.filter((s, i) => i === 0 || s.overlay!.reveal).map((s) => (
 				<Hit key={`hs${s.o}`} t={s.o - 0.06} file="whoosh" vol={0.7} />
