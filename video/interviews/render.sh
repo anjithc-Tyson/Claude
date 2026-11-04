@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 export REMOTION_CHROME=${REMOTION_CHROME:-/opt/pw-browsers/chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell}
 mkdir -p out
-for comp in Street Jewel; do
+for comp in ${COMPS:-Street Jewel}; do
   name=$(echo "$comp" | tr 'A-Z' 'a-z')
   if [ "${AUDIO_ONLY:-}" != "1" ] || [ ! -f "out/${name}_master.mp4" ]; then
     npx remotion render "$comp" "out/${name}_master.mp4" --concurrency=4 --crf=15 --audio-bitrate=320k --log=error
@@ -18,7 +18,7 @@ for comp in Street Jewel; do
   echo "rendered out/takshila_${name}.mp4"
 done
 if command -v earshot >/dev/null; then
-  for name in street jewel; do
+  for name in $(echo ${COMPS:-Street Jewel} | tr "A-Z" "a-z"); do
     earshot critique "out/takshila_${name}.mp4" > "out/critique_${name}.txt" 2>&1 || true
     earshot sheet "out/takshila_${name}.mp4" -o "out/sheet_${name}_audio.png" --detail low > /dev/null 2>&1 || true
   done

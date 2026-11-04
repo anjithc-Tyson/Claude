@@ -15,7 +15,7 @@ P = {
             (114.20, 119.76, 'RAPID FIRE', None),          # off the shelf or your own design?
             (121.90, 126.02, None, None),                  # I think on the shelf... because I can already try it
             (127.35, 130.55, None, None),                  # mass produced or one-on-one?
-            (132.85, 134.10, None, None),                  # maybe a one-on-one
+            (132.78, 134.10, None, None),                  # maybe a one-on-one
             (11.78, 13.88, 'HER DREAM PIECE', None),       # what does your dream jewellery look like?
             (14.45, 15.25, None, None),
             (15.95, 23.04, None, None),                    # solitaire rings with diamonds on the band
@@ -37,7 +37,7 @@ P = {
         'name_tag': (108.96, 'Amanda', "DESIGNED ‘VICTORIA’"),
         'end': {'top': 'DESIGN YOURS AT', 'brand': 'Takshila.co', 'sub': '& earn when your design sells'},
         'answers': [(122.82, 'ON THE SHELF'), (132.86, 'ONE-ON-ONE'), (16.00, 'SOLITAIRE'), (28.72, 'YES!'), (112.14, 'PASS IT DOWN')],
-        'punch': [132.85, 112.10],      # source starts of the big answers (zoom + green flash)
+        'punch': [132.78, 112.10],      # source starts of the big answers (zoom + green flash)
         'coin': [133.70, 146.10],       # one-of-one, 'commission'
         'fix': {'solitary': 'solitaire', 'solitary.': 'solitaire.'},
         'drop': [],
@@ -94,7 +94,7 @@ def main(name, words_path, out, mode='full'):
     plan = dict(P[name])
     if mode == 'quiz':
         # open straight on the anchor's question (no title card), from 'would you rather'
-        plan['clips'] = [((115.60, *c[1:]) if i == 0 else c) for i, c in enumerate(plan['clips'])]
+        plan['clips'] = [((116.36, *c[1:]) if i == 0 else c) for i, c in enumerate(plan['clips'])]
         # the Design Studio comes up as soon as she has the tablet, straight on the prompt being typed (no category grid)
         typing = {33.85: {'src': 76.0, 'rate': 1.4, 'typing': True}, 71.95: {'src': 86.0, 'rate': 5.4, 'typing': True}}
         plan['clips'] = [((c[0], c[1], c[2], typing[c[0]]) if c[0] in typing else c) for c in plan['clips']]

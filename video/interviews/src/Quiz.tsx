@@ -19,7 +19,7 @@ export const QUIZ = quizData as unknown as Data;
 type Q = Data & {words: {w: string; t: number; e: number; key: boolean}[]; answers: {t: number; label: string}[]; punch: number[]; coins: number[]};
 const face = (i: number) => (faces as Record<string, number[] | null>)[String(i)] ?? [680, 1000, 92];
 // the frame stays on the two of them (heads near the top, down to the thighs), the same for every shot
-const VIEW = {z: 1.45, x: 470, y: 1090};
+const VIEW = {z: 1.45, x: 524, y: 1100};
 export const quizTotal = (d: Data) => d.total + END_DUR;
 
 // sharp, clearly audible highlights (earshot bank + Kenney CC0), mixed above the voice
