@@ -6,7 +6,8 @@ import {Audio} from '@remotion/media';
 import faces from './data/street_faces.json';
 import quizData from './data/street_quiz.json';
 import {ROUND} from './fonts';
-import {Data, EndCard, NameTag, Pop, Screen, Seg, Title, END_DUR} from './Interview';
+import {Data, NameTag, Pop, Screen, Seg, Title, END_DUR} from './Interview';
+import {Img} from 'remotion';
 
 const SAP_DARK = '#2f4a17';
 const SAP_LIGHT = '#b6d68c';
@@ -17,13 +18,15 @@ export const QUIZ = quizData as unknown as Data;
 
 type Q = Data & {words: {w: string; t: number; e: number; key: boolean}[]; answers: {t: number; label: string}[]; punch: number[]; coins: number[]};
 const face = (i: number) => (faces as Record<string, number[] | null>)[String(i)] ?? [680, 1000, 92];
+// the frame stays on the two of them (heads near the top, down to the thighs), the same for every shot
+const VIEW = {z: 1.45, x: 470, y: 1090};
 export const quizTotal = (d: Data) => d.total + END_DUR;
 
 // sharp, clearly audible highlights (earshot bank + Kenney CC0), mixed above the voice
-const Hit: React.FC<{t: number; file: string; vol: number}> = ({t, file, vol}) => {
+const Hit: React.FC<{t: number; file: string; vol: number; dur?: number}> = ({t, file, vol, dur = 1.1}) => {
 	const {fps} = useVideoConfig();
 	return (
-		<Sequence name={`sfx ${file}`} from={Math.max(0, Math.round(t * fps))} durationInFrames={Math.round(1.1 * fps)} layout="none">
+		<Sequence name={`sfx ${file}`} from={Math.max(0, Math.round(t * fps))} durationInFrames={Math.round(dur * fps)} layout="none">
 			<Audio src={staticFile(`sfx/quiz/${file}.wav`)} volume={vol} />
 		</Sequence>
 	);
@@ -35,10 +38,15 @@ const Shot: React.FC<{seg: Seg; i: number; punch: boolean}> = ({seg, i, punch}) 
 	const dur = (seg.b - seg.a) * fps;
 	const fade = interpolate(frame, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp);
 	const [fx, fy] = face(i);
-	const z = punch ? interpolate(frame, [0, 6], [1, 1.45], {...clamp, easing: ease}) : 1;
+	const p = punch ? interpolate(frame, [0, 6], [0, 1], {...clamp, easing: ease}) : 0;
+	// punch-in: zoom further and slide the centre onto her
+	const z = VIEW.z * (1 + 0.3 * p);
+	const cx = VIEW.x + (fx - VIEW.x) * p;
+	const cy = VIEW.y + (fy + 150 - VIEW.y) * p;
 	return (
 		<AbsoluteFill style={{overflow: 'hidden'}}>
-			<OffthreadVideo src={staticFile('media/p3/interview.mp4')} trimBefore={Math.round(seg.a * fps)} volume={fade} style={{width: 1080, height: 1920, scale: z, transformOrigin: `${fx}px ${fy + 120}px`}} />
+			<OffthreadVideo src={staticFile('media/p3/interview.mp4')} trimBefore={Math.round(seg.a * fps)} volume={fade}
+				style={{position: 'absolute', width: 1080, height: 1920, left: 540 - cx, top: 960 - cy, scale: z, transformOrigin: `${cx}px ${cy}px`}} />
 		</AbsoluteFill>
 	);
 };
@@ -50,7 +58,7 @@ const Flash: React.FC = () => {
 	return <AbsoluteFill style={{background: 'radial-gradient(ellipse at 50% 50%, rgba(140,200,90,0.2), rgba(90,170,60,0.9))', opacity: a, mixBlendMode: 'screen'}} />;
 };
 
-const Word: React.FC<{d: Q; hide: (t: number) => boolean; onScreen: (t: number) => boolean}> = ({d, hide, onScreen}) => {
+const Word: React.FC<{d: Q; hide: (t: number) => boolean; onScreen: (t: number) => boolean; under: (t: number) => boolean}> = ({d, hide, onScreen, under}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
@@ -61,7 +69,7 @@ const Word: React.FC<{d: Q; hide: (t: number) => boolean; onScreen: (t: number) 
 	const s = interpolate(age, [0, 0.1], [0.82, 1], {...clamp, easing: springy});
 	const light = onScreen(t);
 	return (
-		<AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', top: light ? 1745 : 1180}}>
+		<AbsoluteFill style={{justifyContent: 'flex-start', alignItems: 'center', top: light ? 1745 : under(t) ? 1650 : 1180}}>
 			<div
 				style={{
 					fontFamily: ROUND,
@@ -78,6 +86,18 @@ const Word: React.FC<{d: Q; hide: (t: number) => boolean; onScreen: (t: number) 
 			>
 				{w.w}
 			</div>
+		</AbsoluteFill>
+	);
+};
+
+const RingEnd: React.FC = () => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const z = interpolate(frame, [0, END_DUR * fps], [1.02, 1.1], clamp);
+	const a = interpolate(frame, [0, 6], [0, 1], clamp);
+	return (
+		<AbsoluteFill style={{backgroundColor: '#e9e1d4', opacity: a}}>
+			<Img src={staticFile('img/street_ring_full.jpg')} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z}} />
 		</AbsoluteFill>
 	);
 };
@@ -111,10 +131,10 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 					<Flash />
 				</Sequence>
 			))}
-			<Word d={d} hide={hide} onScreen={onScreen} />
+			<Word d={d} hide={hide} onScreen={onScreen} under={(t) => d.pops.some((p) => t >= p.t - 0.05 && t < p.t + 1.45)} />
 			{d.pops.map((p) => (
 				<Sequence key={`p${p.t}`} name={`sticker ${p.label}`} from={f(p.t - 0.05)} durationInFrames={f(1.5)}>
-					<div style={{position: 'absolute', left: -190, top: -30, width: 1080, height: 1920, scale: 0.72, transformOrigin: '0px 0px'}}>
+					<div style={{position: 'absolute', left: 0, top: 790, width: 1080, height: 1920, scale: 0.9, transformOrigin: '540px 0px'}}>
 						<Pop img={p.img} label={p.label} />
 					</div>
 				</Sequence>
@@ -124,8 +144,8 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 					<NameTag name={d.nameTag.name} sub={d.nameTag.sub} />
 				</Sequence>
 			) : null}
-			<Sequence name="end card" from={f(d.total)}>
-				<EndCard d={d} />
+			<Sequence name="generated ring" from={f(d.total)}>
+				<RingEnd />
 			</Sequence>
 
 			<Audio name="music" src={staticFile(`media/${d.music.file}`)} trimBefore={f(d.music.start)}
@@ -141,6 +161,9 @@ export const Quiz: React.FC<{d: Q}> = ({d}) => {
 			))}
 			{d.punch.map((i) => (
 				<Hit key={`hk${i}`} t={d.segments[i].o - 0.04} file="whoosh" vol={0.6} />
+			))}
+			{screens.filter((s) => s.overlay!.typing).map((s) => (
+				<Hit key={`ty${s.o}`} t={s.o + 0.05} file={s.b - s.a > 3.5 ? 'typing5' : 'typing25'} vol={0.75} dur={s.b - s.a} />
 			))}
 			{d.coins.map((t) => (
 				<Hit key={`hc${t}`} t={t} file="coin" vol={0.7} />

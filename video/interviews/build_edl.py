@@ -95,6 +95,9 @@ def main(name, words_path, out, mode='full'):
     if mode == 'quiz':
         # open straight on the anchor's question (no title card), from 'would you rather'
         plan['clips'] = [((115.60, *c[1:]) if i == 0 else c) for i, c in enumerate(plan['clips'])]
+        # the Design Studio comes up as soon as she has the tablet, straight on the prompt being typed (no category grid)
+        typing = {33.85: {'src': 76.0, 'rate': 1.4, 'typing': True}, 71.95: {'src': 86.0, 'rate': 5.4, 'typing': True}}
+        plan['clips'] = [((c[0], c[1], c[2], typing[c[0]]) if c[0] in typing else c) for c in plan['clips']]
     raw = json.load(open(words_path))
     words = []
     for w in raw:

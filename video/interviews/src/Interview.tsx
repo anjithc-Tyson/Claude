@@ -13,7 +13,7 @@ const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const SHADOW = '0 2px 2px rgba(0,0,0,0.8), 0 0 10px rgba(0,0,0,0.6), 0 0 30px rgba(0,0,0,0.45)';
 
-type Overlay = {src?: number; rate?: number; reveal?: boolean; title?: string; keep_video?: boolean; phone?: boolean};
+type Overlay = {src?: number; rate?: number; typing?: boolean; reveal?: boolean; title?: string; keep_video?: boolean; phone?: boolean};
 export type Seg = {a: number; b: number; o: number; chapter?: string; overlay?: Overlay};
 type Cap = {t: number; e: number; words: string[]; key: number};
 export type Data = {
