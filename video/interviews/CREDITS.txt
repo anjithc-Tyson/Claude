@@ -48,3 +48,8 @@ c3665a97-d92a-446b-94e8-4cc9739b0392.jpg: "Vintage diamond ring illustration" by
   source: https://www.flickr.com/photos/161389331@N04/46483455164
 7a006118-8512-44f1-8783-47997f47b818.jpg: "Platinum Ring" by yonushNZ is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
   source: https://www.flickr.com/photos/25652027@N07/2735007410
+
+Bold Claim, influencer cut
+B-roll video: Mixkit free stock videos (Mixkit License, free for commercial use), clips 34611, 50784, 5180, 5220, 20877, 2567, 51260
+Generated images (public/img/infl): Figma AI (gemini-3.1-flash-lite-image)
+Sound effects: Mixkit free sound effects (Mixkit License) 1489 whoosh, 2356 pop, 868 sparkle
