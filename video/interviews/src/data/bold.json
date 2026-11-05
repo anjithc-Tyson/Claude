@@ -1,0 +1,1368 @@
+{
+ "total": 53.054,
+ "segments": [
+  {
+   "clip": "20261101_144048",
+   "a": 0.61,
+   "b": 1.87,
+   "o": 0.0,
+   "zoom": 1.0,
+   "fx": 156,
+   "fy": 826,
+   "first": true
+  },
+  {
+   "clip": "20261101_144048",
+   "a": 2.33,
+   "b": 4.07,
+   "o": 1.125,
+   "zoom": 1.08,
+   "fx": 156,
+   "fy": 826,
+   "first": false
+  },
+  {
+   "clip": "20261101_144048",
+   "a": 4.21,
+   "b": 6.09,
+   "o": 2.679,
+   "zoom": 1.0,
+   "fx": 156,
+   "fy": 826,
+   "first": false
+  },
+  {
+   "clip": "20261102_092812",
+   "a": 2.67,
+   "b": 5.85,
+   "o": 4.357,
+   "zoom": 1.0,
+   "fx": 502,
+   "fy": 707,
+   "first": true
+  },
+  {
+   "clip": "20261102_092812",
+   "a": 6.21,
+   "b": 13.69,
+   "o": 7.196,
+   "zoom": 1.08,
+   "fx": 502,
+   "fy": 707,
+   "first": false
+  },
+  {
+   "clip": "20261102_093527",
+   "a": 2.25,
+   "b": 4.75,
+   "o": 13.875,
+   "zoom": 1.0,
+   "fx": 478,
+   "fy": 698,
+   "first": true
+  },
+  {
+   "clip": "20261102_093527",
+   "a": 5.59,
+   "b": 8.65,
+   "o": 16.107,
+   "zoom": 1.08,
+   "fx": 478,
+   "fy": 698,
+   "first": false
+  },
+  {
+   "clip": "20261102_093527",
+   "a": 9.45,
+   "b": 12.17,
+   "o": 18.839,
+   "zoom": 1.0,
+   "fx": 478,
+   "fy": 698,
+   "first": false
+  },
+  {
+   "clip": "20261102_093527",
+   "a": 12.45,
+   "b": 15.49,
+   "o": 21.268,
+   "zoom": 1.08,
+   "fx": 478,
+   "fy": 698,
+   "first": false
+  },
+  {
+   "clip": "20261102_093527",
+   "a": 15.89,
+   "b": 18.27,
+   "o": 23.982,
+   "zoom": 1.0,
+   "fx": 478,
+   "fy": 698,
+   "first": false
+  },
+  {
+   "clip": "20261102_094354",
+   "a": 4.17,
+   "b": 7.27,
+   "o": 26.107,
+   "zoom": 1.0,
+   "fx": 524,
+   "fy": 766,
+   "first": true
+  },
+  {
+   "clip": "20261102_094354",
+   "a": 7.67,
+   "b": 9.47,
+   "o": 28.875,
+   "zoom": 1.08,
+   "fx": 524,
+   "fy": 766,
+   "first": false
+  },
+  {
+   "clip": "20261102_094354",
+   "a": 9.87,
+   "b": 13.75,
+   "o": 30.482,
+   "zoom": 1.0,
+   "fx": 524,
+   "fy": 766,
+   "first": false
+  },
+  {
+   "clip": "20261102_094844",
+   "a": 1.35,
+   "b": 2.23,
+   "o": 33.946,
+   "zoom": 1.0,
+   "fx": 467,
+   "fy": 1020,
+   "first": true
+  },
+  {
+   "clip": "20261102_094844",
+   "a": 2.65,
+   "b": 5.09,
+   "o": 34.732,
+   "zoom": 1.08,
+   "fx": 467,
+   "fy": 1020,
+   "first": false
+  },
+  {
+   "clip": "20261102_094844",
+   "a": 5.67,
+   "b": 6.23,
+   "o": 36.911,
+   "zoom": 1.0,
+   "fx": 467,
+   "fy": 1020,
+   "first": false
+  },
+  {
+   "clip": "20261102_094844",
+   "a": 7.23,
+   "b": 7.99,
+   "o": 37.411,
+   "zoom": 1.08,
+   "fx": 467,
+   "fy": 1020,
+   "first": false
+  },
+  {
+   "clip": "20261102_094844",
+   "a": 8.79,
+   "b": 12.99,
+   "o": 38.089,
+   "zoom": 1.0,
+   "fx": 467,
+   "fy": 1020,
+   "first": false
+  },
+  {
+   "clip": "20261102_101733",
+   "a": 2.27,
+   "b": 6.51,
+   "o": 41.839,
+   "zoom": 1.0,
+   "fx": 495,
+   "fy": 922,
+   "first": true
+  },
+  {
+   "clip": "20261102_101733",
+   "a": 6.81,
+   "b": 9.67,
+   "o": 45.625,
+   "zoom": 1.08,
+   "fx": 495,
+   "fy": 922,
+   "first": false
+  },
+  {
+   "clip": "20261102_103613",
+   "a": 3.89,
+   "b": 9.35,
+   "o": 48.179,
+   "zoom": 1.0,
+   "fx": 528,
+   "fy": 895,
+   "first": true
+  }
+ ],
+ "words": [
+  {
+   "w": "Choose",
+   "t": 0.045,
+   "e": 0.527,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "the",
+   "t": 0.527,
+   "e": 0.687,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "metal,",
+   "t": 0.687,
+   "e": 1.045,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "the",
+   "t": 1.17,
+   "e": 1.259,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "stone",
+   "t": 1.259,
+   "e": 1.634,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "and",
+   "t": 1.634,
+   "e": 2.366,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "the",
+   "t": 2.366,
+   "e": 2.455,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "meaning.",
+   "t": 2.455,
+   "e": 2.598,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "We",
+   "t": 2.723,
+   "e": 2.955,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "will",
+   "t": 2.955,
+   "e": 3.205,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "create",
+   "t": 3.205,
+   "e": 3.348,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "the",
+   "t": 3.348,
+   "e": 3.527,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "piece",
+   "t": 3.527,
+   "e": 3.705,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "around",
+   "t": 3.705,
+   "e": 4.045,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you.",
+   "t": 4.045,
+   "e": 4.277,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "Start",
+   "t": 4.402,
+   "e": 5.223,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "with",
+   "t": 5.223,
+   "e": 5.384,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 5.384,
+   "e": 5.58,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "metal",
+   "t": 5.58,
+   "e": 5.973,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "that",
+   "t": 5.973,
+   "e": 6.366,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "feels",
+   "t": 6.366,
+   "e": 6.562,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "like",
+   "t": 6.562,
+   "e": 6.902,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you.",
+   "t": 6.902,
+   "e": 7.116,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "A",
+   "t": 7.241,
+   "e": 7.545,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "warm",
+   "t": 7.545,
+   "e": 7.938,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "gold",
+   "t": 7.938,
+   "e": 8.42,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "rich",
+   "t": 8.42,
+   "e": 9.098,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "with",
+   "t": 9.098,
+   "e": 9.491,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "memory",
+   "t": 9.491,
+   "e": 10.045,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "that",
+   "t": 10.045,
+   "e": 10.491,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "turns",
+   "t": 10.491,
+   "e": 10.795,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "every",
+   "t": 10.795,
+   "e": 11.312,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "moment",
+   "t": 11.312,
+   "e": 11.741,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "into",
+   "t": 11.741,
+   "e": 12.455,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 12.455,
+   "e": 12.527,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "vintage",
+   "t": 12.527,
+   "e": 12.973,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "heirloom.",
+   "t": 12.973,
+   "e": 13.795,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "Or",
+   "t": 13.92,
+   "e": 14.652,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 14.652,
+   "e": 15.009,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "classic",
+   "t": 15.009,
+   "e": 15.312,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "silver.",
+   "t": 15.312,
+   "e": 16.027,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "Bright",
+   "t": 16.152,
+   "e": 16.58,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "and",
+   "t": 16.58,
+   "e": 17.223,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "endlessly",
+   "t": 17.223,
+   "e": 17.759,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "versatile.",
+   "t": 17.759,
+   "e": 18.759,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "Or",
+   "t": 18.884,
+   "e": 19.045,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you",
+   "t": 19.045,
+   "e": 19.188,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "would",
+   "t": 19.188,
+   "e": 19.384,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "like",
+   "t": 19.384,
+   "e": 19.527,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "to",
+   "t": 19.527,
+   "e": 19.777,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "go",
+   "t": 19.777,
+   "e": 19.955,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "with",
+   "t": 19.955,
+   "e": 20.152,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "the",
+   "t": 20.152,
+   "e": 20.259,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "modern",
+   "t": 20.259,
+   "e": 20.598,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "platinum.",
+   "t": 20.598,
+   "e": 21.188,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "An",
+   "t": 21.313,
+   "e": 21.741,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "everyday",
+   "t": 21.741,
+   "e": 22.098,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "reminder",
+   "t": 22.098,
+   "e": 22.545,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "of",
+   "t": 22.545,
+   "e": 22.973,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "your",
+   "t": 22.973,
+   "e": 23.295,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "inner",
+   "t": 23.295,
+   "e": 23.563,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "strength.",
+   "t": 23.563,
+   "e": 23.902,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "A",
+   "t": 24.027,
+   "e": 24.17,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "finish",
+   "t": 24.17,
+   "e": 24.491,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "of",
+   "t": 24.491,
+   "e": 24.973,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "your",
+   "t": 24.973,
+   "e": 25.241,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "everyday",
+   "t": 25.241,
+   "e": 25.652,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "style.",
+   "t": 25.652,
+   "e": 26.027,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "A",
+   "t": 26.152,
+   "e": 27.045,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "diamond",
+   "t": 27.045,
+   "e": 27.545,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "for",
+   "t": 27.545,
+   "e": 27.866,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "something",
+   "t": 27.866,
+   "e": 28.277,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "timeless,",
+   "t": 28.277,
+   "e": 28.795,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "a",
+   "t": 28.92,
+   "e": 29.045,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "sapphire",
+   "t": 29.045,
+   "e": 29.67,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "for",
+   "t": 29.67,
+   "e": 30.027,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "color,",
+   "t": 30.027,
+   "e": 30.402,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "or",
+   "t": 30.527,
+   "e": 30.67,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 30.67,
+   "e": 30.902,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "gem",
+   "t": 30.902,
+   "e": 31.205,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "with",
+   "t": 31.205,
+   "e": 31.723,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 31.723,
+   "e": 31.902,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "meaning",
+   "t": 31.902,
+   "e": 32.152,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "only",
+   "t": 32.152,
+   "e": 32.598,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you",
+   "t": 32.598,
+   "e": 33.063,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "understand.",
+   "t": 33.063,
+   "e": 33.866,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "Finally,",
+   "t": 33.991,
+   "e": 34.652,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "tell",
+   "t": 34.777,
+   "e": 35.063,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "us",
+   "t": 35.063,
+   "e": 35.295,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "what",
+   "t": 35.295,
+   "e": 35.527,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "the",
+   "t": 35.527,
+   "e": 35.848,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "piece",
+   "t": 35.848,
+   "e": 36.062,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "should",
+   "t": 36.062,
+   "e": 36.42,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "carry.",
+   "t": 36.42,
+   "e": 36.83,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "A",
+   "t": 36.955,
+   "e": 37.08,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "name,",
+   "t": 37.08,
+   "e": 37.33,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "a",
+   "t": 37.455,
+   "e": 37.598,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "memory,",
+   "t": 37.598,
+   "e": 38.009,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "a",
+   "t": 38.134,
+   "e": 38.277,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "milestone",
+   "t": 38.277,
+   "e": 38.67,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "or",
+   "t": 38.67,
+   "e": 39.705,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 39.705,
+   "e": 40.063,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "feeling",
+   "t": 40.063,
+   "e": 40.277,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "that",
+   "t": 40.277,
+   "e": 40.634,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you",
+   "t": 40.634,
+   "e": 40.902,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "want",
+   "t": 40.902,
+   "e": 41.063,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "to",
+   "t": 41.063,
+   "e": 41.223,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "keep",
+   "t": 41.223,
+   "e": 41.42,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "close.",
+   "t": 41.42,
+   "e": 41.759,
+   "key": false,
+   "end": true
+  },
+  {
+   "w": "From",
+   "t": 41.884,
+   "e": 42.563,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 42.563,
+   "e": 42.741,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "blank",
+   "t": 42.741,
+   "e": 42.92,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "canvas",
+   "t": 42.92,
+   "e": 43.402,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "to",
+   "t": 43.402,
+   "e": 43.705,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 43.705,
+   "e": 43.884,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "piece",
+   "t": 43.884,
+   "e": 44.027,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "that",
+   "t": 44.027,
+   "e": 44.223,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "only",
+   "t": 44.223,
+   "e": 44.455,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "belongs",
+   "t": 44.455,
+   "e": 44.83,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "to",
+   "t": 44.83,
+   "e": 45.116,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "you.",
+   "t": 45.116,
+   "e": 45.545,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "Every",
+   "t": 45.67,
+   "e": 46.009,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "detail",
+   "t": 46.009,
+   "e": 46.384,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "is",
+   "t": 46.384,
+   "e": 46.723,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "shaped",
+   "t": 46.723,
+   "e": 46.92,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "around",
+   "t": 46.92,
+   "e": 47.33,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "your",
+   "t": 47.33,
+   "e": 47.741,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "story.",
+   "t": 47.741,
+   "e": 48.098,
+   "key": true,
+   "end": true
+  },
+  {
+   "w": "Bring",
+   "t": 48.223,
+   "e": 48.795,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "your",
+   "t": 48.795,
+   "e": 49.063,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "piece",
+   "t": 49.063,
+   "e": 49.277,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "to",
+   "t": 49.277,
+   "e": 49.58,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "takshila.co",
+   "t": 49.58,
+   "e": 50.009,
+   "key": true,
+   "end": false
+  },
+  {
+   "w": "and",
+   "t": 50.723,
+   "e": 51.152,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "we",
+   "t": 51.152,
+   "e": 51.509,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "will",
+   "t": 51.509,
+   "e": 51.777,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "make",
+   "t": 51.777,
+   "e": 51.92,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "it",
+   "t": 51.92,
+   "e": 52.17,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "one",
+   "t": 52.17,
+   "e": 52.295,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "of",
+   "t": 52.295,
+   "e": 52.455,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "a",
+   "t": 52.455,
+   "e": 52.598,
+   "key": false,
+   "end": false
+  },
+  {
+   "w": "kind.",
+   "t": 52.598,
+   "e": 52.973,
+   "key": true,
+   "end": true
+  }
+ ],
+ "cards": [
+  {
+   "t": 0.687,
+   "img": "bold/gold.jpg",
+   "label": "The metal",
+   "kind": "flash",
+   "dur": 0.552
+  },
+  {
+   "t": 1.259,
+   "img": "bold/diamond.jpg",
+   "label": "The stone",
+   "kind": "flash",
+   "dur": 1.05
+  },
+  {
+   "t": 2.455,
+   "img": "bold/sketch.jpg",
+   "label": "The meaning",
+   "kind": "flash",
+   "dur": 1.05
+  },
+  {
+   "t": 7.938,
+   "img": "bold/gold.jpg",
+   "label": "Warm gold",
+   "kind": "card",
+   "dur": 1.6
+  },
+  {
+   "t": 15.312,
+   "img": "bold/silver.jpg",
+   "label": "Classic silver",
+   "kind": "card",
+   "dur": 1.6
+  },
+  {
+   "t": 20.598,
+   "img": "bold/platinum.jpg",
+   "label": "Modern platinum",
+   "kind": "card",
+   "dur": 1.6
+  },
+  {
+   "t": 27.045,
+   "img": "bold/diamond.jpg",
+   "label": "Diamond, for something timeless",
+   "kind": "stone",
+   "dur": 1.7
+  },
+  {
+   "t": 29.045,
+   "img": "bold/sapphire.jpg",
+   "label": "Sapphire, for colour",
+   "kind": "stone",
+   "dur": 1.7
+  },
+  {
+   "t": 30.902,
+   "img": "bold/gems.jpg",
+   "label": "A gem with a meaning",
+   "kind": "stone",
+   "dur": 1.7
+  },
+  {
+   "t": 37.08,
+   "img": null,
+   "label": "A name",
+   "kind": "chip",
+   "dur": 5.183
+  },
+  {
+   "t": 37.598,
+   "img": null,
+   "label": "A memory",
+   "kind": "chip",
+   "dur": 4.665
+  },
+  {
+   "t": 38.277,
+   "img": null,
+   "label": "A milestone",
+   "kind": "chip",
+   "dur": 3.986
+  },
+  {
+   "t": 40.063,
+   "img": null,
+   "label": "A feeling",
+   "kind": "chip",
+   "dur": 2.2
+  },
+  {
+   "t": 42.92,
+   "img": "bold/sketch.jpg",
+   "label": "A blank canvas",
+   "kind": "card",
+   "dur": 0.944
+  },
+  {
+   "t": 43.884,
+   "img": "street_ring_full.jpg",
+   "label": "Only yours",
+   "kind": "reveal",
+   "dur": 2.0
+  },
+  {
+   "t": 46.009,
+   "img": "bold/wax.jpg",
+   "label": "Every detail, shaped",
+   "kind": "card",
+   "dur": 1.6
+  }
+ ],
+ "titles": [
+  {
+   "t": 0.05,
+   "num": "",
+   "text": "Designed around your story",
+   "dur": 2.6
+  },
+  {
+   "t": 4.407,
+   "num": "01",
+   "text": "Choose the metal",
+   "dur": 2.6
+  },
+  {
+   "t": 26.157,
+   "num": "02",
+   "text": "Choose the stone",
+   "dur": 2.6
+  },
+  {
+   "t": 33.996,
+   "num": "03",
+   "text": "Add the meaning",
+   "dur": 2.6
+  },
+  {
+   "t": 41.889,
+   "num": "",
+   "text": "From your idea to your piece",
+   "dur": 2.6
+  },
+  {
+   "t": 48.229,
+   "num": "",
+   "text": "Start your custom design",
+   "dur": 2.6
+  }
+ ],
+ "rate": 1.12,
+ "music": {
+  "file": "p4/starwalk.mp3",
+  "start": 104.72
+ }
+}

@@ -23,3 +23,28 @@ Sound effects: earshot sound bank (MIT), rendered with earshot sfx.
 
 Quiz edit sounds: earshot bank (pop/0, pro_notify/ding_2045, swish/blade); coin: Kenney RPG Audio "handleCoins" (CC0, kenney.nl).
 Music and product images as above.
+
+Bold Claim edit (script 1, "Choose the metal, the stone, and the meaning")
+Music: "Starwalk" by PNFA, CC BY-SA 3.0 (via Openverse / Jamendo)
+000ccad2-5bb0-4560-b7b3-ed8ba496e156.jpg: "My gold ring - macro shot" by gmahender is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/35201330@N04/4116110408
+21e8cc9b-f610-4602-b1ed-1029d3761f2b.jpg: "Gold" by solarisgirl is licensed under CC BY-SA 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/2.0/.
+  source: https://www.flickr.com/photos/7252160@N04/34953644670
+4b592dbc-80e9-4e51-8097-dd57ca72db9e.jpg: "Evolve Ring Silver ~ silver ring close" by Fluid Forms is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/49549674@N00/4168501069
+e62d177f-aae4-400a-ab8e-f89d0db8b5a4.jpg: "Platinum ring with Yellow and white diamond by VIP jewelry Ltd, Calgary" by VIP jewelry Ltd., Calgary by Dmitri Vtornikov is licensed under CC BY-SA 3.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/3.0/.
+  source: https://commons.wikimedia.org/w/index.php?curid=15242778
+91061983-ebde-4946-b709-8ffb05893dac.jpg: "Logan Sapphire - Smithsonian Museum of Natural History - 2012-05-17" by Tim Evanson is licensed under CC BY-SA 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/2.0/.
+  source: https://www.flickr.com/photos/23165290@N00/7283941034
+23cb7abf-3519-4f7e-baf8-a54abceae149.jpg: "loose diamonds hi res" by alonbj is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/19279364@N00/24429270129
+4ee0be37-e202-4b76-a31d-2ac59bf1f43d.jpg: "Silver Ring" by halfrain is licensed under CC BY-SA 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by-sa/2.0/.
+  source: https://www.flickr.com/photos/54217251@N05/6491986847
+76e4c22a-6007-4d78-82d3-daf244874643.jpg: "Brazilian gemstones" by Mauro Cateb is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/69102917@N06/6330406700
+c3665a97-d92a-446b-94e8-4cc9739b0392.jpg: "Vintage diamond ring illustration" by Free Public Domain Illustrations by rawpixel is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/153584064@N07/31844037697
+9ee58149-e9c2-4f4d-8f29-f502c9a82b2b.jpg: "Jewellery Planning with Castable Wax Resin from Formlabs Form 2 SLA 3D Printer" by Formlabs Inc. is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/161389331@N04/46483455164
+7a006118-8512-44f1-8783-47997f47b818.jpg: "Platinum Ring" by yonushNZ is licensed under CC BY 2.0. To view a copy of this license, visit https://creativecommons.org/licenses/by/2.0/.
+  source: https://www.flickr.com/photos/25652027@N07/2735007410
