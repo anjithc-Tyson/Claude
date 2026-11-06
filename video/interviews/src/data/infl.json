@@ -1065,6 +1065,10 @@
   "20261102_094354"
  ],
  "hookEnd": 5.22,
+ "typing": {
+  "file": "type_mech",
+  "vol": 0.55
+ },
  "music": {
   "file": "p4/lovelikethis.mp3",
   "start": 0.0,
