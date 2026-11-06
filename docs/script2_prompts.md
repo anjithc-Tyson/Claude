@@ -85,7 +85,7 @@ The exact same yellow-gold sapphire ring with pavé shoulders as the reference i
 
 **P12 — "every day"** (reference: P11)
 ```
-The same yellow-gold oval sapphire ring with pavé shoulders as the reference image, worn on the ring finger of a woman's relaxed hand holding a ceramic coffee cup by a bright window, soft morning daylight, cosy cream knit sleeve, plants softly out of focus behind. Natural, candid, everyday lifestyle photo; the ring is sharp and clearly visible. Photorealistic, square 1:1, no text, no logos.
+The same yellow-gold oval sapphire ring with pavé shoulders as the reference image, worn on the ring finger of a woman's hand as she gently tucks a strand of hair behind her ear, seen in a close side profile: soft golden-hour sunlight from behind, a warm glow on her cheek and the gold band, a simple ivory linen shirt, a softly blurred sunlit garden behind her. Natural, candid, intimate everyday moment; the ring is sharp and clearly visible, catching a bright sparkle on the sapphire. Photorealistic lifestyle photo, square 1:1, no text, no logos.
 ```
 
 ---
