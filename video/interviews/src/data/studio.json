@@ -815,8 +815,8 @@
    "ev": "direct",
    "imgs": [
     "P10",
-    "P06",
-    "P09"
+    "P13",
+    "P14"
    ],
    "pick": 0
   },
@@ -841,11 +841,6 @@
  "cta": {
   "t": 40.812,
   "text": "takshila.co"
- },
- "music": {
-  "file": "p4/lovelikethis.mp3",
-  "start": 30.0,
-  "vol": 0.08
  },
  "clicks": [
   "mkey1m"

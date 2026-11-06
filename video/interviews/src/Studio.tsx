@@ -34,7 +34,7 @@ const frameOf = (clip: string): React.CSSProperties => {
 
 // until her generated images arrive, the preview uses the script-1 stills
 const PLACEHOLDER: Record<string, string> = {P02: 'infl2/12.jpg', P03: 'infl2/07.jpg', P04: 'infl2/09.jpg', P05: 'infl2/14.jpg', P06: 'infl2/01.jpg',
-	P07: 'infl2/03.jpg', P08: 'infl2/04.jpg', P09: 'infl2/15.jpg', P10: 'infl2/13.jpg', P11: 'infl2/15.jpg', P12: 'infl2/05.jpg'};
+	P07: 'infl2/03.jpg', P08: 'infl2/04.jpg', P09: 'infl2/15.jpg', P10: 'infl2/13.jpg', P11: 'infl2/15.jpg', P12: 'infl2/05.jpg', P13: 'infl2/06.jpg', P14: 'infl2/02.jpg'};
 const imgOf = (d: StudioData, k?: string) => (k ? staticFile(`img/${d.images?.[k] ?? PLACEHOLDER[k]}`) : '');
 
 const Face: React.FC<{s: Seg}> = ({s}) => {
@@ -154,7 +154,7 @@ const Studio: React.FC<{d: StudioData}> = ({d}) => {
 	const detailEv = ev.find((e) => e.ev === 'detail')!;
 	const step = t < direct.t ? 0 : t < refine ? 1 : t < final.t ? 2 : 3;
 	// what the preview shows right now
-	const shown = [...ev].filter((e) => e.t <= t && (e.img || e.ev === 'describe')).pop();
+	const shown = [...ev].filter((e) => (e.ev === 'refine' ? e.t + 0.9 : e.t) <= t && (e.img || e.ev === 'describe')).pop();
 	const panelIn = interpolate(t, [0, 0.5], [120, 0], {...clamp, easing: ease});
 	// prompt box text: typed in word by word as each idea is added
 	const typed = ideas.filter((e) => e.t <= t).map((e, i, arr) => {
@@ -218,22 +218,28 @@ const Studio: React.FC<{d: StudioData}> = ({d}) => {
 		}
 		if (t < final.t) {
 			const isRefine = t >= refine;
-			const prop = interpolate(t, [refine + 0.3, refine + 1.4], [0.35, 0.72], {...clamp, easing: ease});
-			return (
+						return (
 				<div style={{opacity: fade(t, direct.t)}}>
 					<div style={{fontFamily: AFACAD, fontSize: 17, letterSpacing: '0.2em', color: C.taupe}}>{isRefine ? 'REFINE · VERSION 2' : 'DIRECT · PICK ONE OF THREE'}</div>
-					<div style={{fontFamily: CORMORANT_G, fontSize: 56, color: C.plum, marginTop: 8}}>{isRefine ? <>Shape every <i>detail</i></> : <>Your choices, <i>designed</i></>}</div>
+					<div style={{fontFamily: CORMORANT_G, fontSize: 56, color: C.plum, marginTop: 8}}>{isRefine ? <>Refine it <i>together</i></> : <>Your choices, <i>designed</i></>}</div>
 					{isRefine ? (
-						<div style={{marginTop: 30}}>
-							{[['Proportions', prop], ['Band width', 0.4], ['Setting height', interpolate(t, [refine + 0.8, refine + 1.8], [0.5, 0.78], {...clamp, easing: ease})]].map(([l, v]) => (
-								<div key={l as string} style={{marginBottom: 26}}>
-									<div style={{fontFamily: AFACAD, fontSize: 24, color: C.plum, marginBottom: 10}}>{l as string}</div>
-									<div style={{height: 8, borderRadius: 4, background: C.line, position: 'relative'}}>
-										<div style={{position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(v as number) * 100}%`, borderRadius: 4, background: C.mauve}} />
-										<div style={{position: 'absolute', top: -11, left: `calc(${(v as number) * 100}% - 15px)`, width: 30, height: 30, borderRadius: 15, background: 'white', border: `3px solid ${C.mauve}`}} />
-									</div>
+						<div style={{marginTop: 26, display: 'flex', flexDirection: 'column', gap: 16}}>
+							{/* refining happens in the chat: her request, the assistant's reply */}
+							<div style={{alignSelf: 'flex-end', maxWidth: 400, background: C.mauve, color: 'white', borderRadius: '24px 24px 6px 24px', padding: '16px 22px',
+								fontFamily: AFACAD, fontSize: 25, lineHeight: 1.3, opacity: fade(t, refine + 0.1), translate: `0 ${(1 - fade(t, refine + 0.1)) * 16}px`}}>
+								Make the band a little slimmer and the setting taller
+							</div>
+							{t < refine + 0.9 ? (
+								<div style={{alignSelf: 'flex-start', background: C.card, border: `1.5px solid ${C.line}`, borderRadius: '24px 24px 24px 6px', padding: '16px 24px',
+									fontFamily: AFACAD, fontSize: 25, color: C.taupe, opacity: fade(t, refine + 0.45)}}>
+									{'•••'.slice(0, 1 + (Math.floor(frame / 6) % 3))}
 								</div>
-							))}
+							) : (
+								<div style={{alignSelf: 'flex-start', maxWidth: 420, background: C.card, border: `1.5px solid ${C.line}`, borderRadius: '24px 24px 24px 6px', padding: '16px 22px',
+									fontFamily: AFACAD, fontSize: 25, lineHeight: 1.3, color: C.plum, opacity: fade(t, refine + 0.9), translate: `0 ${(1 - fade(t, refine + 0.9)) * 16}px`}}>
+									Done. Slimmer band, taller setting. <span style={{color: C.gold}}>Saved as version 2 ✓</span>
+								</div>
+							)}
 						</div>
 					) : (
 						<div style={{display: 'flex', gap: 14, marginTop: 24}}>

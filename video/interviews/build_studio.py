@@ -35,7 +35,7 @@ EVENTS = [
     ('20261102_174036', 'platinum', 'metal', {'metal': 'Platinum', 'img': 'P08'}),
     ('20261102_174036', 'stone', 'stone', {'stone': 'Sapphire', 'img': 'P09'}),
     ('20261102_174036', 'details', 'detail', {'detail': 'Pavé band', 'img': 'P10'}),
-    ('20261102_174505', 'turn', 'direct', {'imgs': ['P10', 'P06', 'P09'], 'pick': 0}),
+    ('20261102_174505', 'turn', 'direct', {'imgs': ['P10', 'P13', 'P14'], 'pick': 0}),
     ('20261102_174505', 'refine', 'refine', {'img': 'P11'}),
     ('20261102_174505', 'every', 'worn', {'img': 'P12'}),
     ('20261102_174753', 'Tell', 'final', {'sketch': 'P02', 'img': 'P11'}),
@@ -100,7 +100,6 @@ def main(words_path, vdir, out):
     data = {'total': total, 'segments': segs, 'words': words, 'events': events,
             'hookEnd': round(next(s['o'] for s in segs if s['clip'] == CLIPS[1]), 3),
             'cta': {'t': next(w['t'] for w in words if w['w'].startswith('Tell')), 'text': 'takshila.co'},
-            'music': {'file': 'p4/lovelikethis.mp3', 'start': 30.0, 'vol': 0.08},
             'clicks': ['mkey1m']}
     json.dump(data, open(out, 'w'), indent=1)
     print('pace (cps, rate)', rates)
