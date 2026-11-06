@@ -325,7 +325,7 @@ const Clicks: React.FC<{d: StudioData}> = ({d}) => {
 	if (!d.clicks) return null;
 	// one crisp click per hook word, plus one per tap in the studio
 	const hits = [...d.words.filter((w) => w.t < d.hookEnd).map((w) => ({t: w.t, v: 0.6})),
-		...d.events.filter((e) => ['idea', 'generate', 'metal', 'stone', 'detail'].includes(e.ev)).map((e) => ({t: e.t, v: 0.45}))];
+		...d.events.filter((e) => ['idea', 'generate', 'metal', 'stone', 'detail'].includes(e.ev)).map((e) => ({t: e.t, v: 0.25}))];
 	return (
 		<>
 			{hits.map((h, i) => (
