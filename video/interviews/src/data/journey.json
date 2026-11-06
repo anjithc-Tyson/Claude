@@ -1,0 +1,769 @@
+{
+ "clip": "20261104_155922",
+ "total": 44.909,
+ "segments": [
+  {
+   "a": 0.74,
+   "b": 16.22,
+   "o": 0.0,
+   "rate": 1.1
+  },
+  {
+   "a": 19.44,
+   "b": 46.32,
+   "o": 14.073,
+   "rate": 1.1
+  },
+  {
+   "a": 47.12,
+   "b": 54.16,
+   "o": 38.509,
+   "rate": 1.1
+  }
+ ],
+ "words": [
+  {
+   "w": "This",
+   "t": 0.073,
+   "e": 0.455,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 0.455,
+   "e": 0.636,
+   "key": false
+  },
+  {
+   "w": "how",
+   "t": 0.636,
+   "e": 0.945,
+   "key": false
+  },
+  {
+   "w": "we",
+   "t": 0.945,
+   "e": 1.182,
+   "key": false
+  },
+  {
+   "w": "turn",
+   "t": 1.182,
+   "e": 1.364,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 1.364,
+   "e": 1.8,
+   "key": false
+  },
+  {
+   "w": "blank",
+   "t": 1.8,
+   "e": 2.036,
+   "key": true
+  },
+  {
+   "w": "canvas",
+   "t": 2.036,
+   "e": 2.509,
+   "key": true
+  },
+  {
+   "w": "becomes",
+   "t": 2.509,
+   "e": 2.964,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 2.964,
+   "e": 3.382,
+   "key": false
+  },
+  {
+   "w": "custom",
+   "t": 3.382,
+   "e": 3.582,
+   "key": true
+  },
+  {
+   "w": "piece",
+   "t": 3.582,
+   "e": 3.945,
+   "key": true
+  },
+  {
+   "w": "just",
+   "t": 3.945,
+   "e": 4.4,
+   "key": false
+  },
+  {
+   "w": "for",
+   "t": 4.4,
+   "e": 4.6,
+   "key": false
+  },
+  {
+   "w": "you.",
+   "t": 4.6,
+   "e": 5.291,
+   "key": true
+  },
+  {
+   "w": "It",
+   "t": 5.291,
+   "e": 5.982,
+   "key": false
+  },
+  {
+   "w": "starts",
+   "t": 5.982,
+   "e": 6.127,
+   "key": false
+  },
+  {
+   "w": "with",
+   "t": 6.127,
+   "e": 6.291,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 6.291,
+   "e": 6.527,
+   "key": false
+  },
+  {
+   "w": "idea",
+   "t": 6.527,
+   "e": 6.855,
+   "key": true
+  },
+  {
+   "w": "whether",
+   "t": 6.855,
+   "e": 7.345,
+   "key": false
+  },
+  {
+   "w": "this",
+   "t": 7.345,
+   "e": 7.691,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 7.691,
+   "e": 7.964,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 7.964,
+   "e": 8.164,
+   "key": false
+  },
+  {
+   "w": "meaningful",
+   "t": 8.164,
+   "e": 8.545,
+   "key": false
+  },
+  {
+   "w": "stone",
+   "t": 8.545,
+   "e": 8.927,
+   "key": true
+  },
+  {
+   "w": "a",
+   "t": 8.927,
+   "e": 9.6,
+   "key": false
+  },
+  {
+   "w": "special",
+   "t": 9.6,
+   "e": 10.055,
+   "key": false
+  },
+  {
+   "w": "date",
+   "t": 10.055,
+   "e": 10.436,
+   "key": true
+  },
+  {
+   "w": "or",
+   "t": 10.436,
+   "e": 10.873,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 10.873,
+   "e": 11.127,
+   "key": false
+  },
+  {
+   "w": "design",
+   "t": 11.127,
+   "e": 11.582,
+   "key": true
+  },
+  {
+   "w": "you",
+   "t": 11.582,
+   "e": 12.127,
+   "key": true
+  },
+  {
+   "w": "have",
+   "t": 12.127,
+   "e": 12.364,
+   "key": false
+  },
+  {
+   "w": "imagined",
+   "t": 12.364,
+   "e": 13.055,
+   "key": false
+  },
+  {
+   "w": "for",
+   "t": 13.055,
+   "e": 13.545,
+   "key": false
+  },
+  {
+   "w": "years.",
+   "t": 13.545,
+   "e": 13.927,
+   "key": false
+  },
+  {
+   "w": "together",
+   "t": 14.145,
+   "e": 15.236,
+   "key": false
+  },
+  {
+   "w": "with",
+   "t": 15.564,
+   "e": 16.127,
+   "key": false
+  },
+  {
+   "w": "takshila.co",
+   "t": 16.127,
+   "e": 16.4,
+   "key": true
+  },
+  {
+   "w": "we",
+   "t": 17.036,
+   "e": 17.618,
+   "key": false
+  },
+  {
+   "w": "choose",
+   "t": 17.618,
+   "e": 17.982,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 17.982,
+   "e": 18.273,
+   "key": false
+  },
+  {
+   "w": "metal",
+   "t": 18.273,
+   "e": 18.764,
+   "key": true
+  },
+  {
+   "w": "the",
+   "t": 18.764,
+   "e": 19.473,
+   "key": false
+  },
+  {
+   "w": "stone",
+   "t": 19.473,
+   "e": 19.818,
+   "key": true
+  },
+  {
+   "w": "and",
+   "t": 19.818,
+   "e": 20.618,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 20.618,
+   "e": 21.0,
+   "key": false
+  },
+  {
+   "w": "details",
+   "t": 21.0,
+   "e": 21.309,
+   "key": true
+  },
+  {
+   "w": "make",
+   "t": 21.309,
+   "e": 21.891,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 21.891,
+   "e": 22.491,
+   "key": false
+  },
+  {
+   "w": "piece",
+   "t": 22.491,
+   "e": 22.655,
+   "key": true
+  },
+  {
+   "w": "feel",
+   "t": 22.655,
+   "e": 23.436,
+   "key": false
+  },
+  {
+   "w": "like",
+   "t": 23.436,
+   "e": 23.8,
+   "key": false
+  },
+  {
+   "w": "yours",
+   "t": 23.8,
+   "e": 24.109,
+   "key": false
+  },
+  {
+   "w": "then",
+   "t": 24.109,
+   "e": 24.855,
+   "key": false
+  },
+  {
+   "w": "we",
+   "t": 24.855,
+   "e": 25.145,
+   "key": false
+  },
+  {
+   "w": "shape,",
+   "t": 25.145,
+   "e": 25.691,
+   "key": true
+  },
+  {
+   "w": "set,",
+   "t": 25.691,
+   "e": 26.473,
+   "key": true
+  },
+  {
+   "w": "polish",
+   "t": 26.473,
+   "e": 27.218,
+   "key": true
+  },
+  {
+   "w": "and",
+   "t": 27.218,
+   "e": 27.6,
+   "key": false
+  },
+  {
+   "w": "refine",
+   "t": 27.6,
+   "e": 28.091,
+   "key": true
+  },
+  {
+   "w": "every",
+   "t": 28.091,
+   "e": 28.909,
+   "key": false
+  },
+  {
+   "w": "part",
+   "t": 28.909,
+   "e": 29.309,
+   "key": false
+  },
+  {
+   "w": "until",
+   "t": 29.309,
+   "e": 29.855,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 29.855,
+   "e": 30.218,
+   "key": false
+  },
+  {
+   "w": "original",
+   "t": 30.218,
+   "e": 30.564,
+   "key": false
+  },
+  {
+   "w": "idea",
+   "t": 30.564,
+   "e": 30.927,
+   "key": true
+  },
+  {
+   "w": "comes",
+   "t": 30.927,
+   "e": 31.273,
+   "key": false
+  },
+  {
+   "w": "to",
+   "t": 31.273,
+   "e": 31.491,
+   "key": false
+  },
+  {
+   "w": "life.",
+   "t": 31.491,
+   "e": 32.218,
+   "key": true
+  },
+  {
+   "w": "What",
+   "t": 32.364,
+   "e": 32.6,
+   "key": false
+  },
+  {
+   "w": "began",
+   "t": 32.6,
+   "e": 33.055,
+   "key": false
+  },
+  {
+   "w": "as",
+   "t": 33.055,
+   "e": 33.4,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 33.4,
+   "e": 33.618,
+   "key": false
+  },
+  {
+   "w": "blank",
+   "t": 33.618,
+   "e": 33.782,
+   "key": true
+  },
+  {
+   "w": "canvas",
+   "t": 33.782,
+   "e": 34.109,
+   "key": true
+  },
+  {
+   "w": "becomes",
+   "t": 34.109,
+   "e": 34.509,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 34.509,
+   "e": 35.127,
+   "key": false
+  },
+  {
+   "w": "piece",
+   "t": 35.127,
+   "e": 35.418,
+   "key": true
+  },
+  {
+   "w": "that",
+   "t": 35.418,
+   "e": 35.945,
+   "key": false
+  },
+  {
+   "w": "could",
+   "t": 35.945,
+   "e": 36.164,
+   "key": false
+  },
+  {
+   "w": "belong",
+   "t": 36.164,
+   "e": 36.436,
+   "key": false
+  },
+  {
+   "w": "to",
+   "t": 36.436,
+   "e": 36.727,
+   "key": false
+  },
+  {
+   "w": "no",
+   "t": 36.727,
+   "e": 36.855,
+   "key": false
+  },
+  {
+   "w": "one",
+   "t": 36.855,
+   "e": 37.018,
+   "key": false
+  },
+  {
+   "w": "else",
+   "t": 37.018,
+   "e": 37.2,
+   "key": false
+  },
+  {
+   "w": "but",
+   "t": 37.2,
+   "e": 37.382,
+   "key": false
+  },
+  {
+   "w": "you.",
+   "t": 37.382,
+   "e": 38.364,
+   "key": true
+  },
+  {
+   "w": "Bring",
+   "t": 38.582,
+   "e": 38.6,
+   "key": false
+  },
+  {
+   "w": "us",
+   "t": 38.6,
+   "e": 38.8,
+   "key": false
+  },
+  {
+   "w": "your",
+   "t": 38.8,
+   "e": 38.982,
+   "key": false
+  },
+  {
+   "w": "idea",
+   "t": 38.982,
+   "e": 39.291,
+   "key": true
+  },
+  {
+   "w": "takshila.co",
+   "t": 39.291,
+   "e": 39.673,
+   "key": true
+  },
+  {
+   "w": "and",
+   "t": 40.527,
+   "e": 40.982,
+   "key": false
+  },
+  {
+   "w": "we",
+   "t": 40.982,
+   "e": 41.182,
+   "key": false
+  },
+  {
+   "w": "will",
+   "t": 41.182,
+   "e": 41.455,
+   "key": false
+  },
+  {
+   "w": "help",
+   "t": 41.455,
+   "e": 41.727,
+   "key": false
+  },
+  {
+   "w": "you",
+   "t": 41.727,
+   "e": 42.018,
+   "key": true
+  },
+  {
+   "w": "turn",
+   "t": 42.018,
+   "e": 42.182,
+   "key": false
+  },
+  {
+   "w": "into",
+   "t": 42.182,
+   "e": 42.727,
+   "key": false
+  },
+  {
+   "w": "something",
+   "t": 42.727,
+   "e": 43.345,
+   "key": false
+  },
+  {
+   "w": "you",
+   "t": 43.345,
+   "e": 43.782,
+   "key": true
+  },
+  {
+   "w": "can",
+   "t": 43.782,
+   "e": 44.036,
+   "key": false
+  },
+  {
+   "w": "keep",
+   "t": 44.036,
+   "e": 44.291,
+   "key": false
+  },
+  {
+   "w": "forever.",
+   "t": 44.291,
+   "e": 44.764,
+   "key": true
+  }
+ ],
+ "events": [
+  {
+   "t": 6.477,
+   "ev": "step",
+   "step": 0
+  },
+  {
+   "t": 8.495,
+   "ev": "thumb",
+   "img": "J01",
+   "label": "A meaningful stone"
+  },
+  {
+   "t": 10.005,
+   "ev": "thumb",
+   "img": "J02",
+   "label": "A special date"
+  },
+  {
+   "t": 11.077,
+   "ev": "thumb",
+   "img": "J03",
+   "label": "Your design"
+  },
+  {
+   "t": 14.095,
+   "ev": "step",
+   "step": 1
+  },
+  {
+   "t": 18.223,
+   "ev": "thumb",
+   "img": "J04",
+   "label": "Metal"
+  },
+  {
+   "t": 19.423,
+   "ev": "thumb",
+   "img": "J05",
+   "label": "Stone"
+  },
+  {
+   "t": 20.95,
+   "ev": "thumb",
+   "img": "J06",
+   "label": "Details"
+  },
+  {
+   "t": 24.059,
+   "ev": "step",
+   "step": 2
+  },
+  {
+   "t": 25.095,
+   "ev": "thumb",
+   "img": "J07",
+   "label": "Shape"
+  },
+  {
+   "t": 25.641,
+   "ev": "thumb",
+   "img": "J08",
+   "label": "Set"
+  },
+  {
+   "t": 26.423,
+   "ev": "thumb",
+   "img": "J09",
+   "label": "Polish"
+  },
+  {
+   "t": 27.55,
+   "ev": "refine"
+  },
+  {
+   "t": 32.314,
+   "ev": "step",
+   "step": 3
+  },
+  {
+   "t": 35.077,
+   "ev": "reveal",
+   "img": "J10"
+  },
+  {
+   "t": 38.532,
+   "ev": "cta"
+  }
+ ],
+ "music": {
+  "file": "p5/parampampam.mp3",
+  "start": 27.0,
+  "vol": 0.11
+ },
+ "images": {
+  "J01": "journey/J01.jpg",
+  "J02": "journey/J02.jpg",
+  "J03": "journey/J03.jpg",
+  "J04": "journey/J04.jpg",
+  "J05": "journey/J05.jpg",
+  "J06": "journey/J06.jpg",
+  "J07": "journey/J07.jpg",
+  "J08": "journey/J08.jpg",
+  "J09": "journey/J09.jpg",
+  "J10": "journey/J10.jpg",
+  "J11": "journey/J11.jpg"
+ }
+}
