@@ -262,7 +262,8 @@ const Sfx: React.FC<{d: JourneyData}> = ({d}) => {
 	hits.push({t: reveal.t - 1.5, f: 'riser', v: 0.22, len: 1.65}, {t: reveal.t, f: 'glock', v: 0.4});
 	const cta = ev.find((e) => e.ev === 'cta')!;
 	hits.push({t: cta.t, f: 'click', v: 0.4});
-	hits.push({t: d.total - 1.5, f: 'riser', v: 0.2, len: 1.65}, {t: d.total - 0.15, f: 'whoosh', v: 0.25});
+	hits.push({t: d.total - 1.5, f: 'riser', v: 0.2, len: 1.65}, {t: d.total - 0.15, f: 'whoosh', v: 0.25},
+		{t: d.total + 1.15, f: 'typing', v: 0.45, len: 0.7}, {t: d.total + 2.2, f: 'click', v: 0.6});
 	return (
 		<>
 			{hits.map((h, i) => (
