@@ -13,7 +13,8 @@ import cv2
 
 GAP = 0.5
 TARGET_CPS = 10.2   # median speaking pace (characters per second) across the takes
-MAX_RATE = 1.10     # a slow take is sped up gently, never more than this
+MAX_RATE = 1.10
+TAKE_END = {'20261102_092812': 13.25}   # she reaches for the phone after 'heirloom'     # a slow take is sped up gently, never more than this
 PAD_IN, PAD_OUT = 0.08, 0.16
 
 # clip, [(first word, last word, media, fit)] ; fit 'cover' crops to fill, 'fit' shows landscape full width over a blur
@@ -50,7 +51,7 @@ def main(words_path, vdir, out):
         for w in ws[1:]:
             (groups.append(cur), cur := [w]) if w['s'] - cur[-1]['e'] > GAP else cur.append(w)
         groups.append(cur)
-        spans = [(max(0.0, g[0]['s'] - PAD_IN), min(dur - 0.05, g[-1]['e'] + PAD_OUT)) for g in groups]
+        spans = [(max(0.0, g[0]['s'] - PAD_IN), min(dur - 0.05, TAKE_END.get(clip, 1e9), g[-1]['e'] + PAD_OUT)) for g in groups]
         cps = sum(len(w['w']) for w in ws) / sum(b - a for a, b in spans)
         rate = round(min(MAX_RATE, max(1.0, TARGET_CPS / cps)), 3) if cps < TARGET_CPS * 0.95 else 1.0
         rates[clip] = (round(cps, 1), rate)
