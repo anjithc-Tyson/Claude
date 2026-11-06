@@ -17,14 +17,15 @@ PAD_IN, PAD_OUT = 0.08, 0.16
 # clip, [(first word, last word, media, fit)] ; fit 'cover' crops to fill, 'fit' shows landscape full width over a blur
 PLAN = [
     ('20261101_144048', []),
-    ('20261102_092812', [('warm', 'memory', 'stock/34611.mp4', 'fit'), ('that', 'heirloom', 'stock/50784.mp4', 'cover')]),
-    ('20261102_093527', [('classic', 'versatile', 'stock/5180.mp4', 'fit'), ('modern', 'strength', 'stock/5220.mp4', 'cover'),
-                         ('finish', 'style', 'img:infl/platinum_hand.jpg', 'cover')]),
-    ('20261102_094354', [('diamond', 'timeless', 'stock/20877.mp4', 'fit'), ('sapphire', 'color', 'img:infl/sapphire.jpg', 'cover'),
-                         ('gem', 'understand', 'stock/2567.mp4', 'cover')]),
-    ('20261102_094844', [('name', 'name', 'img:infl/engrave.jpg', 'cover'), ('memory', 'milestone', 'img:infl/note.jpg', 'cover'),
-                         ('feeling', 'close', 'stock/51260.mp4', 'cover')]),
-    ('20261102_101733', [('blank', 'canvas', 'img:infl/sketch.jpg', 'cover'), ('piece', 'you', 'img:infl/box.jpg', 'cover')]),
+    ('20261102_092812', [('warm', 'memory', 'img:infl2/01.jpg', 'cover'), ('that', 'heirloom', 'img:infl2/02.jpg', 'cover')]),
+    ('20261102_093527', [('classic', 'versatile', 'img:infl2/03.jpg', 'cover'), ('modern', 'strength', 'img:infl2/04.jpg', 'cover'),
+                         ('finish', 'style', 'img:infl2/05.jpg', 'cover')]),
+    ('20261102_094354', [('diamond', 'timeless', 'img:infl2/06.jpg', 'cover'), ('sapphire', 'color', 'img:infl2/07.jpg', 'cover'),
+                         ('gem', 'understand', 'img:infl2/08.jpg', 'cover')]),
+    ('20261102_094844', [('name', 'name', 'img:infl2/09.jpg', 'cover'), ('memory', 'milestone', 'img:infl2/10.jpg', 'cover'),
+                         ('feeling', 'close', 'img:infl2/11.jpg', 'cover')]),
+    ('20261102_101733', [('blank', 'canvas', 'img:infl2/12.jpg', 'cover'), ('piece', 'you', 'img:infl2/13.jpg', 'cover'),
+                         ('every', 'story', 'img:infl2/14.jpg', 'cover')]),
     ('20261102_103613', []),
 ]
 FIX = {'peace': 'piece', 'Tuxilla': 'takshila.co', '.com': None, 'Starts': 'Start'}

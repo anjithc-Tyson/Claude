@@ -38,12 +38,16 @@ const Face: React.FC<{s: Seg}> = ({s}) => {
 };
 
 // every B-roll shot fills the whole screen
-const Media: React.FC<{b: Broll}> = ({b}) => {
+const Media: React.FC<{b: Broll; i: number}> = ({b, i}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const len = (b.e - b.t) * fps;
-	const push = interpolate(frame, [0, len], [1.0, 1.06], clamp);
-	const style: React.CSSProperties = {width: 1080, height: 1920, objectFit: 'cover', scale: push};
+	// stills get a slow camera move; alternate push-in, pull-out and a sideways drift so cuts feel alive
+	const p = interpolate(frame, [0, len], [0, 1], {...clamp, easing: Easing.inOut(Easing.sin)});
+	const kind = i % 3;
+	const z = kind === 1 ? 1.12 - 0.08 * p : 1.03 + 0.08 * p;
+	const dx = kind === 2 ? -24 + 48 * p : 0;
+	const style: React.CSSProperties = {width: 1080, height: 1920, objectFit: 'cover', scale: z, translate: `${dx}px 0px`};
 	return (
 		<AbsoluteFill style={{backgroundColor: '#111'}}>
 			{b.media.startsWith('img:') ? (
@@ -96,7 +100,7 @@ const Caption: React.FC<{d: Infl; font: FontKey}> = ({d, font}) => {
 	return (
 		<div style={{position: 'absolute', top: 1300, width: 1080, textAlign: 'center', opacity: a}}>
 			<span style={{fontFamily: F.family, fontWeight: F.weight, fontSize: F.size, letterSpacing: F.track, color: 'white',
-				textTransform: font === 'instrument' ? 'lowercase' : 'none', textShadow: '0 1px 2px rgba(0,0,0,0.45), 0 3px 14px rgba(0,0,0,0.35)'}}>
+				textTransform: font === 'instrument' ? 'lowercase' : 'none', textShadow: '0 1px 2px rgba(0,0,0,0.6), 0 0 10px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.5), 0 0 42px rgba(0,0,0,0.3)'}}>
 				{font === 'instrument' ? text.replace(/takshila\.co/i, 'takshila.co') : text}
 			</span>
 		</div>
@@ -136,7 +140,7 @@ const EndCard: React.FC<{font: FontKey}> = ({font}) => {
 	const btn = interpolate(frame, [20, 30], [0, 1], {...clamp, easing: springy});
 	return (
 		<AbsoluteFill style={{opacity: a, backgroundColor: '#000'}}>
-			<Img src={staticFile('img/infl/box.jpg')} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z}} />
+			<Img src={staticFile('img/infl2/15.jpg')} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z}} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.62) 78%)'}} />
 			<div style={{position: 'absolute', top: 1220, width: 1080, textAlign: 'center'}}>
 				<div style={{opacity: l1, translate: `0 ${(1 - l1) * 24}px`, fontFamily: F.family, fontWeight: F.weight, fontSize: F.size * 1.25, color: 'white', textShadow: SHADOW, lineHeight: 1.05}}>
@@ -177,7 +181,7 @@ export const Influencer: React.FC<{d: Infl}> = ({d}) => {
 			))}
 			{d.broll.map((b, i) => (
 				<Sequence key={`b${i}`} name={`broll ${b.media}`} from={f(b.t)} durationInFrames={Math.max(1, f(b.e) - f(b.t))}>
-					<Media b={b} />
+					<Media b={b} i={i} />
 				</Sequence>
 			))}
 			{cuts.map((c, i) => (

@@ -962,79 +962,85 @@
   {
    "t": 9.06,
    "e": 12.16,
-   "media": "stock/34611.mp4",
-   "fit": "fit"
+   "media": "img:infl2/01.jpg",
+   "fit": "cover"
   },
   {
    "t": 11.86,
    "e": 16.36,
-   "media": "stock/50784.mp4",
+   "media": "img:infl2/02.jpg",
    "fit": "cover"
   },
   {
    "t": 17.52,
    "e": 22.12,
-   "media": "stock/5180.mp4",
-   "fit": "fit"
+   "media": "img:infl2/03.jpg",
+   "fit": "cover"
   },
   {
    "t": 23.6,
    "e": 28.36,
-   "media": "stock/5220.mp4",
+   "media": "img:infl2/04.jpg",
    "fit": "cover"
   },
   {
    "t": 28.36,
    "e": 30.74,
-   "media": "img:infl/platinum_hand.jpg",
+   "media": "img:infl2/05.jpg",
    "fit": "cover"
   },
   {
    "t": 31.68,
    "e": 34.02,
-   "media": "stock/20877.mp4",
-   "fit": "fit"
+   "media": "img:infl2/06.jpg",
+   "fit": "cover"
   },
   {
    "t": 34.02,
    "e": 36.2,
-   "media": "img:infl/sapphire.jpg",
+   "media": "img:infl2/07.jpg",
    "fit": "cover"
   },
   {
    "t": 36.2,
    "e": 39.82,
-   "media": "stock/2567.mp4",
+   "media": "img:infl2/08.jpg",
    "fit": "cover"
   },
   {
    "t": 43.42,
    "e": 44.1,
-   "media": "img:infl/engrave.jpg",
+   "media": "img:infl2/09.jpg",
    "fit": "cover"
   },
   {
    "t": 44.1,
    "e": 45.7,
-   "media": "img:infl/note.jpg",
+   "media": "img:infl2/10.jpg",
    "fit": "cover"
   },
   {
    "t": 46.96,
    "e": 49.16,
-   "media": "stock/51260.mp4",
+   "media": "img:infl2/11.jpg",
    "fit": "cover"
   },
   {
    "t": 50.06,
    "e": 51.34,
-   "media": "img:infl/sketch.jpg",
+   "media": "img:infl2/12.jpg",
    "fit": "cover"
   },
   {
    "t": 51.34,
-   "e": 53.5,
-   "media": "img:infl/box.jpg",
+   "e": 53.64,
+   "media": "img:infl2/13.jpg",
+   "fit": "cover"
+  },
+  {
+   "t": 53.64,
+   "e": 56.66,
+   "media": "img:infl2/14.jpg",
    "fit": "cover"
   }
  ],
