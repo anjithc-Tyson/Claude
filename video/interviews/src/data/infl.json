@@ -1067,7 +1067,10 @@
  "hookEnd": 5.22,
  "typing": {
   "file": "type_mech",
-  "vol": 0.55
+  "vol": 0.6,
+  "perWord": [
+   "mkey1m"
+  ]
  },
  "music": {
   "file": "p4/lovelikethis.mp3",

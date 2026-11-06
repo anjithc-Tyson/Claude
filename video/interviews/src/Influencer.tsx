@@ -25,7 +25,7 @@ const segLen = (s: Seg) => (s.b - s.a) / (s.rate ?? 1);
 type Word = {w: string; t: number; e: number; key: boolean};
 type Broll = {t: number; e: number; media: string; fit: string};
 export type Infl = {total: number; segments: Seg[]; words: Word[]; broll: Broll[]; noCutout?: string[]; hookEnd?: number;
-	cta: {t: number; text: string}; typing?: {file: string; vol: number} | null; music?: {file: string; start: number; vol: number}; font?: FontKey};
+	cta: {t: number; text: string}; typing?: {file: string; vol: number; perWord?: string[]} | null; music?: {file: string; start: number; vol: number}; font?: FontKey};
 export const INFL = inflData as unknown as Infl;
 export const INFL_END = 3.2;
 export const inflTotal = (d: Infl) => d.total + INFL_END;
@@ -172,6 +172,18 @@ const Keys: React.FC<{d: Infl}> = ({d}) => {
 	const {fps} = useVideoConfig();
 	if (!d.typing) return null;
 	const hook = d.words.filter((w) => w.t < (d.hookEnd ?? 0));
+	if (d.typing.perWord) {
+		// one key click per word: a 7-word line gets exactly 7 clicks
+		return (
+			<>
+				{hook.map((w, i) => (
+					<Sequence key={`kw${i}`} name="key click" from={Math.round(w.t * fps)} durationInFrames={5} layout="none">
+						<Audio src={staticFile(`sfx/infl/${d.typing!.perWord![i % d.typing!.perWord!.length]}.wav`)} volume={d.typing!.vol * (0.88 + 0.12 * (((i * 7) % 5) / 4))} />
+					</Sequence>
+				))}
+			</>
+		);
+	}
 	let off = 0.8;
 	const parts = hook.map((w) => {
 		const clean = w.w.replace(/[.,!?]+$/, '');
