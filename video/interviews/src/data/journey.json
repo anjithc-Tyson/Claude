@@ -753,6 +753,7 @@
   "start": 27.0,
   "vol": 0.11
  },
+ "placeholders": false,
  "images": {
   "J01": "journey/J01.jpg",
   "J02": "journey/J02.jpg",

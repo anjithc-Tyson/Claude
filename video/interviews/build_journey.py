@@ -88,6 +88,7 @@ def main(words_path, video, out):
     total = round(o, 3)
     data = {'clip': video.split('/')[-1][:-4], 'total': total, 'segments': segs, 'words': words, 'events': events,
             'music': {'file': 'p5/parampampam.mp3', 'start': 27.0, 'vol': 0.11},
+            'placeholders': False,
             'images': {f'J{k:02d}': f'journey/J{k:02d}.jpg' for k in range(1, 12)}}
     json.dump(data, open(out, 'w'), indent=1)
     print('cps', round(cps, 1), 'rate', rate, 'total', total, 'segments', len(segs), 'words', len(words))
