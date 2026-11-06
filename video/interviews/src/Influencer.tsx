@@ -17,7 +17,7 @@ export type FontKey = 'poppins' | 'playfair' | 'instrument';
 const FONTS: Record<FontKey, {family: string; weight: number; italicKey: boolean; size: number; track: string}> = {
 	poppins: {family: POPPINS, weight: 700, italicKey: false, size: 62, track: '-0.01em'},
 	playfair: {family: PLAYFAIR, weight: 700, italicKey: true, size: 68, track: '0'},
-	instrument: {family: INSTRUMENT, weight: 400, italicKey: true, size: 84, track: '0'},
+	instrument: {family: INSTRUMENT, weight: 400, italicKey: true, size: 76, track: '-0.005em'},
 };
 
 type Seg = {clip: string; a: number; b: number; o: number};
@@ -66,22 +66,38 @@ const Cutout: React.FC<{clip: string; src: number}> = ({clip, src}) => {
 	);
 };
 
+// captions like the reference: soft white serif, lowercase, two words at a time, no colour highlights
+const chunks2 = (ws: Word[]) => {
+	const out: Word[][] = [];
+	let cur: Word[] = [];
+	for (const w of ws) {
+		cur.push(w);
+		if (cur.length === 2 || /[.,!?]$/.test(w.w)) {
+			out.push(cur);
+			cur = [];
+		}
+	}
+	if (cur.length) out.push(cur);
+	return out;
+};
+
 const Caption: React.FC<{d: Infl; font: FontKey}> = ({d, font}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
+	const groups = React.useMemo(() => chunks2(d.words), [d.words]);
 	if (t >= d.total) return null;
-	const i = d.words.findIndex((w, k) => w.t <= t && t < Math.min(w.e + 0.25, d.words[k + 1]?.t ?? 1e9));
-	if (i < 0) return null;
-	const w = d.words[i];
+	const gi = groups.findIndex((g, k) => g[0].t <= t && t < Math.min(g[g.length - 1].e + 0.3, groups[k + 1]?.[0].t ?? 1e9));
+	if (gi < 0) return null;
+	const g = groups[gi];
 	const F = FONTS[font];
-	const s = interpolate(t - w.t, [0, 0.1], [0.88, 1], {...clamp, easing: springy});
-	const y = interpolate(t - w.t, [0, 0.1], [8, 0], {...clamp, easing: ease});
+	const a = interpolate(t - g[0].t, [0, 0.08], [0, 1], clamp);
+	const text = g.map((w) => w.w.replace(/[.,!?]+$/, '')).join(' ');
 	return (
-		<div style={{position: 'absolute', top: 1290, width: 1080, textAlign: 'center'}}>
-			<span style={{display: 'inline-block', scale: s, translate: `0 ${y}px`, fontFamily: F.family, fontWeight: F.weight, fontSize: w.key ? F.size * 1.12 : F.size,
-				fontStyle: w.key && F.italicKey ? 'italic' : 'normal', letterSpacing: F.track, color: w.key ? YELLOW : 'white', textShadow: SHADOW}}>
-				{w.w.replace(/[.,!?]+$/, '')}
+		<div style={{position: 'absolute', top: 1300, width: 1080, textAlign: 'center', opacity: a}}>
+			<span style={{fontFamily: F.family, fontWeight: F.weight, fontSize: F.size, letterSpacing: F.track, color: 'white',
+				textTransform: font === 'instrument' ? 'lowercase' : 'none', textShadow: '0 1px 2px rgba(0,0,0,0.45), 0 3px 14px rgba(0,0,0,0.35)'}}>
+				{font === 'instrument' ? text.replace(/takshila\.co/i, 'takshila.co') : text}
 			</span>
 		</div>
 	);
@@ -141,7 +157,7 @@ const EndCard: React.FC<{font: FontKey}> = ({font}) => {
 
 export const Influencer: React.FC<{d: Infl}> = ({d}) => {
 	const {fps, durationInFrames} = useVideoConfig();
-	const font: FontKey = d.font ?? 'poppins';
+	const font: FontKey = d.font ?? 'instrument';
 	const f = (t: number) => Math.round(t * fps);
 	const cuts: {from: number; to: number; clip: string; src: number}[] = [];
 	for (const b of d.broll) {
