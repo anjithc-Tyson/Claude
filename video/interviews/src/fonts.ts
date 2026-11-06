@@ -17,3 +17,8 @@ loadFont({family: PLAYFAIR, url: staticFile('fonts/PlayfairDisplay-normal-700.wo
 loadFont({family: PLAYFAIR, url: staticFile('fonts/PlayfairDisplay-italic-700.woff2'), weight: '400 900', style: 'italic', format: 'woff2'});
 loadFont({family: INSTRUMENT, url: staticFile('fonts/InstrumentSerif-normal-400.woff2'), weight: '400', format: 'woff2'});
 loadFont({family: INSTRUMENT, url: staticFile('fonts/InstrumentSerif-italic-400.woff2'), weight: '400', style: 'italic', format: 'woff2'});
+export const AFACAD = 'AfacadFluxX';
+export const CORMORANT_G = 'CormorantGaramondX';
+loadFont({family: AFACAD, url: staticFile('fonts/AfacadFlux-normal-300-700.woff2'), weight: '300 700', format: 'woff2'});
+loadFont({family: CORMORANT_G, url: staticFile('fonts/CormorantGaramond-normal-500.woff2'), weight: '400 500', format: 'woff2'});
+loadFont({family: CORMORANT_G, url: staticFile('fonts/CormorantGaramond-italic-500.woff2'), weight: '400 500', style: 'italic', format: 'woff2'});
