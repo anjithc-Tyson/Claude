@@ -88,6 +88,7 @@ def main(words_path, vdir, out):
             x['e'] = y['t']
     data = {'total': total, 'segments': segs, 'words': words, 'broll': broll,
             'noCutout': ['20261102_094354'], 'hookEnd': round(segs[[x['clip'] for x in segs].index(PLAN[1][0])]['o'], 3),
+            'music': {'file': 'p4/lovelikethis.mp3', 'start': 0.0, 'vol': 0.08},
             'cta': {'t': next(w['t'] for w in words if w['w'].startswith('takshila')), 'text': 'takshila.co'}}
     json.dump(data, open(out, 'w'), indent=1)
     print('pace (cps, rate)', rates)

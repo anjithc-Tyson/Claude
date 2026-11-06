@@ -171,16 +171,10 @@ const EndCard: React.FC<{font: FontKey}> = ({font}) => {
 const Keys: React.FC<{d: Infl}> = ({d}) => {
 	const {fps} = useVideoConfig();
 	const hits: {t: number; k: string; v: number}[] = [];
-	let n = 0;
-	for (const w of d.words) {
-		if (w.t >= (d.hookEnd ?? 0)) break;
-		const clean = w.w.replace(/[.,!?]+$/, '');
-		const span = Math.min(Math.max(0.12, w.e - w.t), 0.05 * clean.length + 0.08);
-		for (let c = 0; c < clean.length; c++) {
-			hits.push({t: w.t + (span * c) / clean.length, k: ['key00', 'key01', 'key03'][n % 3], v: 0.32 + 0.12 * ((n * 7) % 5) / 4});
-			n++;
-		}
-	}
+	// one key strike per word (tuck, tuck, tuck), not per letter
+	d.words.filter((w) => w.t < (d.hookEnd ?? 0)).forEach((w, n) => {
+		hits.push({t: w.t, k: ['key00', 'key01', 'key03'][n % 3], v: 0.42 + 0.1 * ((n * 7) % 5) / 4});
+	});
 	return (
 		<>
 			{hits.map((h, i) => (

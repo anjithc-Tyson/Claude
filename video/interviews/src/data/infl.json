@@ -1065,6 +1065,11 @@
   "20261102_094354"
  ],
  "hookEnd": 5.22,
+ "music": {
+  "file": "p4/lovelikethis.mp3",
+  "start": 0.0,
+  "vol": 0.08
+ },
  "cta": {
   "t": 56.299,
   "text": "takshila.co"
