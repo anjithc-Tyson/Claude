@@ -842,7 +842,24 @@
   "t": 40.812,
   "text": "takshila.co"
  },
- "clicks": [
-  "mkey1m"
- ]
+ "music": {
+  "file": "p5/parampampam.mp3",
+  "start": 27.0,
+  "vol": 0.16
+ },
+ "images": {
+  "P02": "studio2/P02.jpg",
+  "P03": "studio2/P03.jpg",
+  "P04": "studio2/P04.jpg",
+  "P05": "studio2/P05.jpg",
+  "P06": "studio2/P06.jpg",
+  "P07": "studio2/P07.jpg",
+  "P08": "studio2/P08.jpg",
+  "P09": "studio2/P09.jpg",
+  "P10": "studio2/P10.jpg",
+  "P11": "studio2/P11.jpg",
+  "P12": "studio2/P12.jpg",
+  "P13": "studio2/P13.jpg",
+  "P14": "studio2/P14.jpg"
+ }
 }

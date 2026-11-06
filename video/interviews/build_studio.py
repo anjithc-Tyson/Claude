@@ -100,7 +100,8 @@ def main(words_path, vdir, out):
     data = {'total': total, 'segments': segs, 'words': words, 'events': events,
             'hookEnd': round(next(s['o'] for s in segs if s['clip'] == CLIPS[1]), 3),
             'cta': {'t': next(w['t'] for w in words if w['w'].startswith('Tell')), 'text': 'takshila.co'},
-            'clicks': ['mkey1m']}
+            'music': {'file': 'p5/parampampam.mp3', 'start': 27.0, 'vol': 0.16},
+            'images': {k: f'studio2/{k}.jpg' for k in ['P02', 'P03', 'P04', 'P05', 'P06', 'P07', 'P08', 'P09', 'P10', 'P11', 'P12', 'P13', 'P14']}}
     json.dump(data, open(out, 'w'), indent=1)
     print('pace (cps, rate)', rates)
     print('total', total, 'segments', len(segs), 'words', len(words), 'events', len(events))

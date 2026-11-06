@@ -193,7 +193,7 @@ const Studio: React.FC<{d: StudioData}> = ({d}) => {
 			);
 		}
 		if (t < direct.t) {
-			const metalOn = metals.filter((m) => m.t <= t).pop()?.metal;
+			const metalOn = t >= stoneEv.t ? 'Gold' : metals.filter((m) => m.t <= t).pop()?.metal; // the sapphire designs are yellow gold
 			const sw: Record<string, string> = {Gold: 'linear-gradient(135deg,#f3d27a,#b8862f)', Silver: 'linear-gradient(135deg,#f4f4f4,#a9adb3)', Platinum: 'linear-gradient(135deg,#e6e7ea,#8d9096)'};
 			return (
 				<div style={{opacity: fade(t, gen + 0.6)}}>
@@ -278,7 +278,7 @@ const Studio: React.FC<{d: StudioData}> = ({d}) => {
 				<Stepper step={step} />
 			</div>
 			<div style={{position: 'absolute', left: 40, top: 136, width: 470, bottom: 64}}>{left}</div>
-			<div style={{position: 'absolute', left: 540, top: 126, width: 500, height: 770}}>
+			<div style={{position: 'absolute', left: 540, top: 150, width: 500, height: 500}}>
 				{t >= final.t ? (
 					<div style={{position: 'absolute', inset: 0, display: 'flex', gap: 14}}>
 						{[final.sketch, final.img].map((k, i) => (
@@ -300,6 +300,18 @@ const Studio: React.FC<{d: StudioData}> = ({d}) => {
 					<div style={{position: 'absolute', left: 16, top: 16, background: 'rgba(43,16,22,0.8)', color: 'white', borderRadius: 18, padding: '6px 16px', fontFamily: AFACAD, fontSize: 20}}>Worn every day</div>
 				) : null}
 			</div>
+			{/* what the preview shows, like the studio's version label */}
+			{t >= gen + 0.9 && t < final.t ? (
+				<div style={{position: 'absolute', left: 540, top: 672, width: 500, textAlign: 'center', fontFamily: AFACAD, fontSize: 24, color: C.taupe}}>
+					{(() => {
+						const v = t >= refine + 0.9 ? 'Version 2' : 'Version 1';
+						const metal = metals.filter((m) => m.t <= t).pop()?.metal ?? 'Gold';
+						const stone = t >= stoneEv.t ? 'Oval sapphire' : 'Oval diamond';
+						const extra = t >= detailEv.t ? ' · Pavé band' : '';
+						return <><b style={{color: C.plum, fontWeight: 600}}>{v}</b> · {t >= stoneEv.t ? 'Yellow gold' : metal} · {stone}{extra}</>;
+					})()}
+				</div>
+			) : null}
 			{/* tap ripples where she "presses" */}
 			{ideas.map((e, i) => <Tap key={`ti${i}`} t={t} at={e.t} x={40 + [110, 360, 90, 300][i]} y={130 + 160 + (i < 2 ? 30 : 100)} />)}
 			<Tap t={t} at={gen - 0.05} x={40 + 400} y={1920 - PANEL_TOP - 90} />
@@ -326,17 +338,30 @@ const EndCard: React.FC<{d: StudioData}> = ({d}) => {
 	);
 };
 
-const Clicks: React.FC<{d: StudioData}> = ({d}) => {
+// sound design: only the sounds sliced from the supplied reel pack (public/sfx/reel)
+const Sfx: React.FC<{d: StudioData}> = ({d}) => {
 	const {fps} = useVideoConfig();
-	if (!d.clicks) return null;
-	// one crisp click per hook word, plus one per tap in the studio
-	const hits = [...d.words.filter((w) => w.t < d.hookEnd).map((w) => ({t: w.t, v: 0.6})),
-		...d.events.filter((e) => ['idea', 'generate', 'metal', 'stone', 'detail'].includes(e.ev)).map((e) => ({t: e.t, v: 0.25}))];
+	const ev = d.events;
+	const one = (n: string) => ev.find((e) => e.ev === n)!;
+	const hits: {t: number; f: string; v: number; len?: number}[] = [{t: 0.02, f: 'whoosh', v: 0.35}];
+	ev.filter((e) => e.ev === 'idea').forEach((e) => {
+		hits.push({t: e.t, f: 'tick', v: 0.45});
+		hits.push({t: e.t + 0.05, f: 'typing', v: 0.3, len: 0.6});
+	});
+	const gen = one('generate').t;
+	hits.push({t: gen - 0.05, f: 'mouse', v: 0.5}, {t: gen + 0.0, f: 'riser', v: 0.22, len: 0.95}, {t: gen + 0.9, f: 'glock', v: 0.4});
+	ev.filter((e) => e.ev === 'metal').forEach((e) => hits.push({t: e.t, f: 'tick2', v: 0.4}));
+	hits.push({t: one('stone').t, f: 'pop', v: 0.45}, {t: one('detail').t, f: 'pop', v: 0.4});
+	const dir = one('direct').t;
+	hits.push({t: dir - 0.1, f: 'whoosh', v: 0.3}, {t: dir + 1.0, f: 'click', v: 0.4});
+	const ref = one('refine').t;
+	hits.push({t: ref + 0.1, f: 'whoosh', v: 0.22}, {t: ref + 0.9, f: 'ding', v: 0.4});
+	hits.push({t: one('final').t, f: 'glock', v: 0.35}, {t: d.total + 0.05, f: 'boom', v: 0.3});
 	return (
 		<>
 			{hits.map((h, i) => (
-				<Sequence key={`c${i}`} name="click" from={Math.round(h.t * fps)} durationInFrames={5} layout="none">
-					<Audio src={staticFile(`sfx/infl/${d.clicks![i % d.clicks!.length]}.wav`)} volume={h.v * (0.88 + 0.12 * (((i * 7) % 5) / 4))} />
+				<Sequence key={`s${i}`} name={`sfx ${h.f}`} from={Math.max(0, Math.round(h.t * fps))} durationInFrames={Math.round((h.len ?? 2.2) * fps)} layout="none">
+					<Audio src={staticFile(`sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
 		</>
@@ -359,7 +384,7 @@ export const StudioReel: React.FC<{d: StudioData}> = ({d}) => {
 			<Sequence name="end card" from={f(d.total)}>
 				<EndCard d={d} />
 			</Sequence>
-			<Clicks d={d} />
+			<Sfx d={d} />
 			{d.music ? (
 				<Audio name="music" src={staticFile(`media/${d.music.file}`)} trimBefore={f(d.music.start)}
 					volume={(fr) => interpolate(fr, [0, 10, T, T + 8, Math.max(T + 9, durationInFrames - 20), Math.max(T + 10, durationInFrames)],
