@@ -1038,10 +1038,9 @@
    "fit": "cover"
   }
  ],
- "title": {
-  "top": "Choose the metal, the stone & the meaning",
-  "sub": "we'll create the piece around you"
- },
+ "noCutout": [
+  "20261102_094354"
+ ],
  "cta": {
   "t": 58.24,
   "text": "takshila.co"

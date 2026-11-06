@@ -16,5 +16,8 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="StreetQuiz" component={Quiz} defaultProps={{d: QUIZ as never}} durationInFrames={Math.round(quizTotal(QUIZ) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="BoldClaim" component={BoldClaim} defaultProps={{d: BOLD}} durationInFrames={Math.round(boldTotal(BOLD) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="BoldInfluencer" component={Influencer} defaultProps={{d: INFL}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
+		<Composition id="BoldInfluencer-poppins" component={Influencer} defaultProps={{d: {...INFL, font: 'poppins'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
+		<Composition id="BoldInfluencer-playfair" component={Influencer} defaultProps={{d: {...INFL, font: 'playfair'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
+		<Composition id="BoldInfluencer-instrument" component={Influencer} defaultProps={{d: {...INFL, font: 'instrument'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
 	</>
 );

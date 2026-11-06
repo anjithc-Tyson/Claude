@@ -81,7 +81,7 @@ def main(words_path, vdir, out):
         if 0 < y['t'] - x['e'] < 0.45:
             x['e'] = y['t']
     data = {'total': total, 'segments': segs, 'words': words, 'broll': broll,
-            'title': {'top': 'Choose the metal, the stone & the meaning', 'sub': "we'll create the piece around you"},
+            'noCutout': ['20261102_094354'],
             'cta': {'t': next(w['t'] for w in words if w['w'].startswith('takshila')), 'text': 'takshila.co'}}
     json.dump(data, open(out, 'w'), indent=1)
     print('total', total, 'segments', len(segs), 'words', len(words), 'broll', len(broll),
