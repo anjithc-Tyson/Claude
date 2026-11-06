@@ -25,7 +25,7 @@ const segLen = (s: Seg) => (s.b - s.a) / (s.rate ?? 1);
 type Word = {w: string; t: number; e: number; key: boolean};
 type Broll = {t: number; e: number; media: string; fit: string};
 export type Infl = {total: number; segments: Seg[]; words: Word[]; broll: Broll[]; noCutout?: string[]; hookEnd?: number;
-	cta: {t: number; text: string}; music?: {file: string; start: number; vol: number}; font?: FontKey};
+	cta: {t: number; text: string}; typing?: {file: string; vol: number} | null; music?: {file: string; start: number; vol: number}; font?: FontKey};
 export const INFL = inflData as unknown as Infl;
 export const INFL_END = 3.2;
 export const inflTotal = (d: Infl) => d.total + INFL_END;
@@ -167,21 +167,30 @@ const EndCard: React.FC<{font: FontKey}> = ({font}) => {
 	);
 };
 
-// one real typewriter key strike per letter while the hook types out
+// real typing under the hook: a slice of one continuous typing recording plays exactly while each word types in
 const Keys: React.FC<{d: Infl}> = ({d}) => {
 	const {fps} = useVideoConfig();
-	const hits: {t: number; k: string; v: number}[] = [];
-	// one key strike per word (tuck, tuck, tuck), not per letter
-	d.words.filter((w) => w.t < (d.hookEnd ?? 0)).forEach((w, n) => {
-		hits.push({t: w.t, k: ['key00', 'key01', 'key03'][n % 3], v: 0.42 + 0.1 * ((n * 7) % 5) / 4});
+	if (!d.typing) return null;
+	const hook = d.words.filter((w) => w.t < (d.hookEnd ?? 0));
+	let off = 0.8;
+	const parts = hook.map((w) => {
+		const clean = w.w.replace(/[.,!?]+$/, '');
+		const span = Math.min(Math.max(0.12, w.e - w.t), 0.05 * clean.length + 0.08);
+		const p = {t: w.t, span, off};
+		off += span + 0.05;
+		return p;
 	});
 	return (
 		<>
-			{hits.map((h, i) => (
-				<Sequence key={`k${i}`} name="typewriter key" from={Math.round(h.t * fps)} durationInFrames={6} layout="none">
-					<Audio src={staticFile(`sfx/infl/${h.k}.wav`)} volume={h.v} />
-				</Sequence>
-			))}
+			{parts.map((p, i) => {
+				const len = Math.max(3, Math.round(p.span * fps));
+				return (
+					<Sequence key={`k${i}`} name="typing" from={Math.round(p.t * fps)} durationInFrames={len} layout="none">
+						<Audio src={staticFile(`sfx/infl/${d.typing!.file}.wav`)} trimBefore={Math.round(p.off * fps)}
+							volume={(fr) => d.typing!.vol * interpolate(fr, [0, 1, len - 1, len], [0, 1, 1, 0], clamp)} />
+					</Sequence>
+				);
+			})}
 		</>
 	);
 };
@@ -227,7 +236,7 @@ export const Influencer: React.FC<{d: Infl}> = ({d}) => {
 			</Sequence>
 			{d.music ? (
 				<Audio name="music" src={staticFile(`media/${d.music.file}`)} trimBefore={f(d.music.start)}
-					volume={(fr) => interpolate(fr, [0, 10, f(d.total), f(d.total) + 8, durationInFrames - 20, durationInFrames],
+					volume={(fr) => interpolate(fr, [0, 10, Math.min(f(d.total), durationInFrames - 30), Math.min(f(d.total), durationInFrames - 30) + 8, Math.max(Math.min(f(d.total), durationInFrames - 30) + 9, durationInFrames - 20), Math.max(Math.min(f(d.total), durationInFrames - 30) + 10, durationInFrames)],
 						[0, d.music!.vol, d.music!.vol, d.music!.vol * 2.2, d.music!.vol * 2.2, 0], clamp)} />
 			) : null}
 		</AbsoluteFill>

@@ -19,5 +19,9 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="BoldInfluencer-poppins" component={Influencer} defaultProps={{d: {...INFL, font: 'poppins'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="BoldInfluencer-playfair" component={Influencer} defaultProps={{d: {...INFL, font: 'playfair'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="BoldInfluencer-instrument" component={Influencer} defaultProps={{d: {...INFL, font: 'instrument'}}} durationInFrames={Math.round(inflTotal(INFL) * 30)} fps={30} width={1080} height={1920} />
+		<Composition id="Typing-laptop" component={Influencer} defaultProps={{d: {...INFL, typing: {file: 'type_laptop', vol: 0.55}}}} durationInFrames={165} fps={30} width={1080} height={1920} />
+		<Composition id="Typing-mech" component={Influencer} defaultProps={{d: {...INFL, typing: {file: 'type_mech', vol: 0.55}}}} durationInFrames={165} fps={30} width={1080} height={1920} />
+		<Composition id="Typing-writer" component={Influencer} defaultProps={{d: {...INFL, typing: {file: 'type_writer', vol: 0.55}}}} durationInFrames={165} fps={30} width={1080} height={1920} />
+		<Composition id="Typing-none" component={Influencer} defaultProps={{d: {...INFL, typing: null}}} durationInFrames={165} fps={30} width={1080} height={1920} />
 	</>
 );
