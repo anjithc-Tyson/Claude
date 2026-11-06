@@ -356,7 +356,7 @@ const Sfx: React.FC<{d: StudioData}> = ({d}) => {
 	hits.push({t: dir - 0.1, f: 'whoosh', v: 0.3}, {t: dir + 1.0, f: 'click', v: 0.4});
 	const ref = one('refine').t;
 	hits.push({t: ref + 0.1, f: 'whoosh', v: 0.22}, {t: ref + 0.9, f: 'ding', v: 0.4});
-	hits.push({t: one('final').t, f: 'glock', v: 0.35}, {t: d.total + 0.05, f: 'boom', v: 0.3});
+	hits.push({t: one('final').t, f: 'glock', v: 0.35}, {t: d.total - 1.5, f: 'riser', v: 0.25, len: 1.65}, {t: d.total + 0.25, f: 'glock', v: 0.38});
 	return (
 		<>
 			{hits.map((h, i) => (
