@@ -20,10 +20,11 @@ const FONTS: Record<FontKey, {family: string; weight: number; italicKey: boolean
 	instrument: {family: INSTRUMENT, weight: 400, italicKey: true, size: 76, track: '-0.005em'},
 };
 
-type Seg = {clip: string; a: number; b: number; o: number};
+type Seg = {clip: string; a: number; b: number; o: number; rate?: number};
+const segLen = (s: Seg) => (s.b - s.a) / (s.rate ?? 1);
 type Word = {w: string; t: number; e: number; key: boolean};
 type Broll = {t: number; e: number; media: string; fit: string};
-export type Infl = {total: number; segments: Seg[]; words: Word[]; broll: Broll[]; noCutout?: string[];
+export type Infl = {total: number; segments: Seg[]; words: Word[]; broll: Broll[]; noCutout?: string[]; hookEnd?: number;
 	cta: {t: number; text: string}; music?: {file: string; start: number; vol: number}; font?: FontKey};
 export const INFL = inflData as unknown as Infl;
 export const INFL_END = 3.2;
@@ -32,9 +33,9 @@ export const inflTotal = (d: Infl) => d.total + INFL_END;
 const Face: React.FC<{s: Seg}> = ({s}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const dur = (s.b - s.a) * fps;
+	const dur = segLen(s) * fps;
 	const vol = interpolate(frame, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp);
-	return <OffthreadVideo src={staticFile(`media/p4/${s.clip}.mp4`)} trimBefore={Math.round(s.a * fps)} volume={vol} style={{width: 1080, height: 1920}} />;
+	return <OffthreadVideo src={staticFile(`media/p4/${s.clip}.mp4`)} trimBefore={Math.round(s.a * fps)} playbackRate={s.rate ?? 1} volume={vol} style={{width: 1080, height: 1920}} />;
 };
 
 // every B-roll shot fills the whole screen
@@ -60,11 +61,11 @@ const Media: React.FC<{b: Broll; i: number}> = ({b, i}) => {
 };
 
 // her cut-out, lower right; the left edge of her frame fades out so no hard line shows where her arm leaves the shot
-const Cutout: React.FC<{clip: string; src: number}> = ({clip, src}) => {
+const Cutout: React.FC<{clip: string; src: number; rate: number}> = ({clip, src, rate}) => {
 	const {fps} = useVideoConfig();
 	return (
 		<AbsoluteFill style={{WebkitMaskImage: 'linear-gradient(to right, transparent 46%, black 58%)', maskImage: 'linear-gradient(to right, transparent 46%, black 58%)'}}>
-			<OffthreadVideo src={staticFile(`media/p4/cut/${clip}.webm`)} transparent muted trimBefore={Math.round(src * fps)}
+			<OffthreadVideo src={staticFile(`media/p4/cut/${clip}.webm`)} transparent muted trimBefore={Math.round(src * fps)} playbackRate={rate}
 				style={{width: 1080, height: 1920, scale: 0.58, transformOrigin: '1080px 1920px', translate: '60px 0px'}} />
 		</AbsoluteFill>
 	);
@@ -95,8 +96,15 @@ const Caption: React.FC<{d: Infl; font: FontKey}> = ({d, font}) => {
 	if (gi < 0) return null;
 	const g = groups[gi];
 	const F = FONTS[font];
-	const a = interpolate(t - g[0].t, [0, 0.08], [0, 1], clamp);
-	const text = g.map((w) => w.w.replace(/[.,!?]+$/, '')).join(' ');
+	const hook = t < (d.hookEnd ?? 0);
+	const typed = (w: Word) => {
+		const clean = w.w.replace(/[.,!?]+$/, '');
+		if (!hook) return clean;
+		const span = Math.min(Math.max(0.12, w.e - w.t), 0.05 * clean.length + 0.08);
+		return clean.slice(0, Math.max(0, Math.ceil(((t - w.t) / span) * clean.length)));
+	};
+	const text = g.filter((w) => w.t <= t).map(typed).join(' ');
+	const a = hook ? 1 : interpolate(t - g[0].t, [0, 0.08], [0, 1], clamp);
 	return (
 		<div style={{position: 'absolute', top: 1300, width: 1080, textAlign: 'center', opacity: a}}>
 			<span style={{fontFamily: F.family, fontWeight: F.weight, fontSize: F.size, letterSpacing: F.track, color: 'white',
@@ -159,23 +167,49 @@ const EndCard: React.FC<{font: FontKey}> = ({font}) => {
 	);
 };
 
+// one real typewriter key strike per letter while the hook types out
+const Keys: React.FC<{d: Infl}> = ({d}) => {
+	const {fps} = useVideoConfig();
+	const hits: {t: number; k: string; v: number}[] = [];
+	let n = 0;
+	for (const w of d.words) {
+		if (w.t >= (d.hookEnd ?? 0)) break;
+		const clean = w.w.replace(/[.,!?]+$/, '');
+		const span = Math.min(Math.max(0.12, w.e - w.t), 0.05 * clean.length + 0.08);
+		for (let c = 0; c < clean.length; c++) {
+			hits.push({t: w.t + (span * c) / clean.length, k: ['key00', 'key01', 'key03'][n % 3], v: 0.32 + 0.12 * ((n * 7) % 5) / 4});
+			n++;
+		}
+	}
+	return (
+		<>
+			{hits.map((h, i) => (
+				<Sequence key={`k${i}`} name="typewriter key" from={Math.round(h.t * fps)} durationInFrames={6} layout="none">
+					<Audio src={staticFile(`sfx/infl/${h.k}.wav`)} volume={h.v} />
+				</Sequence>
+			))}
+		</>
+	);
+};
+
 export const Influencer: React.FC<{d: Infl}> = ({d}) => {
 	const {fps, durationInFrames} = useVideoConfig();
 	const font: FontKey = d.font ?? 'instrument';
 	const f = (t: number) => Math.round(t * fps);
-	const cuts: {from: number; to: number; clip: string; src: number}[] = [];
+	const cuts: {from: number; to: number; clip: string; src: number; rate: number}[] = [];
 	for (const b of d.broll) {
 		for (const s of d.segments) {
 			if (d.noCutout?.includes(s.clip)) continue;
 			const from = Math.max(b.t, s.o);
-			const to = Math.min(b.e, s.o + s.b - s.a);
-			if (to - from > 0.04) cuts.push({from, to, clip: s.clip, src: s.a + (from - s.o)});
+			const to = Math.min(b.e, s.o + segLen(s));
+			const r = s.rate ?? 1;
+			if (to - from > 0.04) cuts.push({from, to, clip: s.clip, src: s.a + (from - s.o) * r, rate: r});
 		}
 	}
 	return (
 		<AbsoluteFill style={{backgroundColor: 'black'}}>
 			{d.segments.map((s, i) => (
-				<Sequence key={`f${i}`} name={`${s.clip} ${s.a}`} from={f(s.o)} durationInFrames={Math.max(1, f(s.o + s.b - s.a) - f(s.o))}>
+				<Sequence key={`f${i}`} name={`${s.clip} ${s.a}`} from={f(s.o)} durationInFrames={Math.max(1, f(s.o + segLen(s)) - f(s.o))}>
 					<Face s={s} />
 				</Sequence>
 			))}
@@ -186,10 +220,11 @@ export const Influencer: React.FC<{d: Infl}> = ({d}) => {
 			))}
 			{cuts.map((c, i) => (
 				<Sequence key={`c${i}`} name={`cutout ${c.clip}`} from={f(c.from)} durationInFrames={Math.max(1, f(c.to) - f(c.from))}>
-					<Cutout clip={c.clip} src={c.src} />
+					<Cutout clip={c.clip} src={c.src} rate={c.rate} />
 				</Sequence>
 			))}
 			<Caption d={d} font={font} />
+			<Keys d={d} />
 			<Sequence name="cta search bar" from={f(d.cta.t)} durationInFrames={f(d.total - d.cta.t)}>
 				<SearchBar text={d.cta.text} font={font} />
 			</Sequence>
