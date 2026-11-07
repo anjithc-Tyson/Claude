@@ -12,6 +12,7 @@ import {MagazineReel, MAG, magTotal} from './Magazine';
 import {EngravingReel, ENG, engTotal} from './Engraving';
 import {StyleSample} from './StyleSamples';
 import {BoldCreatorReel, BOLDC, boldcTotal} from './BoldCreator';
+import {MatchCutReel, MATCH, matchTotal} from './MatchCut';
 
 const S = street as Data;
 const J = jewel as Data;
@@ -36,6 +37,7 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="Script4Magazine" component={MagazineReel} defaultProps={{d: MAG}} durationInFrames={Math.round(magTotal(MAG) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Script4Engraving" component={EngravingReel} defaultProps={{d: ENG}} durationInFrames={Math.round(engTotal(ENG) * 30)} fps={30} width={1080} height={1920} />
 		{[1, 2, 3, 4, 5, 6].map((n) => <Composition key={n} id={`Sample${n}`} component={StyleSample} defaultProps={{n}} durationInFrames={1} fps={30} width={1080} height={1920} />)}
+		<Composition id="Script4Match" component={MatchCutReel} defaultProps={{d: MATCH}} durationInFrames={Math.round(matchTotal(MATCH) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Script4Bold" component={BoldCreatorReel} defaultProps={{d: BOLDC}} durationInFrames={Math.round(boldcTotal(BOLDC) * 30)} fps={30} width={1080} height={1920} />
 	</>
 );
