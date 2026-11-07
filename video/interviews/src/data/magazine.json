@@ -1,0 +1,689 @@
+{
+ "total": 49.367,
+ "words": [
+  {
+   "w": "The",
+   "t": 0.08,
+   "e": 0.42,
+   "key": false
+  },
+  {
+   "w": "finished",
+   "t": 0.42,
+   "e": 0.76,
+   "key": true
+  },
+  {
+   "w": "piece",
+   "t": 0.76,
+   "e": 1.22,
+   "key": true
+  },
+  {
+   "w": "is",
+   "t": 1.22,
+   "e": 1.54,
+   "key": false
+  },
+  {
+   "w": "beautiful,",
+   "t": 1.54,
+   "e": 2.24,
+   "key": true
+  },
+  {
+   "w": "but",
+   "t": 2.62,
+   "e": 3.02,
+   "key": false
+  },
+  {
+   "w": "this",
+   "t": 3.02,
+   "e": 3.62,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 3.62,
+   "e": 4.08,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 4.08,
+   "e": 4.28,
+   "key": false
+  },
+  {
+   "w": "detail",
+   "t": 4.28,
+   "e": 4.66,
+   "key": true
+  },
+  {
+   "w": "that",
+   "t": 4.66,
+   "e": 4.88,
+   "key": false
+  },
+  {
+   "w": "makes",
+   "t": 4.88,
+   "e": 5.06,
+   "key": false
+  },
+  {
+   "w": "it",
+   "t": 5.06,
+   "e": 5.32,
+   "key": false
+  },
+  {
+   "w": "personal.",
+   "t": 5.32,
+   "e": 6.0,
+   "key": true
+  },
+  {
+   "w": "When",
+   "t": 6.247,
+   "e": 6.387,
+   "key": false
+  },
+  {
+   "w": "we",
+   "t": 6.387,
+   "e": 6.647,
+   "key": false
+  },
+  {
+   "w": "design",
+   "t": 6.647,
+   "e": 6.987,
+   "key": true
+  },
+  {
+   "w": "a",
+   "t": 6.987,
+   "e": 7.227,
+   "key": false
+  },
+  {
+   "w": "custom",
+   "t": 7.227,
+   "e": 7.447,
+   "key": true
+  },
+  {
+   "w": "piece,",
+   "t": 7.447,
+   "e": 7.847,
+   "key": true
+  },
+  {
+   "w": "we",
+   "t": 8.147,
+   "e": 8.447,
+   "key": false
+  },
+  {
+   "w": "do",
+   "t": 8.447,
+   "e": 8.787,
+   "key": false
+  },
+  {
+   "w": "not",
+   "t": 8.787,
+   "e": 8.967,
+   "key": false
+  },
+  {
+   "w": "begin",
+   "t": 8.967,
+   "e": 9.267,
+   "key": false
+  },
+  {
+   "w": "with",
+   "t": 9.267,
+   "e": 9.507,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 9.507,
+   "e": 9.567,
+   "key": false
+  },
+  {
+   "w": "template.",
+   "t": 9.567,
+   "e": 9.967,
+   "key": true
+  },
+  {
+   "w": "We",
+   "t": 10.467,
+   "e": 10.687,
+   "key": false
+  },
+  {
+   "w": "begin",
+   "t": 10.687,
+   "e": 11.127,
+   "key": false
+  },
+  {
+   "w": "with",
+   "t": 11.127,
+   "e": 11.527,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 11.527,
+   "e": 11.667,
+   "key": false
+  },
+  {
+   "w": "person,",
+   "t": 11.667,
+   "e": 12.147,
+   "key": true
+  },
+  {
+   "w": "the",
+   "t": 12.447,
+   "e": 12.687,
+   "key": false
+  },
+  {
+   "w": "moment",
+   "t": 12.687,
+   "e": 13.107,
+   "key": true
+  },
+  {
+   "w": "and",
+   "t": 13.107,
+   "e": 13.667,
+   "key": false
+  },
+  {
+   "w": "what",
+   "t": 13.667,
+   "e": 14.047,
+   "key": false
+  },
+  {
+   "w": "they",
+   "t": 14.047,
+   "e": 14.367,
+   "key": false
+  },
+  {
+   "w": "want",
+   "t": 14.367,
+   "e": 14.547,
+   "key": false
+  },
+  {
+   "w": "to",
+   "t": 14.547,
+   "e": 14.907,
+   "key": false
+  },
+  {
+   "w": "carry",
+   "t": 14.907,
+   "e": 15.187,
+   "key": true
+  },
+  {
+   "w": "with",
+   "t": 15.187,
+   "e": 15.487,
+   "key": false
+  },
+  {
+   "w": "them.",
+   "t": 15.487,
+   "e": 16.227,
+   "key": false
+  },
+  {
+   "w": "From",
+   "t": 16.48,
+   "e": 16.76,
+   "key": false
+  },
+  {
+   "w": "there,",
+   "t": 16.76,
+   "e": 17.36,
+   "key": false
+  },
+  {
+   "w": "we",
+   "t": 17.68,
+   "e": 17.96,
+   "key": false
+  },
+  {
+   "w": "shape",
+   "t": 17.96,
+   "e": 18.18,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 18.18,
+   "e": 18.56,
+   "key": false
+  },
+  {
+   "w": "design",
+   "t": 18.56,
+   "e": 18.98,
+   "key": true
+  },
+  {
+   "w": "around",
+   "t": 18.98,
+   "e": 19.36,
+   "key": false
+  },
+  {
+   "w": "it,",
+   "t": 19.36,
+   "e": 19.68,
+   "key": false
+  },
+  {
+   "w": "choosing",
+   "t": 19.8,
+   "e": 19.98,
+   "key": false
+  },
+  {
+   "w": "the",
+   "t": 19.98,
+   "e": 20.28,
+   "key": false
+  },
+  {
+   "w": "metal,",
+   "t": 20.28,
+   "e": 20.8,
+   "key": true
+  },
+  {
+   "w": "the",
+   "t": 21.08,
+   "e": 21.22,
+   "key": false
+  },
+  {
+   "w": "proportions",
+   "t": 21.22,
+   "e": 21.74,
+   "key": true
+  },
+  {
+   "w": "and",
+   "t": 21.74,
+   "e": 22.34,
+   "key": false
+  },
+  {
+   "w": "piece",
+   "t": 22.58,
+   "e": 23.1,
+   "key": true
+  },
+  {
+   "w": "feel",
+   "t": 23.1,
+   "e": 24.26,
+   "key": false
+  },
+  {
+   "w": "balanced,",
+   "t": 24.26,
+   "e": 25.12,
+   "key": false
+  },
+  {
+   "w": "wearable",
+   "t": 25.38,
+   "e": 26.04,
+   "key": false
+  },
+  {
+   "w": "and",
+   "t": 26.04,
+   "e": 26.84,
+   "key": false
+  },
+  {
+   "w": "completely",
+   "t": 26.84,
+   "e": 27.62,
+   "key": false
+  },
+  {
+   "w": "theirs.",
+   "t": 27.62,
+   "e": 28.04,
+   "key": true
+  },
+  {
+   "w": "This",
+   "t": 28.313,
+   "e": 29.353,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 29.353,
+   "e": 30.393,
+   "key": false
+  },
+  {
+   "w": "what",
+   "t": 30.393,
+   "e": 30.553,
+   "key": false
+  },
+  {
+   "w": "makes",
+   "t": 30.553,
+   "e": 31.033,
+   "key": false
+  },
+  {
+   "w": "custom",
+   "t": 31.033,
+   "e": 31.453,
+   "key": true
+  },
+  {
+   "w": "jewellery",
+   "t": 31.453,
+   "e": 31.873,
+   "key": false
+  },
+  {
+   "w": "different.",
+   "t": 31.873,
+   "e": 32.413,
+   "key": true
+  },
+  {
+   "w": "It",
+   "t": 32.853,
+   "e": 33.333,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 33.333,
+   "e": 33.653,
+   "key": false
+  },
+  {
+   "w": "not",
+   "t": 33.653,
+   "e": 33.793,
+   "key": false
+  },
+  {
+   "w": "just",
+   "t": 33.793,
+   "e": 34.373,
+   "key": false
+  },
+  {
+   "w": "made",
+   "t": 34.373,
+   "e": 34.713,
+   "key": false
+  },
+  {
+   "w": "to",
+   "t": 34.713,
+   "e": 34.953,
+   "key": false
+  },
+  {
+   "w": "look",
+   "t": 34.953,
+   "e": 35.153,
+   "key": false
+  },
+  {
+   "w": "beautiful.",
+   "t": 35.153,
+   "e": 35.633,
+   "key": true
+  },
+  {
+   "w": "It",
+   "t": 36.053,
+   "e": 36.273,
+   "key": false
+  },
+  {
+   "w": "is",
+   "t": 36.273,
+   "e": 36.693,
+   "key": false
+  },
+  {
+   "w": "made",
+   "t": 36.693,
+   "e": 36.953,
+   "key": false
+  },
+  {
+   "w": "to",
+   "t": 36.953,
+   "e": 37.513,
+   "key": false
+  },
+  {
+   "w": "hold",
+   "t": 37.513,
+   "e": 37.793,
+   "key": false
+  },
+  {
+   "w": "something",
+   "t": 37.793,
+   "e": 38.193,
+   "key": false
+  },
+  {
+   "w": "that",
+   "t": 38.193,
+   "e": 38.553,
+   "key": false
+  },
+  {
+   "w": "really",
+   "t": 38.553,
+   "e": 39.153,
+   "key": false
+  },
+  {
+   "w": "means",
+   "t": 39.153,
+   "e": 39.953,
+   "key": false
+  },
+  {
+   "w": "everything.",
+   "t": 39.953,
+   "e": 40.853,
+   "key": true
+  },
+  {
+   "w": "takshila.co",
+   "t": 41.147,
+   "e": 41.507,
+   "key": true
+  },
+  {
+   "w": "has",
+   "t": 41.807,
+   "e": 42.047,
+   "key": false
+  },
+  {
+   "w": "a",
+   "t": 42.047,
+   "e": 42.167,
+   "key": false
+  },
+  {
+   "w": "question",
+   "t": 42.167,
+   "e": 42.447,
+   "key": false
+  },
+  {
+   "w": "for",
+   "t": 42.447,
+   "e": 42.687,
+   "key": false
+  },
+  {
+   "w": "you.",
+   "t": 42.687,
+   "e": 43.067,
+   "key": false
+  },
+  {
+   "w": "What",
+   "t": 43.347,
+   "e": 43.767,
+   "key": false
+  },
+  {
+   "w": "detail",
+   "t": 43.767,
+   "e": 44.407,
+   "key": true
+  },
+  {
+   "w": "would",
+   "t": 44.407,
+   "e": 45.027,
+   "key": false
+  },
+  {
+   "w": "you",
+   "t": 45.027,
+   "e": 45.567,
+   "key": false
+  },
+  {
+   "w": "build",
+   "t": 45.567,
+   "e": 46.247,
+   "key": false
+  },
+  {
+   "w": "your",
+   "t": 46.247,
+   "e": 47.327,
+   "key": false
+  },
+  {
+   "w": "perfect",
+   "t": 47.327,
+   "e": 47.827,
+   "key": true
+  },
+  {
+   "w": "piece",
+   "t": 47.827,
+   "e": 48.567,
+   "key": true
+  },
+  {
+   "w": "around?",
+   "t": 48.567,
+   "e": 49.147,
+   "key": false
+  }
+ ],
+ "events": [
+  {
+   "t": 4.23,
+   "ev": "lock"
+  },
+  {
+   "t": 11.617,
+   "ev": "pin",
+   "n": 0,
+   "label": "The person"
+  },
+  {
+   "t": 12.637,
+   "ev": "pin",
+   "n": 1,
+   "label": "The moment"
+  },
+  {
+   "t": 14.857,
+   "ev": "pin",
+   "n": 2,
+   "label": "What they carry"
+  },
+  {
+   "t": 20.23,
+   "ev": "spec",
+   "label": "Metal"
+  },
+  {
+   "t": 21.17,
+   "ev": "spec",
+   "label": "Proportions"
+  },
+  {
+   "t": 27.57,
+   "ev": "spec",
+   "label": "Completely theirs"
+  },
+  {
+   "t": 37.463,
+   "ev": "unlock",
+   "img": "D2"
+  },
+  {
+   "t": 41.097,
+   "ev": "question"
+  }
+ ],
+ "images": {
+  "D1": "detail/D1.jpg",
+  "D2": "detail/D2.jpg",
+  "D3": "detail/D3.jpg"
+ },
+ "placeholders": true,
+ "music": {
+  "file": "p5/parampampam.mp3",
+  "start": 27.0,
+  "vol": 0.11
+ },
+ "pages": [
+  0.0,
+  5.997,
+  16.23,
+  28.063,
+  40.897
+ ]
+}
