@@ -214,7 +214,7 @@ const EndCard: React.FC<{d: JourneyData}> = ({d}) => {
 				<span style={{fontFamily: CORMORANT_G, fontStyle: 'italic', fontSize: 100, color: C.mauve, opacity: h2}}>your idea</span>
 			</div>
 			<div style={{marginTop: 34, width: 680, height: 600, borderRadius: 36, overflow: 'hidden', boxShadow: '0 26px 60px rgba(43,16,22,0.2)'}}>
-				<Img src={imgOf(d, 'J11')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
+				<Img src={staticFile('img/journey/J11c.jpg')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
 			</div>
 			<div style={{marginTop: 44, opacity: bar, translate: `0 ${(1 - bar) * 20}px`}}>
 				<div style={{width: 640, height: 104, borderRadius: 52, background: 'white', display: 'flex', alignItems: 'center', padding: '0 14px 0 40px',
