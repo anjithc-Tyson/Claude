@@ -4,7 +4,6 @@ import React from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import journeyData from './data/journey.json';
-import journeyFaces from './data/journey_faces.json';
 import {AFACAD, CORMORANT_G, INSTRUMENT} from './fonts';
 
 const C = {bg: '#F5EFE7', card: '#FBF8F3', plum: '#2B1016', mauve: '#6D3B54', taupe: '#7A5D63', line: '#E7DCCF', gold: '#C9A14A', chip: '#F1E8DD'};
@@ -21,41 +20,24 @@ export const JOURNEY = journeyData as unknown as JourneyData;
 export const JOURNEY_END = 3.8;
 export const journeyTotal = (d: JourneyData) => d.total + JOURNEY_END;
 const segLen = (s: Seg) => (s.b - s.a) / s.rate;
-const CHIN_MAX = 1200; // her chin (and a little neck) stays above this line, clear of the caption and the card
-// zoom-out needed at time t: the deepest the chin goes in the next/previous 0.8 s, so the move is smooth, not pumping
-const fitZoom = (t: number, limit: number) => {
-	const f = journeyFaces as number[][];
-	const near = f.filter(([x]) => Math.abs(x - t) <= 0.8).map(([, b]) => b);
-	const fb = near.length ? Math.max(...near) : 0;
-	const raw = fb > limit ? Math.max(0.8, limit / fb) : 1;
-	// soften with neighbours for an eased move
-	const k = f.filter(([x]) => Math.abs(x - t) <= 1.2).map(([x, b]) => (b > limit ? Math.max(0.8, limit / b) : 1));
-	return Math.min(raw, k.length ? k.reduce((a, b) => a + b, 0) / k.length + 0.02 : 1, 1);
-};
-
 // stand-ins until the J01–J11 images arrive
 const PLACEHOLDER: Record<string, string> = {J01: 'studio2/P03.jpg', J02: 'infl2/10.jpg', J03: 'studio2/P02.jpg', J04: 'studio2/P08.jpg', J05: 'infl2/08.jpg',
 	J06: 'studio2/P05.jpg', J07: 'infl2/14.jpg', J08: 'infl2/14.jpg', J09: 'studio2/P09.jpg', J10: 'studio2/P11.jpg', J11: 'infl2/13.jpg'};
 const imgOf = (d: JourneyData, k: string) => staticFile(`img/${d.placeholders === false ? d.images?.[k] : PLACEHOLDER[k]}`);
 const fade = (t: number, at: number, len = 0.3) => interpolate(t, [at, at + len], [0, 1], {...clamp, easing: ease});
 
+const PANEL = 840;      // the tracker owns the top of the frame (clear of Instagram's bottom overlay)
+const SRC_TOP = 220;    // her frame is shown from this source row down, so her face sits in the lower half
 const Face: React.FC<{d: JourneyData; s: Seg}> = ({d, s}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const dur = segLen(s) * fps;
 	const vol = interpolate(frame, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp);
-	const tt = s.o + frame / fps;
-	const cardIn = (d.events.find((e) => e.ev === 'step')?.t ?? 0) - 0.6;
-	const z = fitZoom(tt, tt < cardIn - 0.8 ? 1340 : CHIN_MAX); // before the tracker arrives, she only has to clear the caption
-	const src = staticFile(`media/p6/${d.clip}.mp4`);
 	return (
-		<AbsoluteFill>
-			{z < 0.999 ? <OffthreadVideo src={src} muted trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} style={{width: 1080, height: 1920, filter: 'blur(16px) brightness(1.03)', scale: 1.06}} /> : null}
-			<div style={{position: 'absolute', inset: 0, scale: z, transformOrigin: '540px 0px', overflow: 'hidden',
-				WebkitMaskImage: z < 0.999 ? 'linear-gradient(to right, transparent 0, black 6%, black 94%, transparent 100%)' : undefined}}>
-				<OffthreadVideo src={src} trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} volume={vol} style={{width: 1080, height: 1920}} />
-			</div>
-		</AbsoluteFill>
+		<div style={{position: 'absolute', left: 0, top: PANEL, width: 1080, height: 1920 - PANEL, overflow: 'hidden'}}>
+			<OffthreadVideo src={staticFile(`media/p6/${d.clip}.mp4`)} trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} volume={vol}
+				style={{position: 'absolute', left: 0, top: -SRC_TOP, width: 1080, height: 1920}} />
+		</div>
 	);
 };
 
@@ -81,7 +63,7 @@ const Caption: React.FC<{d: JourneyData}> = ({d}) => {
 	if (!g) return null;
 	const text = g.filter((w) => w.t <= t).map((w) => w.w.replace(/[.,!?]+$/, '')).join(' ');
 	return (
-		<div style={{position: 'absolute', top: 1215, width: 1080, textAlign: 'center'}}>
+		<div style={{position: 'absolute', top: PANEL + 40, width: 1080, textAlign: 'center'}}>
 			<span style={{fontFamily: INSTRUMENT, fontSize: 76, color: 'white', textTransform: 'lowercase',
 				textShadow: '0 1px 2px rgba(0,0,0,0.6), 0 0 10px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.5), 0 0 42px rgba(0,0,0,0.3)'}}>{text}</span>
 		</div>
@@ -123,12 +105,12 @@ const Tracker: React.FC<{d: JourneyData}> = ({d}) => {
 	const refine = d.events.find((e) => e.ev === 'refine')!;
 	const cur = t < stepAt(0) ? -1 : steps.filter((s) => s.t <= t).length - 1;
 	const thumbs = d.events.filter((e) => e.ev === 'thumb');
-	const inA = interpolate(t, [Math.max(0, stepAt(0) - 0.6), stepAt(0) - 0.1], [0, 1], {...clamp, easing: ease});
+	const inA = interpolate(t, [0.1, 0.6], [0, 1], {...clamp, easing: ease});
 	const doneAll = t >= reveal.t;
-	const status = doneAll ? 'Ready' : cur >= 2 ? 'Crafting' : 'In progress';
+	const status = doneAll ? 'Ready' : cur >= 2 ? 'Crafting' : cur < 0 ? 'Blank canvas' : 'In progress';
 	return (
-		<div style={{position: 'absolute', left: 50, bottom: 50, width: 980, opacity: inA, translate: `0 ${(1 - inA) * 60}px`, background: 'rgba(251,248,243,0.97)',
-			borderRadius: 34, boxShadow: '0 24px 60px rgba(0,0,0,0.35)', padding: '20px 30px 22px', boxSizing: 'border-box'}}>
+		<div style={{position: 'absolute', left: 104, top: 130, width: 872, scale: 1.18, transformOrigin: '436px 0px', opacity: inA, translate: `0 ${(1 - inA) * -40}px`, background: 'rgba(251,248,243,0.97)',
+			borderRadius: 34, boxShadow: '0 18px 44px rgba(43,16,22,0.14)', border: `1.5px solid ${C.line}`, padding: '20px 30px 22px', boxSizing: 'border-box'}}>
 			<div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12}}>
 				<div style={{display: 'flex', alignItems: 'center', gap: 16}}>
 					<Img src={staticFile('img/studio/logo.png')} style={{height: 38}} />
@@ -223,25 +205,24 @@ const EndCard: React.FC<{d: JourneyData}> = ({d}) => {
 	const n = Math.round(interpolate(t, [1.15, 1.15 + url.length * 0.06], [0, url.length], clamp));
 	const press = interpolate(t, [2.2, 2.3, 2.45], [1, 0.95, 1], clamp);
 	return (
-		<AbsoluteFill style={{opacity: a, backgroundColor: '#000'}}>
-			<Img src={imgOf(d, 'J11')} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z}} />
-			<AbsoluteFill style={{background: 'linear-gradient(rgba(43,16,22,0.78) 0%, rgba(43,16,22,0.45) 26%, rgba(43,16,22,0) 46%, rgba(43,16,22,0) 70%, rgba(43,16,22,0.6) 100%)'}} />
-			<Img src={staticFile('img/studio/logo.png')} style={{position: 'absolute', top: 120, left: 540 - 165, height: 110, filter: 'brightness(0) invert(1)', opacity: a}} />
-			<div style={{position: 'absolute', top: 290, width: 1080, textAlign: 'center'}}>
-				<div style={{fontFamily: CORMORANT_G, fontSize: 104, color: 'white', lineHeight: 1, opacity: h1, translate: `0 ${(1 - h1) * 24}px`, textShadow: '0 4px 24px rgba(0,0,0,0.35)'}}>Bring us</div>
-				<div style={{fontFamily: CORMORANT_G, fontStyle: 'italic', fontSize: 112, color: '#F3DC9A', lineHeight: 1.05, opacity: h2, translate: `0 ${(1 - h2) * 24}px`, textShadow: '0 4px 24px rgba(0,0,0,0.35)'}}>your idea</div>
+		<AbsoluteFill style={{opacity: a, backgroundColor: C.bg, alignItems: 'center'}}>
+			<Img src={staticFile('img/studio/logo.png')} style={{marginTop: 170, height: 84}} />
+			<div style={{marginTop: 30, textAlign: 'center'}}>
+				<span style={{fontFamily: CORMORANT_G, fontSize: 96, color: C.plum, opacity: h1}}>Bring us </span>
+				<span style={{fontFamily: CORMORANT_G, fontStyle: 'italic', fontSize: 100, color: C.mauve, opacity: h2}}>your idea</span>
 			</div>
-			<div style={{position: 'absolute', top: 1560, width: 1080, textAlign: 'center'}}>
-				<div style={{display: 'flex', justifyContent: 'center', opacity: bar, translate: `0 ${(1 - bar) * 20}px`}}>
-					<div style={{width: 720, height: 112, borderRadius: 56, background: 'rgba(255,255,255,0.97)', display: 'flex', alignItems: 'center', padding: '0 14px 0 40px',
-						boxSizing: 'border-box', boxShadow: '0 16px 40px rgba(0,0,0,0.35)', gap: 18, scale: press}}>
-						<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
-						<div style={{flex: 1, fontFamily: AFACAD, fontSize: 48, color: C.plum}}>{url.slice(0, n)}<span style={{opacity: Math.floor(frame / 8) % 2 === 0 && n < url.length ? 1 : 0}}>|</span></div>
-						<div style={{height: 84, borderRadius: 42, background: C.plum, color: 'white', fontFamily: AFACAD, fontSize: 32, display: 'flex', alignItems: 'center', padding: '0 34px'}}>Design yours</div>
-					</div>
+			<div style={{marginTop: 34, width: 760, height: 620, borderRadius: 36, overflow: 'hidden', boxShadow: '0 26px 60px rgba(43,16,22,0.2)'}}>
+				<Img src={imgOf(d, 'J11')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
+			</div>
+			<div style={{marginTop: 44, opacity: bar, translate: `0 ${(1 - bar) * 20}px`}}>
+				<div style={{width: 760, height: 112, borderRadius: 56, background: 'white', display: 'flex', alignItems: 'center', padding: '0 14px 0 40px',
+					boxSizing: 'border-box', boxShadow: '0 14px 36px rgba(43,16,22,0.16)', border: `1.5px solid ${C.line}`, gap: 18, scale: press}}>
+					<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+					<div style={{flex: 1, fontFamily: AFACAD, fontSize: 48, color: C.plum}}>{url.slice(0, n)}<span style={{opacity: Math.floor(frame / 8) % 2 === 0 && n < url.length ? 1 : 0}}>|</span></div>
+					<div style={{height: 84, borderRadius: 42, background: C.plum, color: 'white', fontFamily: AFACAD, fontSize: 32, display: 'flex', alignItems: 'center', padding: '0 34px'}}>Design yours</div>
 				</div>
-				<div style={{fontFamily: AFACAD, fontSize: 32, color: 'rgba(255,255,255,0.92)', marginTop: 30, opacity: bar}}>We'll turn it into something you keep forever.</div>
 			</div>
+			<div style={{fontFamily: AFACAD, fontSize: 32, color: C.taupe, marginTop: 26, opacity: bar}}>We'll turn it into something you keep forever.</div>
 		</AbsoluteFill>
 	);
 };
@@ -280,13 +261,13 @@ export const JourneyReel: React.FC<{d: JourneyData}> = ({d}) => {
 	const f = (t: number) => Math.round(t * fps);
 	const T = Math.min(f(d.total), durationInFrames - 30);
 	return (
-		<AbsoluteFill style={{backgroundColor: 'black'}}>
+		<AbsoluteFill style={{backgroundColor: C.bg}}>
 			{d.segments.map((s, i) => (
 				<Sequence key={`f${i}`} name={`take ${s.a}`} from={f(s.o)} durationInFrames={Math.max(1, f(s.o + segLen(s)) - f(s.o))}>
 					<Face d={d} s={s} />
 				</Sequence>
 			))}
-			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 52%, rgba(0,0,0,0.35) 100%)'}} />
+			<div style={{position: 'absolute', left: 0, top: PANEL, width: 1080, height: 26, background: 'linear-gradient(rgba(43,16,22,0.18), rgba(43,16,22,0))'}} />
 			<Caption d={d} />
 			<Tracker d={d} />
 			<Sequence name="end card" from={f(d.total)}>
