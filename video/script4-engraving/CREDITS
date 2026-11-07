@@ -1,0 +1,15 @@
+The Detail (script 4) — Copperplate Engraving style from the Lemo-Opuscar library (github.com/lemomo-ai/lemo-opuscar, MIT; style prompts CC BY 4.0)
+
+PICTURE
+Engraving engine (engine/): copied from the library's engraving demo (MIT). All drawings, lettering layout and animation in film.js are original.
+Her video: Takshila's own footage.
+
+MUSIC (mix.py, original composition, G major, 84 bpm)
+Harpsichord (VCSL), pizzicato and bowed strings (VS Chamber Orchestra: Community Edition), both CC0 1.0, Versilian Studios.
+
+SOUND EFFECTS
+Synthesised in mix.py with numpy and the library's core/audio/sfx.py: burin hiss, letter ticks, circular scribe, burnishing,
+pen scratch, water drops, tissue rustle, paper peel, press thump, room tone.
+
+FONTS (SIL Open Font License 1.1, fonts/OFL.txt)
+Bodoni Moda (engraved capitals and italics), Pinyon Script (script and subtitles), from Google Fonts.
