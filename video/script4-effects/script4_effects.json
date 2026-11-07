@@ -1,0 +1,10 @@
+{"effects": [
+  {"fx": "moody", "start": 0, "end": 49.36, "grade": "warm"},
+  {"fx": "glitter-spotlight", "start": 3.5, "end": 6.2, "text": "DETAIL", "color": "#E8C46A"},
+  {"fx": "huge-strike", "start": 8.7, "end": 10.7, "text": "TEMPLATE", "at": 0.85},
+  {"fx": "slow-push", "start": 10.4, "end": 15.8, "zoom": 1.4},
+  {"fx": "backdrop-word", "start": 26.4, "end": 28.7, "text": "THEIRS", "font": "serif", "color": "#F3E6C8"},
+  {"fx": "spotlight", "start": 37.3, "end": 41.0, "text": "EVERYTHING", "color": "#E8C46A"},
+  {"fx": "lean-in", "start": 42.0, "end": 43.3},
+  {"fx": "backdrop-word", "start": 46.9, "end": 49.3, "text": "YOURS?", "font": "serif", "color": "#F3E6C8"}
+]}
