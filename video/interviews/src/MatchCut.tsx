@@ -147,7 +147,7 @@ export const MatchCutReel: React.FC<{d: D}> = ({d}) => {
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
 		{t: HOOK - 0.25, f: 'whoosh', v: 0.16},
 		{t: HOOK + END_AT - 0.05, f: 'glock', v: 0.22},
-		{t: HOOK + d.total + 0.4, f: 'click', v: 0.3},
+		{t: HOOK + d.total + 0.4, f: 'click', v: 0.45},
 	];
 	const T = f(HOOK + d.total);
 	return (
@@ -170,7 +170,7 @@ export const MatchCutReel: React.FC<{d: D}> = ({d}) => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p5/parampampam.mp3')} trimBefore={f(27)}
-				volume={(fr) => interpolate(fr, [0, 12, T, T + 10, durationInFrames - 20, durationInFrames], [0, 0.1, 0.1, 0.2, 0.2, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 12, T, T + 10, durationInFrames - 20, durationInFrames], [0, 0.1, 0.1, 0.3, 0.3, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
