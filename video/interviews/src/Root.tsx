@@ -7,6 +7,7 @@ import {BoldClaim, BOLD, boldTotal} from './BoldClaim';
 import {Influencer, INFL, inflTotal} from './Influencer';
 import {StudioReel, STUDIO, studioTotal} from './Studio';
 import {JourneyReel, JOURNEY, journeyTotal} from './Journey';
+import {DetailReel, DETAIL, detailTotal} from './Detail';
 
 const S = street as Data;
 const J = jewel as Data;
@@ -27,5 +28,6 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="Typing-none" component={Influencer} defaultProps={{d: {...INFL, typing: null}}} durationInFrames={165} fps={30} width={1080} height={1920} />
 		<Composition id="Script2Studio" component={StudioReel} defaultProps={{d: STUDIO}} durationInFrames={Math.round(studioTotal(STUDIO) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Script3Journey" component={JourneyReel} defaultProps={{d: JOURNEY}} durationInFrames={Math.round(journeyTotal(JOURNEY) * 30)} fps={30} width={1080} height={1920} />
+		<Composition id="Script4Detail" component={DetailReel} defaultProps={{d: DETAIL}} durationInFrames={Math.round(detailTotal(DETAIL) * 30)} fps={30} width={1080} height={1920} />
 	</>
 );
