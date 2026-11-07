@@ -26,18 +26,18 @@ const PLACEHOLDER: Record<string, string> = {J01: 'studio2/P03.jpg', J02: 'infl2
 const imgOf = (d: JourneyData, k: string) => staticFile(`img/${d.placeholders === false ? d.images?.[k] : PLACEHOLDER[k]}`);
 const fade = (t: number, at: number, len = 0.3) => interpolate(t, [at, at + len], [0, 1], {...clamp, easing: ease});
 
-const PANEL = 840;      // the tracker owns the top of the frame (clear of Instagram's bottom overlay)
-const SRC_TOP = 220;    // her frame is shown from this source row down, so her face sits in the lower half
+const FRAME = {scale: 1.1, lift: 180}; // fixed: her face sits higher so the box below never reaches it
+const CARD_BOTTOM = 1650;                // above Instagram's username/caption row
 const Face: React.FC<{d: JourneyData; s: Seg}> = ({d, s}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const dur = segLen(s) * fps;
 	const vol = interpolate(frame, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp);
 	return (
-		<div style={{position: 'absolute', left: 0, top: PANEL, width: 1080, height: 1920 - PANEL, overflow: 'hidden'}}>
+		<AbsoluteFill style={{overflow: 'hidden'}}>
 			<OffthreadVideo src={staticFile(`media/p6/${d.clip}.mp4`)} trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} volume={vol}
-				style={{position: 'absolute', left: 0, top: -SRC_TOP, width: 1080, height: 1920}} />
-		</div>
+				style={{position: 'absolute', width: 1080, height: 1920, scale: FRAME.scale, transformOrigin: '540px 0px', top: -FRAME.lift}} />
+		</AbsoluteFill>
 	);
 };
 
@@ -59,11 +59,13 @@ const Caption: React.FC<{d: JourneyData}> = ({d}) => {
 		return out;
 	}, [d.words]);
 	if (t >= d.total) return null;
+	const cardOn = t >= (d.events.find((e) => e.ev === 'step')?.t ?? 1e9) - 0.3;
+	const captionTop = cardOn ? 985 : 1090; // just above the box while it is on screen
 	const g = groups.find((x, k) => x[0].t <= t && t < Math.min(x[x.length - 1].e + 0.3, groups[k + 1]?.[0].t ?? 1e9));
 	if (!g) return null;
 	const text = g.filter((w) => w.t <= t).map((w) => w.w.replace(/[.,!?]+$/, '')).join(' ');
 	return (
-		<div style={{position: 'absolute', top: PANEL + 40, width: 1080, textAlign: 'center'}}>
+		<div style={{position: 'absolute', top: captionTop, left: 40, width: 830, textAlign: 'center'}}>
 			<span style={{fontFamily: INSTRUMENT, fontSize: 76, color: 'white', textTransform: 'lowercase',
 				textShadow: '0 1px 2px rgba(0,0,0,0.6), 0 0 10px rgba(0,0,0,0.45), 0 4px 24px rgba(0,0,0,0.5), 0 0 42px rgba(0,0,0,0.3)'}}>{text}</span>
 		</div>
@@ -105,12 +107,12 @@ const Tracker: React.FC<{d: JourneyData}> = ({d}) => {
 	const refine = d.events.find((e) => e.ev === 'refine')!;
 	const cur = t < stepAt(0) ? -1 : steps.filter((s) => s.t <= t).length - 1;
 	const thumbs = d.events.filter((e) => e.ev === 'thumb');
-	const inA = interpolate(t, [0.1, 0.6], [0, 1], {...clamp, easing: ease});
+	const inA = interpolate(t, [Math.max(0, stepAt(0) - 0.6), stepAt(0) - 0.1], [0, 1], {...clamp, easing: ease});
 	const doneAll = t >= reveal.t;
-	const status = doneAll ? 'Ready' : cur >= 2 ? 'Crafting' : cur < 0 ? 'Blank canvas' : 'In progress';
+	const status = doneAll ? 'Ready' : cur >= 2 ? 'Crafting' : 'In progress';
 	return (
-		<div style={{position: 'absolute', left: 104, top: 130, width: 872, scale: 1.18, transformOrigin: '436px 0px', opacity: inA, translate: `0 ${(1 - inA) * -40}px`, background: 'rgba(251,248,243,0.97)',
-			borderRadius: 34, boxShadow: '0 18px 44px rgba(43,16,22,0.14)', border: `1.5px solid ${C.line}`, padding: '20px 30px 22px', boxSizing: 'border-box'}}>
+		<div style={{position: 'absolute', left: 40, bottom: 1920 - CARD_BOTTOM, width: 830, opacity: inA, translate: `0 ${(1 - inA) * 40}px`, background: 'rgba(251,248,243,0.97)',
+			borderRadius: 34, boxShadow: '0 20px 50px rgba(0,0,0,0.3)', padding: '18px 26px 20px', boxSizing: 'border-box'}}>
 			<div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12}}>
 				<div style={{display: 'flex', alignItems: 'center', gap: 16}}>
 					<Img src={staticFile('img/studio/logo.png')} style={{height: 38}} />
@@ -123,7 +125,7 @@ const Tracker: React.FC<{d: JourneyData}> = ({d}) => {
 			{doneAll ? (
 				// Ready: the finished piece takes over the card
 				<div style={{display: 'flex', gap: 26, alignItems: 'center', opacity: fade(t, reveal.t)}}>
-					<div style={{width: 330, height: 330, borderRadius: 26, overflow: 'hidden', flexShrink: 0, scale: interpolate(t, [reveal.t, reveal.t + 0.4], [0.85, 1], {...clamp, easing: springy})}}>
+					<div style={{width: 290, height: 290, borderRadius: 24, overflow: 'hidden', flexShrink: 0, scale: interpolate(t, [reveal.t, reveal.t + 0.4], [0.85, 1], {...clamp, easing: springy})}}>
 						<Img src={imgOf(d, 'J10')} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
 					</div>
 					<div>
@@ -206,16 +208,16 @@ const EndCard: React.FC<{d: JourneyData}> = ({d}) => {
 	const press = interpolate(t, [2.2, 2.3, 2.45], [1, 0.95, 1], clamp);
 	return (
 		<AbsoluteFill style={{opacity: a, backgroundColor: C.bg, alignItems: 'center'}}>
-			<Img src={staticFile('img/studio/logo.png')} style={{marginTop: 170, height: 84}} />
+			<Img src={staticFile('img/studio/logo.png')} style={{marginTop: 270, height: 84}} />
 			<div style={{marginTop: 30, textAlign: 'center'}}>
 				<span style={{fontFamily: CORMORANT_G, fontSize: 96, color: C.plum, opacity: h1}}>Bring us </span>
 				<span style={{fontFamily: CORMORANT_G, fontStyle: 'italic', fontSize: 100, color: C.mauve, opacity: h2}}>your idea</span>
 			</div>
-			<div style={{marginTop: 34, width: 760, height: 620, borderRadius: 36, overflow: 'hidden', boxShadow: '0 26px 60px rgba(43,16,22,0.2)'}}>
+			<div style={{marginTop: 34, width: 680, height: 600, borderRadius: 36, overflow: 'hidden', boxShadow: '0 26px 60px rgba(43,16,22,0.2)'}}>
 				<Img src={imgOf(d, 'J11')} style={{width: '100%', height: '100%', objectFit: 'cover', scale: z}} />
 			</div>
 			<div style={{marginTop: 44, opacity: bar, translate: `0 ${(1 - bar) * 20}px`}}>
-				<div style={{width: 760, height: 112, borderRadius: 56, background: 'white', display: 'flex', alignItems: 'center', padding: '0 14px 0 40px',
+				<div style={{width: 640, height: 104, borderRadius: 52, background: 'white', display: 'flex', alignItems: 'center', padding: '0 14px 0 40px',
 					boxSizing: 'border-box', boxShadow: '0 14px 36px rgba(43,16,22,0.16)', border: `1.5px solid ${C.line}`, gap: 18, scale: press}}>
 					<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#6b6b6b" strokeWidth="2.4" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
 					<div style={{flex: 1, fontFamily: AFACAD, fontSize: 48, color: C.plum}}>{url.slice(0, n)}<span style={{opacity: Math.floor(frame / 8) % 2 === 0 && n < url.length ? 1 : 0}}>|</span></div>
@@ -261,13 +263,13 @@ export const JourneyReel: React.FC<{d: JourneyData}> = ({d}) => {
 	const f = (t: number) => Math.round(t * fps);
 	const T = Math.min(f(d.total), durationInFrames - 30);
 	return (
-		<AbsoluteFill style={{backgroundColor: C.bg}}>
+		<AbsoluteFill style={{backgroundColor: 'black'}}>
 			{d.segments.map((s, i) => (
 				<Sequence key={`f${i}`} name={`take ${s.a}`} from={f(s.o)} durationInFrames={Math.max(1, f(s.o + segLen(s)) - f(s.o))}>
 					<Face d={d} s={s} />
 				</Sequence>
 			))}
-			<div style={{position: 'absolute', left: 0, top: PANEL, width: 1080, height: 26, background: 'linear-gradient(rgba(43,16,22,0.18), rgba(43,16,22,0))'}} />
+			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.3) 100%)'}} />
 			<Caption d={d} />
 			<Tracker d={d} />
 			<Sequence name="end card" from={f(d.total)}>
