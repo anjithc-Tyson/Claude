@@ -21,7 +21,7 @@ export const matchTotal = (d: D) => HOOK + d.total + MATCH_END;
 type Cut = {a: number; b: number; img: string; z0?: number; z1?: number; ox?: number; oy?: number};
 const CUTS: Cut[] = [
 	{a: 0.0, b: 2.55, img: 'D02'},
-	{a: 4.2, b: 5.65, img: 'D01', z0: 1.12, z1: 1.2},
+	{a: 4.2, b: 5.65, img: 'D01', z0: 1.35, z1: 1.45, ox: 400, oy: 640},
 	{a: 8.95, b: 10.4, img: 'D03', z0: 1.0, z1: 1.05},
 	{a: 11.5, b: 12.6, img: 'D04'},
 	{a: 12.6, b: 14.25, img: 'D05'},
@@ -52,11 +52,11 @@ const Hook: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const z = interpolate(t, [0, HOOK], [1.0, 1.1], {...clamp, easing: Easing.out(Easing.quad)});
+	const z = interpolate(t, [0, HOOK], [1.15, 1.3], {...clamp, easing: Easing.out(Easing.quad)});
 	const sweep = interpolate(t, [0.1, HOOK + 0.2], [-500, 1300], clamp);
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', backgroundColor: '#EDE6DA'}}>
-			<AbsoluteFill style={{scale: z, transformOrigin: '540px 700px'}}>
+			<AbsoluteFill style={{scale: z, transformOrigin: '400px 640px'}}>
 				<Img src={staticFile('img/match/D01.jpg')} style={{width: 1080, height: 1920}} />
 				<div style={{position: 'absolute', top: 0, bottom: 0, left: sweep, width: 380, rotate: '14deg', mixBlendMode: 'soft-light',
 					background: 'linear-gradient(90deg, rgba(255,250,240,0) 0%, rgba(255,250,240,0.55) 50%, rgba(255,250,240,0) 100%)'}} />
@@ -125,10 +125,10 @@ const EndCard: React.FC<{d: D}> = ({d}) => {
 	return (
 		<AbsoluteFill>
 			<Shot img="D13" dur={6} z0={1.0} z1={1.04} oy={1100} />
-			<div style={{position: 'absolute', left: 80, right: 80, top: 300, textAlign: 'center', color: '#3A2A1E', opacity: qa, translate: `0 ${(1 - qa) * 14}px`}}>
+			<div style={{position: 'absolute', left: 80, right: 80, top: 150, textAlign: 'center', color: '#3A2A1E', opacity: qa, translate: `0 ${(1 - qa) * 14}px`}}>
 				<div style={{fontFamily: INSTRUMENT, fontSize: 98, lineHeight: 1.02}}>What detail would you<br />build <i>yours</i> around?</div>
 			</div>
-			<div style={{position: 'absolute', left: 0, right: 0, top: 640, textAlign: 'center', opacity: ba, fontFamily: AFACAD, fontWeight: 500, fontSize: 34, letterSpacing: '0.32em', color: '#6B5440'}}>
+			<div style={{position: 'absolute', left: 0, right: 0, top: 470, textAlign: 'center', opacity: ba, fontFamily: AFACAD, fontWeight: 500, fontSize: 34, letterSpacing: '0.32em', color: '#6B5440'}}>
 				TAKSHILA.CO
 				<div style={{fontSize: 30, letterSpacing: '0.04em', fontWeight: 400, marginTop: 18, color: '#3A2A1E'}}>tell us in the comments</div>
 			</div>
