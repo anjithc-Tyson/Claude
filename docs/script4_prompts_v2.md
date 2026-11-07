@@ -17,7 +17,7 @@ Rules for every image:
 - If the tool takes a negative prompt, paste this **[NEGATIVE]** list:
   > CGI, 3D render, plastic, cartoon, oversaturated, orange gold, brass, chunky ring, thick band, oversized stone, two rings, stacked bands, warped band, melted metal, extra fingers, deformed hands, blurry engraving, misspelled engraving, glitter, sparkles, lens flare, glow, dark moody lighting, watermark, text artifacts
 
-**The look (add to every prompt):**
+**[LOOK]: paste this wherever a prompt says [LOOK]:**
 > photographed like a luxury fine-jewellery campaign, real photograph, shot on a full-frame camera with a 100 mm macro lens, f/4, soft natural window daylight from the left with a large diffused fill, gentle realistic reflections in the polished gold showing the soft window shape, true-to-life colour, warm cream and oat linen palette, natural skin texture with fine lines and pores, shallow depth of field, crisp focus on the ring, subtle film-like softness, no retouching artifacts
 
 ---
