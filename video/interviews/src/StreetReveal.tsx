@@ -220,7 +220,7 @@ export const StreetRevealReel: React.FC = () => {
 		{t: starts[SEGS.findIndex((x) => x.reveal)] + 1.6, f: 'glock', v: 0.26},
 		{t: 0.05, f: 'tick', v: 0.35},
 		{t: total, f: 'whoosh', v: 0.22},
-		{t: total + 0.45, f: 'pop', v: 0.3},
+		{t: total + 0.45, f: 'pop', v: 0.45},
 	];
 	return (
 		<AbsoluteFill style={{backgroundColor: 'black'}}>
@@ -241,7 +241,7 @@ export const StreetRevealReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p4/lovelikethis.mp3')}
-				volume={(fr) => interpolate(fr, [0, 15, f(total), f(total) + 10, durationInFrames - 15, durationInFrames], [0, 0.07, 0.07, 0.22, 0.22, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 15, f(total), f(total) + 10, durationInFrames - 15, durationInFrames], [0, 0.07, 0.07, 0.32, 0.32, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
