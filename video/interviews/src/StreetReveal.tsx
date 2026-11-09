@@ -16,9 +16,9 @@ type Word = {w: string; t: number; e: number};
 const WORDS = wordsData as Word[];
 
 // v = video start in the interview, d = length, a = audio start (defaults to v)
-type Seg = {v: number; d: number; a?: number; tab?: 'grid' | 'prompt' | 'type'; z?: [number, number]; o?: [number, number]; tag?: string};
+type Seg = {v: number; d: number; a?: number; rate?: number; tab?: 'grid' | 'prompt' | 'type'; z?: [number, number]; o?: [number, number]; tag?: string};
 export const SEGS: Seg[] = [
-	{v: 143.2, a: 165.85, d: 2.75, z: [1.25, 1.45], o: [560, 1000]},   // cold open: the necklace + "Piece of my heart"
+	{v: 144.7, a: 165.85, d: 2.75, rate: 0.42, z: [1.08, 1.18], o: [560, 900]},   // cold open: the necklace + "Piece of my heart"
 	{v: 21.15, d: 3.8, tag: 'earlier'},
 	{v: 25.85, d: 1.25, z: [1.12, 1.15]},
 	{v: 35.45, d: 2.85},
@@ -29,7 +29,7 @@ export const SEGS: Seg[] = [
 	{v: 92.05, d: 3.55, tab: 'type'},
 	{v: 112.4, d: 3.95, z: [1.12, 1.15]},
 	{v: 134.8, d: 3.15},
-	{v: 143.0, d: 3.3, z: [1.0, 1.4], o: [560, 1000]},                // the reveal
+	{v: 143.0, d: 3.3, z: [1.0, 1.15], o: [560, 900]},                // the reveal
 	{v: 146.3, d: 3.15, z: [1.12, 1.15]},
 	{v: 165.85, d: 2.75},
 	{v: 176.35, d: 6.3, tag: 'rapid', z: [1.12, 1.15]},
@@ -40,7 +40,7 @@ const starts = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i
 export const revealTotal = () => starts[starts.length - 1] + SEGS[SEGS.length - 1].d + REVEAL_END;
 
 // transcript fixes (whisper mishearings)
-const FIX: Record<string, string> = {chance: 'chain', Nomen: 'Yurman', 'Nomen.': 'Yurman.', "K's": "Kay's", love: 'know', prompts: 'prompt.'};
+const FIX: Record<string, string> = {chance: 'chain', Nomen: 'Yurman', 'Nomen.': 'Yurman.', "K's": "Kay's", love: 'know', prompts: 'prompt.', 'prompts.': 'prompt.'};
 const fixWord = (w: Word) => {
 	if (w.t > 49.1 && w.t < 49.5 && w.w === 'have') return '';
 	if (w.w === 'never' && w.t > 49 && w.t < 50) return "I've never";
@@ -57,6 +57,8 @@ SEGS.forEach((s, i) => {
 	const a = s.a ?? s.v;
 	WORDS.filter((w) => w.t >= a - 0.05 && w.t < a + s.d - 0.15).forEach((w) => {
 		const txt = fixWord(w);
+		const last = capWords[capWords.length - 1];
+		if (txt && txt.startsWith('-') && last) { last.w += txt; last.e = starts[i] + w.e - a; return; }
 		if (txt) capWords.push({w: txt, t: starts[i] + w.t - a, e: starts[i] + Math.min(w.e, a + s.d) - a, seg: i});
 	});
 });
@@ -70,7 +72,7 @@ const Face: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	const [ox, oy] = s.o ?? [540, 880];
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', backgroundColor: 'black'}}>
-			<OffthreadVideo src={staticFile('media/p8/int.mp4')} muted trimBefore={Math.round(s.v * fps)}
+			<OffthreadVideo src={staticFile('media/p8/int.mp4')} muted trimBefore={Math.round(s.v * fps)} playbackRate={s.rate ?? 1}
 				style={{width: 1080, height: 1920, scale: z, transformOrigin: `${ox}px ${oy}px`}} />
 		</AbsoluteFill>
 	);
@@ -165,7 +167,7 @@ const Quote: React.FC<{d: number; small?: boolean}> = ({d, small}) => {
 	const t = frame / fps;
 	const a = interpolate(t, [0.05, 0.5, d - 0.25, d], [0, 1, 1, small ? 1 : 0], {...clamp, easing: ease});
 	return (
-		<div style={{position: 'absolute', left: 0, right: 0, top: small ? 1360 : 1330, textAlign: 'center', opacity: a, translate: `0 ${(1 - a) * 20}px`, color: 'white',
+		<div style={{position: 'absolute', left: 0, right: 0, top: small ? 1360 : 150, textAlign: 'center', opacity: a, translate: `0 ${(1 - a) * 20}px`, color: 'white',
 			textShadow: '0 4px 30px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.45)'}}>
 			<div style={{fontFamily: INSTRUMENT, fontStyle: 'italic', fontSize: small ? 112 : 132, lineHeight: 1}}>“Piece of my heart”</div>
 			{small ? null : <div style={{fontFamily: AFACAD, fontWeight: 500, fontSize: 32, letterSpacing: '0.3em', marginTop: 22}}>SHE DESIGNED THIS · ON THE STREET</div>}
