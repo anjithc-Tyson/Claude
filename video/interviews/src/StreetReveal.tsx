@@ -11,15 +11,16 @@ import {AFACAD, INSTRUMENT, POPPINS} from './fonts';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
-const PINK = '#F6B9C6';
+const TERRA = '#E2725B', SAP = '#507D2A';
 type Word = {w: string; t: number; e: number};
 const WORDS = wordsData as Word[];
 
 // v = video start in the interview, d = length, a = audio start (defaults to v)
-type Seg = {v: number; d: number; a?: number; rate?: number; tab?: 'grid' | 'prompt' | 'type'; z?: [number, number]; o?: [number, number]; tag?: string};
+type Seg = {v: number; d: number; a?: number; rate?: number; tab?: 'grid' | 'prompt' | 'type'; z?: [number, number]; o?: [number, number]; tag?: string; quote?: boolean; reveal?: boolean};
 export const SEGS: Seg[] = [
-	{v: 144.7, a: 165.85, d: 2.75, rate: 0.42, z: [1.08, 1.18], o: [560, 900]},   // cold open: the necklace + "Piece of my heart"
-	{v: 21.15, d: 3.8, tag: 'earlier'},
+	{v: 176.35, d: 6.3, tag: 'rapid', z: [1.06, 1.1]},                // rapid fire opens the reel
+	{v: 184.7, d: 5.65, z: [1.12, 1.15]},
+	{v: 21.15, d: 3.8},
 	{v: 25.85, d: 1.25, z: [1.12, 1.15]},
 	{v: 35.45, d: 2.85},
 	{v: 41.15, d: 2.75, z: [1.12, 1.15]},
@@ -29,11 +30,9 @@ export const SEGS: Seg[] = [
 	{v: 92.05, d: 3.55, tab: 'type'},
 	{v: 112.4, d: 3.95, z: [1.12, 1.15]},
 	{v: 134.8, d: 3.15},
-	{v: 143.0, d: 3.3, z: [1.0, 1.15], o: [560, 900]},                // the reveal
+	{v: 143.0, d: 3.3, z: [1.0, 1.15], o: [560, 900], reveal: true},  // the reveal
 	{v: 146.3, d: 3.15, z: [1.12, 1.15]},
-	{v: 165.85, d: 2.75},
-	{v: 176.35, d: 6.3, tag: 'rapid', z: [1.12, 1.15]},
-	{v: 184.7, d: 5.65},
+	{v: 165.85, d: 2.75, quote: true},
 ];
 export const REVEAL_END = 3.2;
 const starts = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i - 1] + SEGS[i - 1].d], []);
@@ -73,13 +72,14 @@ const Face: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', backgroundColor: 'black'}}>
 			<OffthreadVideo src={staticFile('media/p8/int.mp4')} muted trimBefore={Math.round(s.v * fps)} playbackRate={s.rate ?? 1}
-				style={{width: 1080, height: 1920, scale: z, transformOrigin: `${ox}px ${oy}px`}} />
+				style={{width: 1080, height: 1920, scale: z, transformOrigin: `${ox}px ${oy}px`, filter: GRADE}} />
 		</AbsoluteFill>
 	);
 };
 
 // the iPad screen floating on a blush backdrop
-const TW = 860, TH = Math.round(860 * 2360 / 1640), TX = (1080 - TW) / 2, TY = 300;
+const TW = 1080, TH = Math.round(1080 * 2360 / 1640), TX = 0, TY = 96;
+const GRADE = 'contrast(1.08) saturate(1.04) sepia(0.12) brightness(1.01)';
 const PROMPT = 'Heart-shaped diamond necklace';
 const Tablet: React.FC<{s: Seg; inFrom: boolean; outTo: boolean}> = ({s, inFrom, outTo}) => {
 	const frame = useCurrentFrame();
@@ -88,8 +88,7 @@ const Tablet: React.FC<{s: Seg; inFrom: boolean; outTo: boolean}> = ({s, inFrom,
 	const enter = inFrom ? spring({frame, fps, config: {damping: 16, mass: 0.7}}) : 1;
 	const leave = outTo ? interpolate(t, [s.d - 0.3, s.d], [0, 1], {...clamp, easing: Easing.in(Easing.cubic)}) : 0;
 	const y = (1 - enter) * 900 + leave * 1000;
-	const rot = (1 - enter) * 8 - leave * 6;
-	const k = PROMPT.length;
+		const k = PROMPT.length;
 	const typed = s.tab === 'type' ? Math.round(interpolate(t, [0.1, 1.9], [0, k], clamp)) : 0;
 	const caret = Math.floor(t * 2.2) % 2 === 0;
 	const sk = s.tab === 'type' ? interpolate(t, [2.45, 2.65], [0, 1], clamp) : 0;
@@ -97,12 +96,8 @@ const Tablet: React.FC<{s: Seg; inFrom: boolean; outTo: boolean}> = ({s, inFrom,
 	const S = TW / 1640;
 	return (
 		<AbsoluteFill style={{background: 'linear-gradient(170deg, #FBEFF1 0%, #F6E3E7 55%, #F1DCD6 100%)'}}>
-			<div style={{position: 'absolute', left: 0, right: 0, top: 120, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em', color: '#8A5A66', opacity: enter}}>
-				LIVE ON TAKSHILA.CO
-			</div>
-			<div style={{position: 'absolute', left: TX - 18, top: TY - 18, width: TW + 36, height: TH + 36, borderRadius: 56, background: '#1B1B1F', translate: `0 ${y}px`, rotate: `${rot}deg`,
-				boxShadow: '0 40px 90px rgba(90,40,55,0.35), 0 10px 24px rgba(0,0,0,0.25)', padding: 18}}>
-				<div style={{position: 'relative', width: TW, height: TH, borderRadius: 40, overflow: 'hidden', background: '#FBF2F3'}}>
+			<div style={{position: 'absolute', left: TX, top: TY, width: TW, height: TH, translate: `0 ${y}px`, boxShadow: '0 30px 70px rgba(90,40,55,0.18)'}}>
+				<div style={{position: 'relative', width: TW, height: TH, overflow: 'hidden', background: '#FBF2F3'}}>
 					{s.tab === 'grid' ? (
 						<OffthreadVideo src={staticFile('media/p8/rec.mp4')} muted trimBefore={Math.round(135.6 * fps)} style={{width: TW, height: TH}} />
 					) : (
@@ -146,7 +141,7 @@ const Captions: React.FC = () => {
 	const t = frame / fps;
 	const groups = React.useMemo(() => groupsOf(capWords), []);
 	const g = groups.find((x, i) => t >= x[0].t - 0.05 && t < Math.min(x[x.length - 1].e + 0.45, groups[i + 1]?.[0].t ?? 1e9));
-	if (!g || g[0].seg === 0 || g[0].seg === 13) return null;
+	if (!g || SEGS[g[0].seg].quote) return null;
 	const onTab = !!SEGS[g[0].seg].tab;
 	const a = spring({frame: frame - Math.round((g[0].t - 0.05) * fps), fps, config: {damping: 14, mass: 0.5}});
 	return (
@@ -154,7 +149,7 @@ const Captions: React.FC = () => {
 			fontFamily: POPPINS, fontWeight: 700, fontSize: 64, lineHeight: 1.12, color: onTab ? '#2B1A20' : 'white',
 			textShadow: onTab ? 'none' : '0 3px 0 rgba(0,0,0,0.55), 0 0 22px rgba(0,0,0,0.45)'}}>
 			{g.map((w, i) => (
-				<span key={i} style={{color: t >= w.t - 0.03 ? (onTab ? '#B0476A' : PINK) : undefined}}>{w.w.replace(/[,]$/, '')}{i < g.length - 1 ? ' ' : ''}</span>
+				<span key={i} style={{color: t >= w.t - 0.03 ? (onTab ? SAP : TERRA) : undefined}}>{w.w.replace(/[,]$/, '')}{i < g.length - 1 ? ' ' : ''}</span>
 			))}
 		</div>
 	);
@@ -185,7 +180,7 @@ const Tag: React.FC<{kind: 'earlier' | 'rapid'}> = ({kind}) => {
 		<>
 			{earlier ? <AbsoluteFill style={{background: 'white', opacity: interpolate(frame, [0, 5], [0.85, 0], clamp)}} /> : null}
 			<div style={{position: 'absolute', left: 0, right: 0, top: 230, display: 'flex', justifyContent: 'center', opacity: (earlier ? out : 1) * a}}>
-				<div style={{background: earlier ? 'rgba(20,14,16,0.78)' : '#B0476A', color: 'white', borderRadius: 60, padding: '20px 44px', fontFamily: POPPINS, fontWeight: 700,
+				<div style={{background: earlier ? 'rgba(20,14,16,0.78)' : SAP, color: 'white', borderRadius: 60, padding: '20px 44px', fontFamily: POPPINS, fontWeight: 700,
 					fontSize: 40, letterSpacing: '0.12em', scale: 0.7 + 0.3 * a, rotate: earlier ? '0deg' : '-3deg'}}>
 					{earlier ? '⏪  2 MINUTES EARLIER' : '⚡ RAPID FIRE'}
 				</div>
@@ -202,10 +197,10 @@ const EndCard: React.FC = () => {
 	return (
 		<AbsoluteFill style={{background: 'linear-gradient(170deg, #FBEFF1 0%, #F6E3E7 55%, #F1DCD6 100%)', opacity: interpolate(frame, [0, 6], [0, 1], clamp)}}>
 			<div style={{position: 'absolute', left: 80, right: 80, top: 640, textAlign: 'center', color: '#3A2028', opacity: a, translate: `0 ${(1 - a) * 30}px`}}>
-				<div style={{fontFamily: INSTRUMENT, fontSize: 118, lineHeight: 1.0}}>What would <i>you</i><br />design?</div>
+				<div style={{fontFamily: INSTRUMENT, fontSize: 118, lineHeight: 1.0}}>What would <i style={{color: TERRA}}>you</i><br />design?</div>
 			</div>
 			<div style={{position: 'absolute', left: 0, right: 0, top: 1000, textAlign: 'center', opacity: b}}>
-				<div style={{display: 'inline-block', background: '#3A2028', color: 'white', borderRadius: 60, padding: '22px 52px', fontFamily: POPPINS, fontWeight: 600, fontSize: 40}}>Try it free · takshila.co</div>
+				<div style={{display: 'inline-block', background: SAP, color: 'white', borderRadius: 60, padding: '22px 52px', fontFamily: POPPINS, fontWeight: 600, fontSize: 40}}>Try it free · takshila.co</div>
 				<div style={{fontFamily: AFACAD, fontSize: 36, color: '#8A5A66', marginTop: 34}}>tell us in the comments 👇</div>
 			</div>
 		</AbsoluteFill>
@@ -218,13 +213,12 @@ export const StreetRevealReel: React.FC = () => {
 	const total = starts[starts.length - 1] + SEGS[SEGS.length - 1].d;
 	const typeIdx = SEGS.findIndex((s) => s.tab === 'type');
 	const sfx: {t: number; f: string; v: number}[] = [
-		{t: starts[1] - 0.15, f: 'whoosh', v: 0.26},
-		{t: starts[6] - 0.1, f: 'whoosh', v: 0.2},
+		{t: starts[SEGS.findIndex((x) => x.tab)] - 0.1, f: 'whoosh', v: 0.2},
 		...PROMPT.split(' ').map((_, k) => ({t: starts[typeIdx] + 0.1 + (k * 1.8) / 3, f: 'key', v: 0.28})),
 		{t: starts[typeIdx] + 2.15, f: 'click', v: 0.35},
-		{t: starts[11] - 1.0, f: 'riser', v: 0.16},
-		{t: starts[11] + 1.6, f: 'glock', v: 0.26},
-		{t: starts[14], f: 'tick', v: 0.35},
+		{t: starts[SEGS.findIndex((x) => x.reveal)] - 1.0, f: 'riser', v: 0.16},
+		{t: starts[SEGS.findIndex((x) => x.reveal)] + 1.6, f: 'glock', v: 0.26},
+		{t: 0.05, f: 'tick', v: 0.35},
 		{t: total, f: 'whoosh', v: 0.22},
 		{t: total + 0.45, f: 'pop', v: 0.3},
 	];
@@ -233,8 +227,7 @@ export const StreetRevealReel: React.FC = () => {
 			{SEGS.map((s, i) => (
 				<Sequence key={i} name={`seg ${i} @${s.v}`} from={f(starts[i])} durationInFrames={f(starts[i] + s.d) - f(starts[i])}>
 					{s.tab ? <Tablet s={s} inFrom={!SEGS[i - 1]?.tab} outTo={!SEGS[i + 1]?.tab} /> : <Face s={s} i={i} />}
-					{i === 0 ? <Quote d={s.d} /> : null}
-					{i === 13 ? <Quote d={s.d} small /> : null}
+										{s.quote ? <Quote d={s.d} small /> : null}
 					{s.tag ? <Tag kind={s.tag as 'earlier' | 'rapid'} /> : null}
 					<Audio src={staticFile('media/p8/int.mp4')} trimBefore={f(s.a ?? s.v)}
 						volume={(fr) => interpolate(fr, [0, 2, f(s.d) - 2, f(s.d)], [0, 1, 1, 0], clamp)} />
