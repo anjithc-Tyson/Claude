@@ -242,7 +242,7 @@ export const StreetRevealReel: React.FC = () => {
 					{s.tab ? <Tablet s={s} inFrom={!SEGS[i - 1]?.tab} outTo={!SEGS[i + 1]?.tab} /> : <Face s={s} i={i} />}
 										{s.quote ? <Quote d={s.d} small /> : null}
 					{s.tag ? <Tag kind={s.tag as 'earlier' | 'rapid'} /> : null}
-					<Audio src={staticFile('media/p8/int.mp4')} trimBefore={f(s.a ?? s.v)}
+					<Audio src={staticFile('media/p8/voice_dn.wav')} trimBefore={f(s.a ?? s.v)}
 						volume={(fr) => interpolate(fr, [0, i === 0 ? 12 : 2, f(s.d) - (i === SEGS.length - 1 ? 18 : 2), f(s.d)], [0, 1, 1, 0], clamp)} />
 				</Sequence>
 			))}
@@ -254,7 +254,7 @@ export const StreetRevealReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p4/lovelikethis.mp3')}
-				volume={(fr) => interpolate(fr, [0, 30, f(total) - 30, f(total) + 15, durationInFrames - 30, durationInFrames], [0, 0.07, 0.07, 0.32, 0.32, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 30, f(total) - 30, f(total) + 15, durationInFrames - 30, durationInFrames], [0, 0.15, 0.15, 0.34, 0.34, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
