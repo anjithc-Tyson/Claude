@@ -18,23 +18,29 @@ const WORDS = wordsData as Word[];
 // v = video start in the interview, d = length, a = audio start (defaults to v)
 type Seg = {v: number; d: number; a?: number; rate?: number; tab?: 'grid' | 'prompt' | 'type'; z?: [number, number]; o?: [number, number]; tag?: string; quote?: boolean; reveal?: boolean};
 export const SEGS: Seg[] = [
-	{v: 176.35, d: 6.3, tag: 'rapid', z: [1.06, 1.1]},                // rapid fire opens the reel
-	{v: 184.7, d: 5.65, z: [1.12, 1.15]},
-	{v: 21.15, d: 3.8},
-	{v: 25.85, d: 1.25, z: [1.12, 1.15]},
-	{v: 35.45, d: 2.85},
-	{v: 41.15, d: 2.75, z: [1.12, 1.15]},
-	{v: 46.75, d: 4.2},
-	{v: 51.1, d: 5.0, tab: 'grid'},
-	{v: 59.6, d: 2.8, tab: 'prompt'},
-	{v: 92.05, d: 3.55, tab: 'type'},
-	{v: 112.4, d: 3.95, z: [1.12, 1.15]},
-	{v: 134.8, d: 3.15},
-	{v: 143.0, d: 3.3, z: [1.0, 1.15], o: [560, 900], reveal: true},  // the reveal
-	{v: 146.3, d: 3.15, z: [1.12, 1.15]},
-	{v: 165.85, d: 2.75, quote: true},
+	{v: 13.45, d: 5.45, z: [1.0, 1.05]},                              // host intro (fades in from black)
+	{v: 176.35, d: 6.3, tag: 'rapid', z: [1.06, 1.1]},
+	{v: 184.7, d: 6.3, z: [1.1, 1.13]},
+	{v: 20.0, d: 4.95},
+	{v: 25.85, d: 2.75, z: [1.1, 1.13]},
+	{v: 32.75, d: 0.75},
+	{v: 35.45, d: 4.85, z: [1.1, 1.13]},
+	{v: 41.15, d: 4.95},
+	{v: 46.75, d: 4.2, z: [1.1, 1.13]},
+	{v: 51.1, d: 8.4, tab: 'grid'},
+	{v: 59.6, d: 2.9, tab: 'prompt'},
+	{v: 92.05, d: 5.5, tab: 'type'},
+	{v: 108.3, d: 8.1},                                               // the silver conversation
+	{v: 118.3, d: 3.8, z: [1.1, 1.13]},
+	{v: 124.0, d: 6.5},
+	{v: 132.05, d: 5.95, z: [1.1, 1.13]},
+	{v: 138.6, d: 2.75},
+	{v: 143.0, d: 3.3, z: [1.0, 1.15], o: [560, 900], reveal: true},
+	{v: 146.3, d: 3.2, z: [1.1, 1.13]},
+	{v: 165.85, d: 3.45, quote: true},
+	{v: 201.0, d: 7.9, z: [1.0, 1.06]},                               // sign-off
 ];
-export const REVEAL_END = 3.2;
+export const REVEAL_END = 4.5;
 const starts = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i - 1] + SEGS[i - 1].d], []);
 export const revealTotal = () => starts[starts.length - 1] + SEGS[SEGS.length - 1].d + REVEAL_END;
 
@@ -89,9 +95,9 @@ const Tablet: React.FC<{s: Seg; inFrom: boolean; outTo: boolean}> = ({s, inFrom,
 	const leave = outTo ? interpolate(t, [s.d - 0.3, s.d], [0, 1], {...clamp, easing: Easing.in(Easing.cubic)}) : 0;
 	const y = (1 - enter) * 900 + leave * 1000;
 		const k = PROMPT.length;
-	const typed = s.tab === 'type' ? Math.round(interpolate(t, [0.1, 1.9], [0, k], clamp)) : 0;
+	const typed = s.tab === 'type' ? Math.round(interpolate(t, [0.1, 1.95], [0, k], clamp)) : 0;
 	const caret = Math.floor(t * 2.2) % 2 === 0;
-	const sk = s.tab === 'type' ? interpolate(t, [2.45, 2.65], [0, 1], clamp) : 0;
+	const sk = s.tab === 'type' ? interpolate(t, [2.45, 2.75], [0, 1], clamp) : 0;
 	const press = s.tab === 'type' ? interpolate(t, [2.1, 2.25, 2.45], [1, 0.92, 1], clamp) : 1;
 	const S = TW / 1640;
 	return (
@@ -103,19 +109,20 @@ const Tablet: React.FC<{s: Seg; inFrom: boolean; outTo: boolean}> = ({s, inFrom,
 					) : (
 						<>
 							<Img src={staticFile('img/rec_prompt.png')} style={{width: TW, height: TH}} />
-							{/* the prompt box: cover the placeholder and type her prompt */}
-							<div style={{position: 'absolute', left: 70 * S, top: 715 * S, width: 1500 * S, height: 300 * S, background: 'white'}} />
-							<div style={{position: 'absolute', left: 106 * S, top: 748 * S, fontFamily: AFACAD, fontSize: 64 * S, color: '#2B2024'}}>
-								{s.tab === 'prompt' ? <span style={{color: '#A59A9D'}}>{caret ? '|' : ' '}</span> : <>{PROMPT.slice(0, typed)}<span style={{opacity: caret && typed < k ? 1 : 0}}>|</span></>}
-							</div>
-							<div style={{position: 'absolute', left: 1336 * S, top: 1062 * S, width: 198 * S, height: 82 * S, borderRadius: 41 * S, scale: press,
-								background: s.tab === 'type' && t > 2.1 ? '#5C2A3E' : 'transparent', color: 'white', fontFamily: AFACAD, fontWeight: 600, fontSize: 26 * S * 1.6, letterSpacing: '0.1em',
-								display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: s.tab === 'type' && t > 2.1 ? 1 : 0}}>GENERATE</div>
 							{sk > 0 ? (
 								<div style={{position: 'absolute', left: 0, top: 0, width: TW, height: TH, opacity: sk}}>
 									<OffthreadVideo src={staticFile('media/p8/rec.mp4')} muted trimBefore={Math.round(168.4 * fps)} style={{width: TW, height: TH}} />
 								</div>
 							) : null}
+							{/* the prompt box: cover the placeholder and type her prompt */}
+							<div style={{position: 'absolute', left: 70 * S, top: 715 * S, width: 1500 * S, height: 300 * S, background: 'white'}} />
+							<div style={{position: 'absolute', left: 106 * S, top: 748 * S, fontFamily: AFACAD, fontSize: 64 * S, color: '#2B2024'}}>
+								{s.tab === 'prompt' ? <span style={{color: '#A59A9D'}}>{caret ? '|' : ' '}</span> : <>{PROMPT.slice(0, typed)}<span style={{opacity: caret && typed < k ? 1 : 0}}>|</span></>}
+							</div>
+							<div style={{position: 'absolute', left: 1262 * S, top: 1058 * S, width: 300 * S, height: 90 * S, borderRadius: 41 * S, scale: press,
+								background: s.tab === 'type' && t > 2.1 ? '#5C2A3E' : 'transparent', color: 'white', fontFamily: AFACAD, fontWeight: 600, fontSize: 26 * S * 1.6, letterSpacing: '0.1em',
+								display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: s.tab === 'type' && t > 2.1 ? 1 : 0}}>GENERATE</div>
+
 						</>
 					)}
 				</div>
@@ -195,7 +202,7 @@ const EndCard: React.FC = () => {
 	const a = spring({frame, fps, config: {damping: 16, mass: 0.7}});
 	const b = spring({frame: frame - 10, fps, config: {damping: 16, mass: 0.7}});
 	return (
-		<AbsoluteFill style={{background: 'linear-gradient(170deg, #FBEFF1 0%, #F6E3E7 55%, #F1DCD6 100%)', opacity: interpolate(frame, [0, 6], [0, 1], clamp)}}>
+		<AbsoluteFill style={{background: 'linear-gradient(170deg, #FBEFF1 0%, #F6E3E7 55%, #F1DCD6 100%)', opacity: interpolate(frame, [0, 18], [0, 1], clamp)}}>
 			<div style={{position: 'absolute', left: 80, right: 80, top: 640, textAlign: 'center', color: '#3A2028', opacity: a, translate: `0 ${(1 - a) * 30}px`}}>
 				<div style={{fontFamily: INSTRUMENT, fontSize: 118, lineHeight: 1.0}}>What would <i style={{color: TERRA}}>you</i><br />design?</div>
 			</div>
@@ -205,6 +212,11 @@ const EndCard: React.FC = () => {
 			</div>
 		</AbsoluteFill>
 	);
+};
+
+const FadeBlack: React.FC = () => {
+	const frame = useCurrentFrame();
+	return <AbsoluteFill style={{background: 'black', opacity: interpolate(frame, [0, 18], [1, 0], clamp)}} />;
 };
 
 export const StreetRevealReel: React.FC = () => {
@@ -218,7 +230,7 @@ export const StreetRevealReel: React.FC = () => {
 		{t: starts[typeIdx] + 2.15, f: 'click', v: 0.35},
 		{t: starts[SEGS.findIndex((x) => x.reveal)] - 1.0, f: 'riser', v: 0.16},
 		{t: starts[SEGS.findIndex((x) => x.reveal)] + 1.6, f: 'glock', v: 0.26},
-		{t: 0.05, f: 'tick', v: 0.35},
+		{t: starts[1] + 0.05, f: 'tick', v: 0.35},
 		{t: total, f: 'whoosh', v: 0.22},
 		{t: total + 0.45, f: 'pop', v: 0.45},
 	];
@@ -226,11 +238,12 @@ export const StreetRevealReel: React.FC = () => {
 		<AbsoluteFill style={{backgroundColor: 'black'}}>
 			{SEGS.map((s, i) => (
 				<Sequence key={i} name={`seg ${i} @${s.v}`} from={f(starts[i])} durationInFrames={f(starts[i] + s.d) - f(starts[i])}>
+					{i === 0 ? <AbsoluteFill style={{zIndex: 5, pointerEvents: 'none'}}><FadeBlack /></AbsoluteFill> : null}
 					{s.tab ? <Tablet s={s} inFrom={!SEGS[i - 1]?.tab} outTo={!SEGS[i + 1]?.tab} /> : <Face s={s} i={i} />}
 										{s.quote ? <Quote d={s.d} small /> : null}
 					{s.tag ? <Tag kind={s.tag as 'earlier' | 'rapid'} /> : null}
 					<Audio src={staticFile('media/p8/int.mp4')} trimBefore={f(s.a ?? s.v)}
-						volume={(fr) => interpolate(fr, [0, 2, f(s.d) - 2, f(s.d)], [0, 1, 1, 0], clamp)} />
+						volume={(fr) => interpolate(fr, [0, i === 0 ? 12 : 2, f(s.d) - (i === SEGS.length - 1 ? 18 : 2), f(s.d)], [0, 1, 1, 0], clamp)} />
 				</Sequence>
 			))}
 			<Sequence name="end card" from={f(total)}><EndCard /></Sequence>
@@ -241,7 +254,7 @@ export const StreetRevealReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p4/lovelikethis.mp3')}
-				volume={(fr) => interpolate(fr, [0, 15, f(total), f(total) + 10, durationInFrames - 15, durationInFrames], [0, 0.07, 0.07, 0.32, 0.32, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 30, f(total) - 30, f(total) + 15, durationInFrames - 30, durationInFrames], [0, 0.07, 0.07, 0.32, 0.32, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
