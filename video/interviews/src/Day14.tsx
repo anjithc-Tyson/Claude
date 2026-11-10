@@ -1,7 +1,7 @@
 // "Day 14 the Bracelet": idea to sparkle. Her take (media/p9/day14.mp4, upscaled from 720p) with the long pauses
 // tightened. Her three wishes ("elegant", "delicate", "just the right sparkle") pop up as soft word chips above her
-// head; on "we brought her idea to life" a pencil sketch of the bracelet draws itself full screen, then dissolves
-// into the finished bracelet on "beautiful diamond bracelet"; "the finished piece" cuts to it on the wrist.
+// head; on "we brought her idea to life" a pencil sketch of the bracelet draws itself, then the real bracelet footage
+// (gloved over its certificate, then in hand) carries the making and "the finished piece".
 import React from 'react';
 import {AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
@@ -9,7 +9,6 @@ import wordsData from './data/day14_words.json';
 import {AFACAD, INSTRUMENT, POPPINS} from './fonts';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
-const ease = Easing.bezier(0.16, 1, 0.3, 1);
 const TERRA = '#E2725B', SAP = '#507D2A', INK = '#2E2A26';
 type Word = {w: string; t: number; e: number};
 const WORDS = wordsData as Word[];
@@ -71,45 +70,51 @@ const Chips: React.FC = () => {
 	);
 };
 
-// the pencil sketch draws itself (soft-edged wipe), holds with a slow push, then dissolves into the photo
-const SketchToPhoto: React.FC<{dur: number; photoAt: number}> = ({dur, photoAt}) => {
+// the pencil sketch draws itself (soft-edged wipe) with a slow push
+const Sketch: React.FC<{dur: number}> = ({dur}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const draw = interpolate(t, [0.25, 2.8], [0, 1], {...clamp, easing: Easing.inOut(Easing.quad)});
-	const edge = -10 + draw * 120;   // percent across
-	const photo = interpolate(t, [photoAt - 0.25, photoAt + 0.45], [0, 1], {...clamp, easing: ease});
-	const zs = interpolate(t, [0, photoAt + 0.5], [1.0, 1.08], clamp);
-	const zp = interpolate(t, [photoAt, dur], [1.04, 1.12], clamp);
-	const inA = interpolate(t, [0, 0.25], [0, 1], clamp);
+	const draw = interpolate(t, [0.2, 2.3], [0, 1], {...clamp, easing: Easing.inOut(Easing.quad)});
+	const edge = -10 + draw * 120;
+	const z = interpolate(t, [0, dur], [1.0, 1.06], clamp);
+	const inA = interpolate(t, [0, 0.2], [0, 1], clamp);
+	const outA = interpolate(t, [dur - 0.3, dur], [1, 0], clamp);
 	return (
 		<AbsoluteFill style={{background: '#F3EDE2', opacity: inA}}>
-			<AbsoluteFill style={{scale: zs, transformOrigin: '540px 760px'}}>
+			<AbsoluteFill style={{scale: z, transformOrigin: '540px 760px', opacity: outA}}>
 				<Img src={staticFile('img/bracelet/B_sketch.jpg')} style={{width: 1080, height: 1920,
 					maskImage: `linear-gradient(100deg, black ${edge - 8}%, transparent ${edge + 4}%)`, WebkitMaskImage: `linear-gradient(100deg, black ${edge - 8}%, transparent ${edge + 4}%)`}} />
 			</AbsoluteFill>
-			<AbsoluteFill style={{opacity: photo, scale: zp, transformOrigin: '540px 720px'}}>
-				<Img src={staticFile('img/bracelet/B_photo.jpg')} style={{width: 1080, height: 1920}} />
-			</AbsoluteFill>
-			<div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em',
-				color: photo > 0.5 ? '#6F6A64' : '#8B7F70', opacity: inA}}>{photo > 0.5 ? 'THE FINISHED PIECE' : 'HER IDEA, ON PAPER'}</div>
+			<div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em', color: '#8B7F70'}}>HER IDEA, ON PAPER</div>
 		</AbsoluteFill>
 	);
 };
 
-const Wrist: React.FC<{dur: number}> = ({dur}) => {
+// the real bracelet footage (upscaled from the phone clips), slowed a touch, with a short label
+type Roll = {at: number; clip: string; from: number; dur: number; label?: string};
+const ROLL: Roll[] = [
+	{at: 21.0, clip: 'g3', from: 15.0, dur: 3.4, label: 'EVERY LITTLE DETAIL'},
+	{at: 24.4, clip: 'g2', from: 1.0, dur: 2.0},
+	{at: 26.4, clip: 'g3', from: 21.0, dur: 2.2},
+	{at: 32.65, clip: 'h1', from: 8.0, dur: 2.4, label: 'THE FINISHED PIECE'},
+	{at: 35.05, clip: 'h3', from: 4.0, dur: 1.9},
+	{at: 36.95, clip: 'h2', from: 20.2, dur: 1.45, label: 'WITH ITS CERTIFICATE'},
+];
+const RATE = 0.85;
+const Clip: React.FC<{r: Roll}> = ({r}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const z = interpolate(t, [0, dur], [1.0, 1.1], clamp);
-	const sweep = interpolate(t, [0.3, 1.6], [-400, 1400], clamp);
+	const z = interpolate(t, [0, r.dur], [1.04, 1.1], clamp);
+	const la = interpolate(t, [0.15, 0.45, r.dur - 0.25, r.dur], [0, 1, 1, 0], clamp);
 	return (
-		<AbsoluteFill style={{overflow: 'hidden', background: '#EEE7DD'}}>
-			<AbsoluteFill style={{scale: z, transformOrigin: '600px 560px'}}>
-				<Img src={staticFile('img/bracelet/B_wrist.jpg')} style={{width: 1080, height: 1920}} />
-				<div style={{position: 'absolute', top: 0, bottom: 0, left: sweep, width: 300, rotate: '16deg', mixBlendMode: 'soft-light',
-					background: 'linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.6), rgba(255,255,255,0))'}} />
-			</AbsoluteFill>
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
+			<OffthreadVideo src={staticFile(`media/p9/${r.clip}.mp4`)} muted trimBefore={Math.round(r.from * fps)} playbackRate={RATE}
+				style={{width: 1080, height: 1920, scale: z, filter: 'contrast(1.06) saturate(0.92) brightness(1.02)'}} />
+			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0.35) 0%, rgba(0,0,0,0) 22%)'}} />
+			{r.label ? <div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em',
+				color: 'white', opacity: la, textShadow: '0 2px 12px rgba(0,0,0,0.5)'}}>{r.label}</div> : null}
 		</AbsoluteFill>
 	);
 };
@@ -137,7 +142,7 @@ const Captions: React.FC<{light: (t: number) => boolean}> = ({light}) => {
 	return (
 		<div style={{position: 'absolute', left: 70, right: 70, top: 1440, textAlign: 'center', opacity: a, scale: 0.92 + 0.08 * a,
 			fontFamily: POPPINS, fontWeight: 700, fontSize: 62, lineHeight: 1.12, color: onLight ? INK : 'white',
-			textShadow: onLight ? '0 0 24px rgba(255,250,240,0.9)' : '0 3px 0 rgba(0,0,0,0.5), 0 0 22px rgba(0,0,0,0.45)'}}>
+			textShadow: onLight ? '0 0 18px rgba(255,252,246,1), 0 0 34px rgba(255,252,246,0.95), 0 0 6px rgba(255,252,246,1)' : '0 3px 0 rgba(0,0,0,0.5), 0 0 22px rgba(0,0,0,0.45)'}}>
 			{g.map((w, i) => (
 				<span key={i} style={{color: t >= w.t - 0.03 ? (onLight ? SAP : TERRA) : undefined}}>{w.w.replace(/,$/, '')}{i < g.length - 1 ? ' ' : ''}</span>
 			))}
@@ -154,9 +159,9 @@ const EndCard: React.FC = () => {
 	return (
 		<AbsoluteFill style={{opacity: interpolate(frame, [0, 15], [0, 1], clamp), background: '#F3EDE2'}}>
 			<AbsoluteFill style={{scale: z, transformOrigin: '540px 900px'}}>
-				<Img src={staticFile('img/bracelet/B_photo.jpg')} style={{width: 1080, height: 1920, opacity: 0.9}} />
+				<OffthreadVideo src={staticFile('media/p9/h1.mp4')} muted trimBefore={Math.round(5.0 * fps)} playbackRate={0.7} style={{width: 1080, height: 1920}} />
 			</AbsoluteFill>
-			<AbsoluteFill style={{background: 'linear-gradient(rgba(248,244,237,0.92) 0%, rgba(248,244,237,0.55) 34%, rgba(248,244,237,0) 55%)'}} />
+			<AbsoluteFill style={{background: 'linear-gradient(rgba(248,244,237,0.96) 0%, rgba(248,244,237,0.85) 30%, rgba(248,244,237,0) 52%)'}} />
 			<div style={{position: 'absolute', left: 80, right: 80, top: 210, textAlign: 'center', color: INK, opacity: a, translate: `0 ${(1 - a) * 26}px`}}>
 				<div style={{fontFamily: INSTRUMENT, fontSize: 110, lineHeight: 1.0}}>Every piece begins<br />with <i style={{color: TERRA}}>one little idea</i></div>
 			</div>
@@ -170,15 +175,13 @@ const EndCard: React.FC = () => {
 export const Day14Reel: React.FC = () => {
 	const {fps, durationInFrames} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
-	const sk0 = out(18.3), sk1 = out(28.6) - 0.02, photoAt = out(26.3) - sk0;
-	const wr0 = out(32.65), wr1 = out(36.0);
-	const light = (t: number) => (t >= sk0 && t < sk1) || (t >= wr0 && t < wr1);
+	const sk0 = out(18.3), sk1 = out(21.0);
+	const light = (t: number) => (t >= sk0 && t < sk1) || ROLL.some((r) => t >= out(r.at) && t < out(r.at) + r.dur);
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
 		...CHIPS.map((c) => ({t: out(c.at) - 0.03, f: 'pop', v: 0.16})),
 		{t: sk0 - 0.15, f: 'whoosh', v: 0.16},
-		{t: sk0 + photoAt - 0.9, f: 'riser', v: 0.12, len: 1.2},
-		{t: sk0 + photoAt + 0.05, f: 'glock', v: 0.22},
-		{t: wr0 + 0.3, f: 'tick2', v: 0.18},
+		{t: out(32.65) - 1.0, f: 'riser', v: 0.12, len: 1.2},
+		{t: out(32.65) + 0.05, f: 'glock', v: 0.22},
 		{t: TAKE - 0.1, f: 'whoosh', v: 0.2},
 		{t: TAKE + 0.5, f: 'click', v: 0.35},
 	];
@@ -191,8 +194,10 @@ export const Day14Reel: React.FC = () => {
 				</Sequence>
 			))}
 			<Chips />
-			<Sequence name="sketch to photo" from={f(sk0)} durationInFrames={f(sk1) - f(sk0)}><SketchToPhoto dur={sk1 - sk0} photoAt={photoAt} /></Sequence>
-			<Sequence name="wrist" from={f(wr0)} durationInFrames={f(wr1) - f(wr0)}><Wrist dur={wr1 - wr0} /></Sequence>
+			<Sequence name="sketch" from={f(sk0)} durationInFrames={f(sk1) - f(sk0)}><Sketch dur={sk1 - sk0} /></Sequence>
+			{ROLL.map((r, i) => (
+				<Sequence key={`r${i}`} name={`${r.clip} @${r.at}`} from={f(out(r.at))} durationInFrames={f(out(r.at) + r.dur) - f(out(r.at))}><Clip r={r} /></Sequence>
+			))}
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			<Captions light={light} />
 			{sfx.map((h, i) => (
