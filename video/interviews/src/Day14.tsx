@@ -178,7 +178,7 @@ export const Day14Reel: React.FC = () => {
 	const sk0 = out(18.3), sk1 = out(21.0);
 	const light = (t: number) => (t >= sk0 && t < sk1) || ROLL.some((r) => t >= out(r.at) && t < out(r.at) + r.dur);
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
-		...CHIPS.map((c) => ({t: out(c.at) - 0.03, f: 'pop', v: 0.16})),
+		...CHIPS.map((c) => ({t: out(c.at) - 0.03, f: 'pop', v: 0.09})),
 		{t: sk0 - 0.15, f: 'whoosh', v: 0.16},
 		{t: out(32.65) - 1.0, f: 'riser', v: 0.12, len: 1.2},
 		{t: out(32.65) + 0.05, f: 'glock', v: 0.22},
