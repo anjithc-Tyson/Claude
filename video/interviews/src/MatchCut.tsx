@@ -21,7 +21,7 @@ export const matchTotal = (d: D) => HOOK + d.total + MATCH_END;
 type Cut = {a: number; b: number; img: string; z0?: number; z1?: number; ox?: number; oy?: number};
 const CUTS: Cut[] = [
 	{a: 0.0, b: 2.55, img: 'D02'},
-	{a: 4.2, b: 5.65, img: 'D01', z0: 1.35, z1: 1.45, ox: 400, oy: 640},
+	{a: 4.2, b: 5.65, img: 'D01', z0: 1.12, z1: 1.2, ox: 330, oy: 700},
 	{a: 8.95, b: 10.4, img: 'D03', z0: 1.0, z1: 1.05},
 	{a: 11.5, b: 12.6, img: 'D04'},
 	{a: 12.6, b: 14.25, img: 'D05'},
@@ -52,11 +52,11 @@ const Hook: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const z = interpolate(t, [0, HOOK], [1.15, 1.3], {...clamp, easing: Easing.out(Easing.quad)});
+	const z = interpolate(t, [0, HOOK], [1.0, 1.12], {...clamp, easing: Easing.out(Easing.quad)});
 	const sweep = interpolate(t, [0.1, HOOK + 0.2], [-500, 1300], clamp);
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', backgroundColor: '#EDE6DA'}}>
-			<AbsoluteFill style={{scale: z, transformOrigin: '400px 640px'}}>
+			<AbsoluteFill style={{scale: z, transformOrigin: '330px 700px'}}>
 				<Img src={staticFile('img/match/D01.jpg')} style={{width: 1080, height: 1920}} />
 				<div style={{position: 'absolute', top: 0, bottom: 0, left: sweep, width: 380, rotate: '14deg', mixBlendMode: 'soft-light',
 					background: 'linear-gradient(90deg, rgba(255,250,240,0) 0%, rgba(255,250,240,0.55) 50%, rgba(255,250,240,0) 100%)'}} />
@@ -108,7 +108,7 @@ const Captions: React.FC<{d: D}> = ({d}) => {
 	const a = interpolate(v, [g[0].t - 0.05, g[0].t + 0.1], [0, 1], clamp);
 	return (
 		<div style={{position: 'absolute', left: 90, right: 90, top: 1330, textAlign: 'center', opacity: a, translate: `0 ${(1 - a) * 8}px`,
-			fontFamily: AFACAD, fontWeight: 500, fontSize: 62, lineHeight: 1.15, color: 'white', textShadow: '0 2px 14px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.35)'}}>
+			fontFamily: AFACAD, fontWeight: 500, fontSize: 62, lineHeight: 1.15, color: 'white', textShadow: '0 2px 16px rgba(0,0,0,0.7), 0 0 4px rgba(0,0,0,0.6), 0 1px 2px rgba(0,0,0,0.6)'}}>
 			{g.map((w, i) => (
 				<span key={i} style={{opacity: v >= w.t - 0.03 ? 1 : 0.55}}>{w.w.replace(/[,.]$/, '')}{i < g.length - 1 ? ' ' : ''}</span>
 			))}
