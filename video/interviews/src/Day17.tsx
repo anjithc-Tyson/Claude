@@ -4,13 +4,13 @@
 // Her take (media/p11/day17.mp4) with the retakes removed. On "And here it is" the screen moves inside a gold ring
 // (photoreal macro) and the engraving "A + R · 14.02.2024" appears on the inner wall as she says it.
 import React from 'react';
-import {AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import wordsData from './data/day17_words.json';
-import {AFACAD, INSTRUMENT, POPPINS} from './fonts';
+import {INSTRUMENT, POPPINS} from './fonts';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
-const TERRA = '#E2725B', SAP = '#507D2A', INK = '#2E2A26', CREAM = '#F3EDE2';
+const TERRA = '#E2725B', SAP = '#507D2A', INK = '#2E2A26';
 type Word = {w: string; t: number; e: number};
 const WORDS = wordsData as Word[];
 
@@ -55,39 +55,20 @@ const Her: React.FC<{from: number; dur: number; k: number}> = ({from, dur, k}) =
 	);
 };
 
-// inside the band: a photoreal macro looking into a gold ring (img/ring17/band.jpg, no text in the photo); the engraving
-// is set onto the inner wall in code, following its curve, so the spelling is exact. It is revealed softly by the light
-// (no letter-by-letter animation): "A + R" fades in on her words, then the date.
-const ENG_A = 'A + R', ENG_B = '  ·  14.02.2024';
-const BandInside: React.FC<{dur: number; a: (t: number) => number; b: (t: number) => number; push?: [number, number]; label?: (t: number) => string}> = ({dur, a, b, push = [1.0, 1.1], label}) => {
+// the Watercolor Brush insert (Lemo-Opuscar, video/day17-watercolor): rendered page video, revealed by a wavy
+// brush-edge wipe over her shot; plays from "And here it is" and continues under the end card
+const WC_IN = 0.55;
+const Watercolor: React.FC<{from: number; wipe?: boolean}> = ({from, wipe}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const t = frame / fps;
-	const inA = interpolate(t, [0, 0.35], [0, 1], clamp);
-	const z = interpolate(t, [0, dur], push, {...clamp, easing: Easing.inOut(Easing.quad)});
-	const oa = a(t), ob = b(t);
-	const Line: React.FC<{fill: string; op: number; dy?: number; blend?: React.CSSProperties['mixBlendMode']}> = ({fill, op, dy = 0, blend}) => (
-		<text fontFamily={INSTRUMENT} fontStyle="italic" fontSize="92" letterSpacing="3" textAnchor="middle" fill={fill} opacity={op} transform={`translate(0 ${dy})`} style={{mixBlendMode: blend}}>
-			<textPath href="#arc" startOffset="50%"><tspan opacity={oa}>{ENG_A}</tspan><tspan opacity={ob}>{ENG_B}</tspan></textPath>
-		</text>
-	);
+	const p = wipe ? interpolate(frame / fps, [0, WC_IN], [0, 1], {...clamp, easing: Easing.inOut(Easing.cubic)}) : 1;
+	const pts: string[] = [];
+	const edge = -8 + p * 116;
+	for (let i = 0; i <= 24; i++) { const y = (i / 24) * 100; const x = edge + 3.2 * Math.sin(i * 1.7 + frame * 0.15) + 1.8 * Math.sin(i * 3.9); pts.push(`${x.toFixed(2)}% ${y.toFixed(2)}%`); }
+	const clip = p >= 1 ? undefined : `polygon(0% 0%, ${pts.join(', ')}, 0% 100%)`;
 	return (
-		<AbsoluteFill style={{background: CREAM, opacity: inA, overflow: 'hidden'}}>
-			<AbsoluteFill style={{scale: z, transformOrigin: '540px 860px'}}>
-				<Img src={staticFile('img/ring17/band.jpg')} style={{width: 1080, height: 1920}} />
-				<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', left: 0, top: 0}}>
-					<defs>
-						<path id="arc" d="M 170 888 Q 540 752 912 878" />
-						<filter id="cut" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="0.6" /></filter>
-					</defs>
-					<g filter="url(#cut)">
-						{/* light lower lip of the cut, then the dark engraved groove on top */}
-						<Line fill="#FFF2C8" op={0.55} dy={2.5} blend="screen" />
-						<Line fill="#4A3010" op={0.82} blend="multiply" />
-					</g>
-				</svg>
-			</AbsoluteFill>
-			{label ? <div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em', color: '#6F6658'}}>{label(t)}</div> : null}
+		<AbsoluteFill style={{clipPath: clip}}>
+			<OffthreadVideo src={staticFile('media/p11/wc_insert.mp4')} muted trimBefore={Math.round(from * fps)} style={{width: 1080, height: 1920}} />
 		</AbsoluteFill>
 	);
 };
@@ -130,7 +111,7 @@ const EndCard: React.FC = () => {
 	const b = spring({frame: frame - 10, fps, config: {damping: 16, mass: 0.7}});
 	return (
 		<AbsoluteFill style={{opacity: interpolate(frame, [0, 15], [0, 1], clamp)}}>
-			<BandInside dur={DAY17_END} a={() => 1} b={() => 1} push={[1.12, 1.16]} />
+			<Watercolor from={9.95} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(248,244,237,0.97) 0%, rgba(248,244,237,0.9) 30%, rgba(248,244,237,0) 50%)'}} />
 			<div style={{position: 'absolute', left: 80, right: 80, top: 210, textAlign: 'center', color: INK, opacity: a, translate: `0 ${(1 - a) * 26}px`}}>
 				<div style={{fontFamily: INSTRUMENT, fontSize: 110, lineHeight: 1.0}}>What would<br /><i style={{color: TERRA}}>yours</i> say?</div>
@@ -147,10 +128,7 @@ export const Day17Reel: React.FC = () => {
 	const f = (t: number) => Math.round(t * fps);
 	// inside-the-band scene: from "And here it is" to the end of the date
 	const b0 = out(65.0), b1 = out(74.95);
-	const aR0 = out(68.97) - b0, d0 = out(71.25) - b0;
-	const fa = (t: number) => interpolate(t, [aR0 - 0.1, aR0 + 0.7], [0, 1], {...clamp, easing: Easing.out(Easing.quad)});
-	const fb = (t: number) => interpolate(t, [d0 - 0.1, d0 + 0.9], [0, 1], {...clamp, easing: Easing.out(Easing.quad)});
-	const label = (t: number) => (t < aR0 ? 'THE PART NOBODY SEES' : 'INSIDE THE BAND');
+	const aR0 = out(68.97) - b0;
 	const light = (t: number) => t >= b0 && t < b1;
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
 		{t: b0 - 0.15, f: 'whoosh', v: 0.16},
@@ -167,7 +145,7 @@ export const Day17Reel: React.FC = () => {
 				</Sequence>
 			))}
 			<Sequence name="inside the band" from={f(b0)} durationInFrames={f(b1) - f(b0)}>
-				<BandInside dur={b1 - b0} a={fa} b={fb} push={[1.0, 1.12]} label={label} />
+				<Watercolor from={0} wipe />
 			</Sequence>
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			<Captions light={light} />
