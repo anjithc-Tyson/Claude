@@ -1,11 +1,10 @@
 // "Day 17": the hidden engraving. House style of the Day series (Day 14/15): Poppins captions (white, spoken word
 // terracotta; sap green on light backgrounds), Afacad tracked labels, Instrument Serif italic chips in cream pills,
 // Instrument Serif end card with a sap-green Poppins button.
-// Her take (media/p11/day17.mp4) with the retakes removed. Her wishes ("nothing loud", "no big gestures", "a secret")
-// as chips; from "we tucked it inside the band" the screen moves inside a gold band, and on her words the engraving
-// "A + R · 14.02.2024" cuts itself into the metal, letter by letter (drawn in code so the text is exact).
+// Her take (media/p11/day17.mp4) with the retakes removed. On "And here it is" the screen moves inside a gold ring
+// (photoreal macro) and the engraving "A + R · 14.02.2024" appears on the inner wall as she says it.
 import React from 'react';
-import {AbsoluteFill, Easing, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Easing, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import wordsData from './data/day17_words.json';
 import {AFACAD, INSTRUMENT, POPPINS} from './fonts';
@@ -56,99 +55,39 @@ const Her: React.FC<{from: number; dur: number; k: number}> = ({from, dur, k}) =
 	);
 };
 
-// her wishes as cream chips (house style)
-const CHIPS = [
-	{text: 'nothing loud', at: 16.5},
-	{text: 'no big gestures', at: 18.41},
-	{text: 'a secret ✨', at: 23.4},
-];
-const Chips: React.FC = () => {
-	const frame = useCurrentFrame();
-	const {fps} = useVideoConfig();
-	const t = frame / fps;
-	const end = out(28.0);
-	const fade = interpolate(t, [end - 0.4, end], [1, 0], clamp);
-	return (
-		<div style={{position: 'absolute', left: 0, right: 0, top: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22, opacity: fade}}>
-			{CHIPS.map((c, i) => {
-				const a = spring({frame: frame - Math.round(out(c.at) * fps), fps, config: {damping: 13, mass: 0.6}});
-				return (
-					<div key={i} style={{opacity: a, scale: 0.6 + 0.4 * a, translate: `0 ${(1 - a) * 24}px`, background: 'rgba(255,252,246,0.92)', color: INK,
-						borderRadius: 60, padding: '16px 40px', fontFamily: INSTRUMENT, fontStyle: 'italic', fontSize: 62, boxShadow: '0 12px 30px rgba(40,30,20,0.18)',
-						border: i === 2 ? `2px solid ${TERRA}` : '2px solid transparent'}}>{c.text}</div>
-				);
-			})}
-		</div>
-	);
-};
-
-// inside the band: a macro of the inner surface of a gold ring, curving across the frame; the engraving cuts itself in
-const ENGRAVE = 'A + R  ·  14.02.2024';
-const BandInside: React.FC<{dur: number; text: string; reveal: (t: number) => number; push?: [number, number]; label?: (t: number) => string}> = ({dur, text, reveal, push = [1.0, 1.08], label}) => {
+// inside the band: a photoreal macro looking into a gold ring (img/ring17/band.jpg, no text in the photo); the engraving
+// is set onto the inner wall in code, following its curve, so the spelling is exact. It is revealed softly by the light
+// (no letter-by-letter animation): "A + R" fades in on her words, then the date.
+const ENG_A = 'A + R', ENG_B = '  ·  14.02.2024';
+const BandInside: React.FC<{dur: number; a: (t: number) => number; b: (t: number) => number; push?: [number, number]; label?: (t: number) => string}> = ({dur, a, b, push = [1.0, 1.1], label}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
 	const inA = interpolate(t, [0, 0.35], [0, 1], clamp);
 	const z = interpolate(t, [0, dur], push, {...clamp, easing: Easing.inOut(Easing.quad)});
-	const n = Math.round(reveal(t) * text.length);
-	const shown = text.slice(0, n);
-	const writing = n > 0 && n < text.length;
-	const sweep = interpolate((t % 4.5) / 4.5, [0, 1], [-30, 130]);
-	// band geometry: a wide strip that sags slightly in the middle (concave inner surface)
-	const y = 820, h = 330, sag = 70;
-	const top = `M -120 ${y - h / 2} Q 540 ${y - h / 2 + sag} 1200 ${y - h / 2}`;
-	const mid = `M -120 ${y + 10} Q 540 ${y + 10 + sag} 1200 ${y + 10}`;
-	const band = `${top} L 1200 ${y + h / 2} Q 540 ${y + h / 2 + sag} -120 ${y + h / 2} Z`;
+	const oa = a(t), ob = b(t);
+	const Line: React.FC<{fill: string; op: number; dy?: number; blend?: React.CSSProperties['mixBlendMode']}> = ({fill, op, dy = 0, blend}) => (
+		<text fontFamily={INSTRUMENT} fontStyle="italic" fontSize="92" letterSpacing="3" textAnchor="middle" fill={fill} opacity={op} transform={`translate(0 ${dy})`} style={{mixBlendMode: blend}}>
+			<textPath href="#arc" startOffset="50%"><tspan opacity={oa}>{ENG_A}</tspan><tspan opacity={ob}>{ENG_B}</tspan></textPath>
+		</text>
+	);
 	return (
-		<AbsoluteFill style={{background: `radial-gradient(ellipse 80% 55% at 50% 45%, #FBF6EE 0%, ${CREAM} 55%, #E7DDCD 100%)`, opacity: inA}}>
+		<AbsoluteFill style={{background: CREAM, opacity: inA, overflow: 'hidden'}}>
 			<AbsoluteFill style={{scale: z, transformOrigin: '540px 860px'}}>
-				<svg width={1080} height={1920} viewBox="0 0 1080 1920">
+				<Img src={staticFile('img/ring17/band.jpg')} style={{width: 1080, height: 1920}} />
+				<svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', left: 0, top: 0}}>
 					<defs>
-						<linearGradient id="gold" x1="0" y1={y - h / 2} x2="0" y2={y + h / 2 + sag} gradientUnits="userSpaceOnUse">
-							<stop offset="0" stopColor="#7A5521" />
-							<stop offset="0.12" stopColor="#C9973E" />
-							<stop offset="0.3" stopColor="#F4D488" />
-							<stop offset="0.42" stopColor="#FFF0C2" />
-							<stop offset="0.55" stopColor="#E3B865" />
-							<stop offset="0.78" stopColor="#B4842F" />
-							<stop offset="1" stopColor="#6A4718" />
-						</linearGradient>
-						<linearGradient id="shine" x1="0" y1="0" x2="1" y2="0">
-							<stop offset="0" stopColor="#FFF8E0" stopOpacity="0" />
-							<stop offset="0.5" stopColor="#FFF8E0" stopOpacity="0.55" />
-							<stop offset="1" stopColor="#FFF8E0" stopOpacity="0" />
-						</linearGradient>
-						<filter id="soft" x="-10%" y="-10%" width="120%" height="140%"><feGaussianBlur stdDeviation="22" /></filter>
-						<path id="arc" d={mid} />
-						<clipPath id="bandClip"><path d={band} /></clipPath>
+						<path id="arc" d="M 170 888 Q 540 752 912 878" />
+						<filter id="cut" x="-5%" y="-30%" width="110%" height="160%"><feGaussianBlur stdDeviation="0.6" /></filter>
 					</defs>
-					{/* soft shadow under the band */}
-					<path d={band} fill="rgba(70,50,25,0.28)" filter="url(#soft)" transform="translate(0 36)" />
-					<path d={band} fill="url(#gold)" />
-					{/* fine brushed texture */}
-					<g clipPath="url(#bandClip)" opacity="0.12">
-						{Array.from({length: 46}).map((_, i) => (
-							<path key={i} d={`M -120 ${y - h / 2 + i * 8} Q 540 ${y - h / 2 + sag + i * 8} 1200 ${y - h / 2 + i * 8}`} stroke={i % 2 ? '#5A3E12' : '#FFF6D6'} strokeWidth="1" fill="none" />
-						))}
-					</g>
-					{/* engraving: dark cut + light lower lip so the letters read as incised */}
-					<text fontFamily={INSTRUMENT} fontStyle="italic" fontSize="132" letterSpacing="4" textAnchor="middle" fill="#FFF3CC" opacity="0.7" transform="translate(0 3)">
-						<textPath href="#arc" startOffset="50%">{shown}</textPath>
-					</text>
-					<text fontFamily={INSTRUMENT} fontStyle="italic" fontSize="132" letterSpacing="4" textAnchor="middle" fill="#5B3F15" opacity="0.9">
-						<textPath href="#arc" startOffset="50%">{shown}</textPath>
-					</text>
-					{/* travelling light across the polished metal */}
-					<g clipPath="url(#bandClip)">
-						<rect x={sweep * 10.8 - 160} y={0} width={320} height={1920} fill="url(#shine)" transform={`rotate(12 ${sweep * 10.8} 820)`} />
+					<g filter="url(#cut)">
+						{/* light lower lip of the cut, then the dark engraved groove on top */}
+						<Line fill="#FFF2C8" op={0.55} dy={2.5} blend="screen" />
+						<Line fill="#4A3010" op={0.82} blend="multiply" />
 					</g>
 				</svg>
-				{writing ? (
-					<div style={{position: 'absolute', left: 540 + (n / text.length - 0.5) * 900 - 9, top: 850 - 9, width: 18, height: 18, borderRadius: 9,
-						background: 'radial-gradient(circle, #FFFFFF 0%, #FFE9A8 45%, rgba(255,233,168,0) 75%)'}} />
-				) : null}
 			</AbsoluteFill>
-			{label ? <div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em', color: '#8B7F70'}}>{label(t)}</div> : null}
+			{label ? <div style={{position: 'absolute', left: 0, right: 0, top: 150, textAlign: 'center', fontFamily: AFACAD, fontWeight: 500, fontSize: 30, letterSpacing: '0.34em', color: '#6F6658'}}>{label(t)}</div> : null}
 		</AbsoluteFill>
 	);
 };
@@ -191,7 +130,7 @@ const EndCard: React.FC = () => {
 	const b = spring({frame: frame - 10, fps, config: {damping: 16, mass: 0.7}});
 	return (
 		<AbsoluteFill style={{opacity: interpolate(frame, [0, 15], [0, 1], clamp)}}>
-			<BandInside dur={DAY17_END} text={ENGRAVE} reveal={() => 1} push={[1.02, 1.06]} />
+			<BandInside dur={DAY17_END} a={() => 1} b={() => 1} push={[1.12, 1.16]} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(248,244,237,0.97) 0%, rgba(248,244,237,0.9) 30%, rgba(248,244,237,0) 50%)'}} />
 			<div style={{position: 'absolute', left: 80, right: 80, top: 210, textAlign: 'center', color: INK, opacity: a, translate: `0 ${(1 - a) * 26}px`}}>
 				<div style={{fontFamily: INSTRUMENT, fontSize: 110, lineHeight: 1.0}}>What would<br /><i style={{color: TERRA}}>yours</i> say?</div>
@@ -208,26 +147,14 @@ export const Day17Reel: React.FC = () => {
 	const f = (t: number) => Math.round(t * fps);
 	// inside-the-band scene: from "And here it is" to the end of the date
 	const b0 = out(65.0), b1 = out(74.95);
-	const aR0 = out(68.97) - b0, aR1 = out(70.85) - b0, d0 = out(71.25) - b0, d1 = out(74.5) - b0;
-	const plusR = 'A + R'.length, total = ENGRAVE.length;
-	const reveal = (t: number) => {
-		if (t < aR0) return 0;
-		if (t < aR1) return interpolate(t, [aR0, aR1], [0, plusR / total], clamp);
-		if (t < d0) return plusR / total;
-		return interpolate(t, [d0, d1], [plusR / total, 1], clamp);
-	};
+	const aR0 = out(68.97) - b0, d0 = out(71.25) - b0;
+	const fa = (t: number) => interpolate(t, [aR0 - 0.1, aR0 + 0.7], [0, 1], {...clamp, easing: Easing.out(Easing.quad)});
+	const fb = (t: number) => interpolate(t, [d0 - 0.1, d0 + 0.9], [0, 1], {...clamp, easing: Easing.out(Easing.quad)});
 	const label = (t: number) => (t < aR0 ? 'THE PART NOBODY SEES' : 'INSIDE THE BAND');
 	const light = (t: number) => t >= b0 && t < b1;
-	const keys = Array.from({length: total}).map((_, k) => {
-		const r = (k + 1) / total;
-		const tt = r <= plusR / total ? aR0 + (r / (plusR / total)) * (aR1 - aR0) : d0 + ((r - plusR / total) / (1 - plusR / total)) * (d1 - d0);
-		return b0 + tt;
-	}).filter((_, k) => ENGRAVE[k] !== ' ');
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
-		...CHIPS.map((c) => ({t: out(c.at) - 0.03, f: 'pop', v: 0.09})),
 		{t: b0 - 0.15, f: 'whoosh', v: 0.16},
-		...keys.filter((_, i) => i % 2 === 0).map((t) => ({t, f: 'tick', v: 0.07, len: 0.4})),
-		{t: b0 + d1 + 0.1, f: 'glock', v: 0.2},
+		{t: b0 + aR0, f: 'glock', v: 0.16},
 		{t: TAKE - 0.1, f: 'whoosh', v: 0.18},
 		{t: TAKE + 0.5, f: 'click', v: 0.32},
 	];
@@ -239,9 +166,8 @@ export const Day17Reel: React.FC = () => {
 					<Audio src={staticFile('media/p11/day17.mp4')} trimBefore={f(a)} volume={(fr) => interpolate(fr, [0, 3, f(b - a) - 3, f(b - a)], [0, 1, 1, 0], clamp)} />
 				</Sequence>
 			))}
-			<Chips />
 			<Sequence name="inside the band" from={f(b0)} durationInFrames={f(b1) - f(b0)}>
-				<BandInside dur={b1 - b0} text={ENGRAVE} reveal={reveal} push={[1.0, 1.12]} label={label} />
+				<BandInside dur={b1 - b0} a={fa} b={fb} push={[1.0, 1.12]} label={label} />
 			</Sequence>
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			<Captions light={light} />
