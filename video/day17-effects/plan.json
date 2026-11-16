@@ -1,0 +1,48 @@
+{
+ "effects": [
+  {
+   "fx": "spotlight",
+   "start": 2.2,
+   "end": 4.6
+  },
+  {
+   "fx": "huge-strike",
+   "start": 15.8,
+   "end": 19.2,
+   "text": "LOUD",
+   "at": 1.7
+  },
+  {
+   "fx": "backdrop-word",
+   "start": 24.3,
+   "end": 27.0,
+   "text": "SECRET",
+   "font": "serif",
+   "color": "#E2725B"
+  },
+  {
+   "fx": "slow-push",
+   "start": 30.6,
+   "end": 34.2,
+   "zoom": 1.3
+  },
+  {
+   "fx": "lean-in",
+   "start": 35.4,
+   "end": 36.6,
+   "zoom": 1.3
+  },
+  {
+   "fx": "crayon-write",
+   "start": 50.0,
+   "end": 52.8,
+   "text": "A + R"
+  },
+  {
+   "fx": "lean-in",
+   "start": 54.0,
+   "end": 55.1,
+   "zoom": 1.35
+  }
+ ]
+}

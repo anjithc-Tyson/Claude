@@ -43,13 +43,14 @@ const capWords: CW[] = WORDS.filter((w) => KEEP.some(([a, b]) => w.t >= a && w.t
 	.filter((w) => w.w);
 
 const GRADE = 'contrast(1.05) saturate(1.04) sepia(0.06)';
-const Her: React.FC<{from: number; dur: number; k: number}> = ({from, dur, k}) => {
-	const frame = useCurrentFrame();
+// her cut with the face-tracked effects baked in (effects skill: spotlight, huge-strike LOUD, backdrop-word SECRET,
+// lean-ins, slow push, crayon-write A + R), rendered from the kept takes in output time: video/day17-effects/plan.json
+const Her: React.FC<{from: number}> = ({from}) => {
 	const {fps} = useVideoConfig();
-	const z = interpolate(frame, [0, dur * fps], k % 2 ? [1.1, 1.14] : [1.0, 1.04], clamp);
+	const z = 1;
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-			<OffthreadVideo src={staticFile('media/p11/day17.mp4')} muted trimBefore={Math.round(from * fps)}
+			<OffthreadVideo src={staticFile('media/p11/take_fx.mp4')} muted trimBefore={Math.round(from * fps)}
 				style={{width: 1080, height: 1920, scale: z, transformOrigin: '540px 700px', filter: GRADE}} />
 		</AbsoluteFill>
 	);
@@ -131,6 +132,9 @@ export const Day17Reel: React.FC = () => {
 	const aR0 = out(68.97) - b0;
 	const light = (t: number) => t >= b0 && t < b1;
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
+		{t: 2.15, f: 'whoosh', v: 0.13},
+		{t: 15.8 + 1.7, f: 'pop', v: 0.12},
+		{t: 24.25, f: 'whoosh', v: 0.12},
 		{t: b0 - 0.15, f: 'whoosh', v: 0.16},
 		{t: b0 + aR0, f: 'glock', v: 0.16},
 		{t: TAKE - 0.1, f: 'whoosh', v: 0.18},
@@ -140,7 +144,7 @@ export const Day17Reel: React.FC = () => {
 		<AbsoluteFill style={{background: '#000'}}>
 			{KEEP.map(([a, b], i) => (
 				<Sequence key={i} name={`take ${a}-${b}`} from={f(OFF[i])} durationInFrames={f(OFF[i] + b - a) - f(OFF[i])}>
-					<Her from={a} dur={b - a} k={i} />
+					<Her from={OFF[i]} />
 					<Audio src={staticFile('media/p11/day17.mp4')} trimBefore={f(a)} volume={(fr) => interpolate(fr, [0, 3, f(b - a) - 3, f(b - a)], [0, 1, 1, 0], clamp)} />
 				</Sequence>
 			))}
@@ -154,8 +158,8 @@ export const Day17Reel: React.FC = () => {
 					<Audio src={staticFile(`sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
-			<Audio name="music" src={staticFile('media/p4/lovelikethis.mp3')}
-				volume={(fr) => interpolate(fr, [0, 20, f(TAKE) - 20, f(TAKE) + 10, durationInFrames - 25, durationInFrames], [0, 0.12, 0.12, 0.3, 0.3, 0], clamp)} />
+			<Audio name="music" src={staticFile('media/p11/me_and_you.mp3')}
+				volume={(fr) => interpolate(fr, [0, 20, f(TAKE) - 20, f(TAKE) + 10, durationInFrames - 25, durationInFrames], [0, 0.11, 0.11, 0.26, 0.26, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
