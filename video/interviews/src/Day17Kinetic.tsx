@@ -14,7 +14,7 @@ import {ROUND} from './fonts';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const FOREST = '#2E6B3F', CREAM = '#F3EDE2', INK = '#2E2A26';
-type Seg = {a: number; b: number; rate: number; o: number};
+type Seg = {a: number; b: number; rate: number; o: number; fx: number};
 type Word = {w: string; t: number; e: number; src: number};
 const D = k17 as {segs: Seg[]; words: Word[]; total: number};
 const SEGS = D.segs;
@@ -62,7 +62,10 @@ const BEHIND: {word: string; src: number; dur: number; col?: string}[] = [
 	{word: 'YOURS?', src: 80.7, dur: 0.9},
 ];
 // effect windows (output time) baked into take_fx2.mp4: no punch-in there, so their overlays stay whole
-const FX_WIN: [number, number][] = [[0.2, 3.9], [12.6, 14.6], [14.9, 23.6], [27.6, 32.6], [54.4, 57.6]];
+// take_fx2.mp4 time → output time (the effects were rendered on the cut before the "uh-oh" was removed)
+const fxOut = (x: number) => { const s = [...SEGS].reverse().find((q) => x >= q.fx) ?? SEGS[0]; return s.o + x - s.fx; };
+const FX_WIN: [number, number][] = ([[0.2, 3.9], [12.6, 14.6], [14.9, 23.6], [27.6, 32.6], [54.4, 57.6]] as [number, number][]).map(([a, b]) => [fxOut(a), fxOut(b)]);
+const CMT0 = fxOut(54.4), CMT1 = fxOut(56.7);
 const NAME0 = 3.93, NAME1 = 4.82, NAME_END = 6.9;
 // the engraving card: from "A plus R" to the end of the date
 const CARD0 = outOf(68.85), CARD1 = outOf(74.7), DATE_AT = outOf(71.2);
@@ -79,7 +82,7 @@ const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'; skip?: number}> =
 	const style: React.CSSProperties = {position: 'absolute', width: 1080, height: 1920, scale: z, transformOrigin: '540px 620px', filter: 'contrast(1.08) saturate(1.04) sepia(0.05)'};
 	return layer === 'base' ? (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-			<OffthreadVideo src={staticFile('media/p11/take_fx2.mp4')} muted trimBefore={Math.round(s.o * fps)} style={style} />
+			<OffthreadVideo src={staticFile('media/p11/take_fx2.mp4')} muted trimBefore={Math.round(s.fx * fps)} style={style} />
 		</AbsoluteFill>
 	) : (
 		<AbsoluteFill style={{overflow: 'hidden'}}>
@@ -145,7 +148,7 @@ const Captions: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	if (t >= TAKE || (t >= CARD0 && t < CARD1) || (t >= 54.4 && t < 56.7)) return null; // the comment bar carries this line
+	if (t >= TAKE || (t >= CARD0 && t < CARD1) || (t >= CMT0 && t < CMT1)) return null; // the comment bar carries this line
 	const gi = groups.findIndex((g, i) => t >= g[0].t - 0.05 && t < Math.min(g[g.length - 1].e + 0.35, groups[i + 1]?.[0].t ?? 1e9));
 	if (gi < 0) return null;
 	const g = groups[gi], k = keyIndex(g);
@@ -243,7 +246,7 @@ export const Day17KineticReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.065, 0.065, 0.22, 0.22, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.04, 0.04, 0.17, 0.17, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
