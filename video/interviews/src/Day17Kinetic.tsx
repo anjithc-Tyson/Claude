@@ -23,6 +23,7 @@ const segLen = (s: Seg) => (s.b - s.a) / s.rate;
 const outOf = (src: number) => { const s = SEGS.find((x) => src >= x.a && src < x.b) ?? SEGS[SEGS.length - 1]; return s.o + (src - s.a) / s.rate; };
 
 const fixAt = (w: Word): string => {
+	if (w.src > 54.8 && w.src < 54.9) return '';
 	if (w.w === 'Takshila') return 'takshila.co';
 	if (w.w === '.co.') return '';
 	if (w.w === 'plus') return '+';
@@ -53,7 +54,6 @@ const BEHIND: {word: string; src: number; dur: number; col?: string}[] = [
 	{word: 'NOBODY', src: 3.9, dur: 1.7},
 	{word: 'TRULY', src: 14.2, dur: 1.4},
 	{word: 'LOUD', src: 17.0, dur: 1.6, col: SAP},
-	{word: 'SECRET', src: 23.3, dur: 2.0},
 	{word: 'TWO', src: 26.6, dur: 1.4},
 	{word: 'WHERE?', src: 29.2, dur: 1.4, col: SAP},
 	{word: 'INSIDE', src: 50.4, dur: 1.9},
@@ -68,7 +68,7 @@ const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'}> = ({s, i, layer}
 	const {fps} = useVideoConfig();
 	const p = frame / (segLen(s) * fps);
 	// alternate wide / close per sentence (a jump-cut feel), a slow drift inside each
-	const base = i % 2 ? 1.14 : 1.0;
+	const base = i === 5 ? 1.0 : i % 2 ? 1.12 : 1.0; // sentence 6 is already a close-up in her original clip
 	const z = base + 0.03 * p;
 	const style: React.CSSProperties = {position: 'absolute', width: 1080, height: 1920, scale: z, transformOrigin: '540px 620px', filter: 'contrast(1.08) saturate(1.04) sepia(0.05)'};
 	return layer === 'base' ? (
@@ -88,7 +88,7 @@ const Behind: React.FC<{word: string; dur: number; col?: string}> = ({word, dur,
 	const t = frame / fps;
 	const s = spring({frame, fps, config: {damping: 14, mass: 0.5, stiffness: 190}});
 	const outA = interpolate(t, [dur - 0.2, dur], [1, 0], clamp);
-	const size = Math.min(330, 1700 / word.length);
+	const size = Math.min(270, 1450 / word.length);
 	return (
 		<div style={{position: 'absolute', left: 0, right: 0, top: 360, textAlign: 'center', fontFamily: ROUND, fontWeight: 900, fontSize: size, lineHeight: 0.9,
 			letterSpacing: '-0.03em', color: col, opacity: outA, scale: 1.25 - 0.25 * s, translate: `0 ${(1 - s) * -40 + t * -14}px`}}>{word}</div>
