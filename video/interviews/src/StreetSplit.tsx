@@ -1,8 +1,10 @@
-// Street interview #2 (Alexis), "Live split-screen": Alexis on the street on top, her REAL iPad session underneath,
-// synced to what she is doing (category grid → typing "gold, shiny and long with more shine" → sketch loading → her
-// rose-gold necklace). When she names it "Brooklyn" the necklace takes the full screen. Natural pace (no speed changes
-// on her), Day-17 kinetic captions in the Takshila palette (forest green #2E6B3F, cream #F3EDE2, ink #2E2A26).
-// Sources: media/p12/alexis.mp4 (upscaled 720p), media/p12/alexis_voice.wav (denoised), media/p12/rec_s.mp4 (her iPad recording, 130–192 s of media/p8/rec.mp4 at 1080 wide).
+// Street interview #2 (Alexis). Hook first: her finished necklace with "WE ASKED A STRANGER TO DESIGN HER DREAM
+// NECKLACE" over the host's "What would you name this piece?". Then the interview at its natural pace, with her REAL
+// iPad session as full-screen cut-ins at the moments that matter (the empty prompt, her typing "gold, shiny and long",
+// the sketch loading into her rose-gold necklace), and the full-screen "BROOKLYN" reveal when she names it.
+// Kinetic captions in the Takshila palette (forest green #2E6B3F, cream #F3EDE2, ink #2E2A26).
+// Sources: media/p12/alexis.mp4 (upscaled 720p), media/p12/alexis_voice2.wav (light clean-up, Alexis's off-mic lines
+// lifted to the host's level), media/p12/rec_s.mp4 (her iPad recording, 130–192 s of media/p8/rec.mp4 at 1080 wide).
 import React from 'react';
 import {AbsoluteFill, Freeze, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
@@ -14,26 +16,30 @@ const FOREST = '#2E6B3F', CREAM = '#F3EDE2', INK = '#2E2A26';
 type Word = {w: string; t: number; e: number};
 const WORDS = wordsData as Word[];
 
-// a = source in, b = source out; mode: full (her only), split (her + iPad), reveal (necklace full screen)
-// rec = iPad source second at the start of the segment, rr = iPad playback rate, ry = how far down the iPad page to show
-type Seg = {a: number; b: number; mode: 'full' | 'split' | 'reveal'; rec?: number; rr?: number; ry?: number; rz?: number; tag?: string};
+// a = source in, b = source out (her audio always plays from a to b); mode: hook (necklace + title), full (her),
+// screen (her iPad full screen: rec = iPad second at segment start, rr = its speed, z/ox/oy = zoom and focus point in
+// the 1080×1554 iPad frame), reveal (necklace full screen, "BROOKLYN"); tail = extra seconds of picture after her audio
+type Seg = {a: number; b: number; mode: 'hook' | 'full' | 'screen' | 'reveal'; rec?: number; rr?: number; z?: number; ox?: number; oy?: number; tag?: string; tail?: number};
 const SEGS: Seg[] = [
+	{a: 61.62, b: 63.45, mode: 'hook', rec: 186.0, tail: 0.7},
 	{a: 6.0, b: 14.95, mode: 'full'},
-	{a: 15.0, b: 22.35, mode: 'split', rec: 135.6, ry: 170},
-	{a: 22.7, b: 25.75, mode: 'split', rec: 145.3, ry: 170, rz: 1.7},
-	{a: 25.75, b: 30.25, mode: 'split', rec: 149.6, rr: 3.6, ry: 170, rz: 1.7},  // she types (silent): her prompt on the iPad
-	{a: 41.0, b: 42.75, mode: 'split', rec: 166.0, rr: 1.4, ry: 170, rz: 1.7},
-	{a: 44.9, b: 52.75, mode: 'split', rec: 168.6, rr: 1.72, ry: 330},           // the sketch loads → her necklace appears
-	{a: 59.2, b: 63.6, mode: 'split', rec: 182.0, ry: 260},
-	{a: 63.6, b: 66.7, mode: 'reveal', rec: 186.0},                             // "I would name this Brooklyn"
+	{a: 15.0, b: 22.35, mode: 'full'},
+	{a: 22.7, b: 25.75, mode: 'screen', rec: 145.3, z: 1.35, ox: 334, oy: 470},
+	{a: 25.75, b: 30.25, mode: 'screen', rec: 149.6, rr: 3.6, z: 1.35, ox: 334, oy: 470},   // she types (silent)
+	{a: 41.0, b: 42.75, mode: 'full'},
+	{a: 44.9, b: 48.1, mode: 'full'},
+	{a: 48.1, b: 52.75, mode: 'screen', rec: 168.6, rr: 2.9, z: 1.0, ox: 437, oy: 760},    // sketch loads → her necklace
+	{a: 59.2, b: 63.6, mode: 'full'},
+	{a: 63.6, b: 66.7, mode: 'reveal', rec: 186.0},                                          // "I would name this Brooklyn"
 	{a: 66.7, b: 75.5, mode: 'full'},
 	{a: 77.55, b: 84.5, mode: 'full', tag: 'rapid'},
 	{a: 84.85, b: 95.6, mode: 'full'},
 	{a: 106.25, b: 116.75, mode: 'full', tag: 'paid'},
 	{a: 124.6, b: 135.5, mode: 'full'},
 ];
-const OFF = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i - 1] + (SEGS[i - 1].b - SEGS[i - 1].a)], []);
-const TAKE = OFF[OFF.length - 1] + SEGS[SEGS.length - 1].b - SEGS[SEGS.length - 1].a;
+const segLen = (s: Seg) => s.b - s.a + (s.tail ?? 0);
+const OFF = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i - 1] + segLen(SEGS[i - 1])], []);
+const TAKE = OFF[OFF.length - 1] + segLen(SEGS[SEGS.length - 1]);
 export const SPLIT_END = 3.4;
 export const splitTotal = () => TAKE + SPLIT_END;
 
@@ -61,38 +67,62 @@ const KEY = /^(dream|blingy|shiny|stands|own|necklace|type|generate|prompt|gold|
 const clean = (w: string) => w.replace(/[.,!?]+$/, '');
 const modeAt = (t: number) => { let k = 0; OFF.forEach((o, i) => { if (t >= o) k = i; }); return SEGS[k]; };
 
-const SPLIT_H = 1010;
 const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const p = frame / ((s.b - s.a) * fps);
-	const split = s.mode === 'split';
-	// full frame: a two-shot crop that alternates wide/close per segment; split: the top panel
-	const z = split ? 1.05 : (i % 2 ? 1.22 : 1.1) + 0.03 * p;
+	const p = frame / (segLen(s) * fps);
+	const z = (i % 2 ? 1.22 : 1.1) + 0.03 * p;   // a two-shot crop that alternates wide/close per segment
 	return (
-		<AbsoluteFill style={{overflow: 'hidden', background: '#000', height: split ? SPLIT_H : 1920}}>
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
 			<OffthreadVideo src={staticFile('media/p12/alexis.mp4')} muted trimBefore={Math.round(s.a * fps)}
-				style={{position: 'absolute', left: 0, top: split ? -520 : 0, width: 1080, height: 1920, scale: z, transformOrigin: split ? '540px 1000px' : '540px 980px',
-					filter: 'contrast(1.06) saturate(1.04)'}} />
+				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, transformOrigin: '540px 980px', filter: 'contrast(1.06) saturate(1.04)'}} />
 		</AbsoluteFill>
 	);
 };
 
-// her real iPad session in the lower panel, cropped to the part of the page that matters
-const RW = 1080, RH = Math.round(1080 * 2360 / 1640);
-const IPad: React.FC<{s: Seg; inFrom: boolean}> = ({s, inFrom}) => {
+// her real iPad screen, full frame, zoomed to what matters, with a small "HER SCREEN" tag and a gentle push
+const RW = 1080, RH = 1554, FILL = 1920 / 1554;
+const Screen: React.FC<{s: Seg}> = ({s}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const enter = inFrom ? spring({frame, fps, config: {damping: 16, mass: 0.6}}) : 1;
+	const t = frame / fps;
+	const z = FILL * (s.z ?? 1) * (1 + 0.03 * (t / segLen(s)));
+	const ox = s.ox ?? 540, oy = s.oy ?? 777;
+	const inA = interpolate(t, [0, 0.12], [0, 1], clamp);
 	return (
-		<div style={{position: 'absolute', left: 0, top: SPLIT_H, width: 1080, height: 1920 - SPLIT_H, overflow: 'hidden', background: CREAM}}>
-			<div style={{position: 'absolute', left: 0, top: -(s.ry ?? 170), width: RW, height: RH, translate: `0 ${(1 - enter) * 900}px`, scale: s.rz ?? 1, transformOrigin: '20px 330px'}}>
+		<AbsoluteFill style={{background: CREAM, overflow: 'hidden', opacity: inA}}>
+			<div style={{position: 'absolute', left: 540 - ox * z, top: 960 - oy * z, width: RW, height: RH, scale: z, transformOrigin: '0px 0px'}}>
 				<OffthreadVideo src={staticFile('media/p12/rec_s.mp4')} muted trimBefore={Math.round(((s.rec ?? 130) - 130) * fps)} playbackRate={s.rr ?? 1} style={{width: RW, height: RH}} />
 			</div>
-			<div style={{position: 'absolute', left: 0, right: 0, top: 0, height: 6, background: FOREST}} />
-			<div style={{position: 'absolute', left: 30, top: 24, background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 26, letterSpacing: '0.12em', padding: '10px 20px', borderRadius: 10,
-				opacity: enter}}>● HER SCREEN · LIVE</div>
-		</div>
+			<div style={{position: 'absolute', left: 40, top: 150, background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 28, letterSpacing: '0.12em', padding: '12px 22px', borderRadius: 12}}>● HER SCREEN</div>
+		</AbsoluteFill>
+	);
+};
+
+// the hook: her finished necklace, a slow push, the title slams in over the host's question
+const Hook: React.FC<{s: Seg}> = ({s}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const t = frame / fps;
+	const z = interpolate(t, [0, segLen(s)], [1.0, 1.1], clamp);
+	const sp = (o: number) => spring({frame: frame - o, fps, config: {damping: 12, mass: 0.5, stiffness: 200}});
+	const lines = [['WE ASKED A', 'white'], ['STRANGER TO', 'white'], ['DESIGN HER', 'white'], ['DREAM NECKLACE', FOREST]] as const;
+	return (
+		<AbsoluteFill style={{background: '#EDE4D8', overflow: 'hidden'}}>
+			<AbsoluteFill style={{scale: z * 2.05, transformOrigin: '540px 760px'}}>
+				<Freeze frame={0}>
+					<OffthreadVideo src={staticFile('media/p12/rec_s.mp4')} muted trimBefore={Math.round(((s.rec ?? 186) - 130) * fps)} style={{position: 'absolute', left: 0, top: -260, width: RW, height: RH}} />
+				</Freeze>
+			</AbsoluteFill>
+			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.1) 45%, rgba(0,0,0,0) 60%)'}} />
+			<div style={{position: 'absolute', left: 60, right: 60, top: 230, fontFamily: ROUND, fontWeight: 900, fontSize: 92, lineHeight: 0.98, letterSpacing: '-0.02em'}}>
+				{lines.map(([w, c], i) => (
+					<div key={w} style={{opacity: sp(i * 3) > 0.02 ? 1 : 0, scale: 1.3 - 0.3 * sp(i * 3), transformOrigin: 'left bottom', color: c === FOREST ? 'white' : c, textShadow: '0 4px 20px rgba(0,0,0,0.35)'}}>
+						{c === FOREST ? <span style={{background: FOREST, padding: '0 16px', borderRadius: 12, textShadow: 'none'}}>{w}</span> : w}
+					</div>
+				))}
+			</div>
+		</AbsoluteFill>
 	);
 };
 
@@ -101,7 +131,7 @@ const Reveal: React.FC<{s: Seg; nameAt: number}> = ({s, nameAt}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const z = interpolate(t, [0, s.b - s.a], [1.0, 1.12], clamp);
+	const z = interpolate(t, [0, segLen(s)], [1.0, 1.12], clamp);
 	const a = spring({frame: frame - Math.round(nameAt * fps), fps, config: {damping: 12, mass: 0.5, stiffness: 200}});
 	const flash = interpolate(t, [0, 0.12, 0.35], [0.8, 0.4, 0], clamp);
 	return (
@@ -142,14 +172,15 @@ const Captions: React.FC = () => {
 	const t = frame / fps;
 	if (t >= TAKE) return null;
 	const s = modeAt(t);
-	if (s.mode === 'reveal') return null;
+	if (s.mode === 'reveal' || s.mode === 'hook') return null;
 	const gi = groups.findIndex((g, i) => t >= g[0].t - 0.05 && t < Math.min(g[g.length - 1].e + 0.35, groups[i + 1]?.[0].t ?? 1e9));
 	if (gi < 0) return null;
 	const g = groups[gi], k = g.findIndex((w) => KEY.test(clean(w.w)));
-	const split = s.mode === 'split';
+	const split = false;
+	const onScreen = s.mode === 'screen';
 	const long = g.map((w) => clean(w.w)).join(' ').length > 15;
 	return (
-		<div style={{position: 'absolute', left: 50, right: 50, top: split ? 770 : 1270, fontFamily: ROUND, fontWeight: 900, fontSize: split ? (long ? 80 : 92) : (long ? 100 : 116), lineHeight: 1.0,
+		<div style={{position: 'absolute', left: 50, right: 50, top: onScreen ? 1520 : split ? 770 : 1270, fontFamily: ROUND, fontWeight: 900, fontSize: split ? (long ? 80 : 92) : (long ? 100 : 116), lineHeight: 1.0,
 			letterSpacing: '-0.02em', textTransform: 'uppercase', color: 'white', textShadow: '0 5px 22px rgba(0,0,0,0.45)'}}>
 			{g.map((w, i) => {
 				const sp = spring({frame: frame - Math.round((w.t - 0.05) * fps), fps, config: {damping: 13, mass: 0.45, stiffness: 220}});
@@ -187,25 +218,28 @@ export const StreetSplitReel: React.FC = () => {
 	const revealI = SEGS.findIndex((s) => s.mode === 'reveal');
 	const nameAt = 64.39 - SEGS[revealI].a; // "Brooklyn"
 	const sfx: {t: number; f: string; v: number}[] = [
-		{t: OFF[1] - 0.1, f: 'whoosh', v: 0.15},
+		{t: 0.05, f: 'whoosh', v: 0.16},
+		{t: OFF[1] - 0.12, f: 'whoosh', v: 0.18},
+		...SEGS.map((s, i) => (s.mode === 'screen' && SEGS[i - 1]?.mode !== 'screen' ? {t: OFF[i] - 0.06, f: 'whoosh', v: 0.12} : null)).filter((x): x is {t: number; f: string; v: number} => !!x),
 		{t: OFF[revealI] - 0.05, f: 'whoosh', v: 0.18},
 		{t: OFF[revealI] + nameAt, f: 'pop', v: 0.16},
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
-		{t: TAKE + 0.6, f: 'click', v: 0.45},
 		{t: TAKE + 0.1, f: 'glock', v: 0.45},
+		{t: TAKE + 0.6, f: 'click', v: 0.45},
 		{t: TAKE + 1.9, f: 'pop', v: 0.35},
 	];
 	return (
 		<AbsoluteFill style={{background: '#000'}}>
 			{SEGS.map((s, i) => {
-				const from = f(OFF[i]), dur = Math.max(1, f(OFF[i] + s.b - s.a) - from);
+				const from = f(OFF[i]), dur = Math.max(1, f(OFF[i] + segLen(s)) - from), aud = f(s.b - s.a);
 				return (
 					<Sequence key={i} name={`${s.mode} ${s.a}-${s.b}`} from={from} durationInFrames={dur}>
-						{s.mode === 'reveal' ? <Reveal s={s} nameAt={nameAt} /> : <Her s={s} i={i} />}
-						{s.mode === 'split' ? <IPad s={s} inFrom={SEGS[i - 1]?.mode !== 'split'} /> : null}
+						{s.mode === 'hook' ? <Hook s={s} /> : s.mode === 'reveal' ? <Reveal s={s} nameAt={nameAt} /> : s.mode === 'screen' ? <Screen s={s} /> : <Her s={s} i={i} />}
 						{s.tag ? <Tag kind={s.tag} /> : null}
-						<Audio src={staticFile('media/p12/alexis_voice.wav')} trimBefore={f(s.a)} volume={(fr) => interpolate(fr, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp)} />
+						<Sequence durationInFrames={aud} layout="none">
+							<Audio src={staticFile('media/p12/alexis_voice2.wav')} trimBefore={f(s.a)} volume={(fr) => interpolate(fr, [0, 2, aud - 2, aud], [0, 1, 1, 0], clamp)} />
+						</Sequence>
 					</Sequence>
 				);
 			})}
@@ -217,7 +251,7 @@ export const StreetSplitReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 6, durationInFrames], [0, 0.04, 0.04, 0.6, 0.6, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 6, durationInFrames], [0, 0.03, 0.03, 0.6, 0.6, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
