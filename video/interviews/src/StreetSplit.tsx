@@ -193,7 +193,8 @@ export const StreetSplitReel: React.FC = () => {
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
 		{t: TAKE + 0.6, f: 'click', v: 0.45},
-		{t: TAKE + 0.1, f: 'glock', v: 0.25},
+		{t: TAKE + 0.1, f: 'glock', v: 0.45},
+		{t: TAKE + 1.9, f: 'pop', v: 0.35},
 	];
 	return (
 		<AbsoluteFill style={{background: '#000'}}>
@@ -216,7 +217,7 @@ export const StreetSplitReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.04, 0.04, 0.3, 0.3, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 6, durationInFrames], [0, 0.04, 0.04, 0.6, 0.6, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
