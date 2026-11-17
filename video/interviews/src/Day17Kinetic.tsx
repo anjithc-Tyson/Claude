@@ -1,17 +1,19 @@
-// Day 17, "Bold kinetic type" in the Takshila palette (terracotta #E2725B, sap green #507D2A, cream #F3EDE2, ink #2E2A26).
-// Even pace: every sentence is its own segment with a gentle speed change (×0.94–1.15) toward one speaking rate, and
-// the gaps between sentences are trimmed to the same short beat (src/data/day17k.json).
-// Visual layers: her full frame; a giant terracotta word BEHIND her on each key line (her alpha cut-out, media/p11/
-// day17_cut.webm, is laid back on top); white kinetic captions in front with the keyword on a terracotta block; the
+// Day 17, "Bold kinetic type" in the Takshila palette: forest green #2E6B3F accent, sap green #507D2A, cream #F3EDE2,
+// ink #2E2A26. Natural pace, exactly as recorded (no speed changes): the kept takes, with the stammered "we" and the
+// first of two "somewhere"s cut out (src/data/day17k.json). Wide/close framing alternates per sentence.
+// Visual layers: her footage with the effects-skill visuals baked in (media/p11/take_fx2.mp4, plan in
+// video/day17-kinetic/plan.json: spotlight, scribble, her-brief checklist, message pop-ups, comment bar, follow button);
+// a freeze-frame name tag for Sisanda; giant forest-green words BEHIND her on a few key lines (her alpha cut-out,
+// media/p11/day17_cut.webm, laid back on top); white kinetic captions with the keyword on a forest-green block; the
 // engraving and the end card as cream type cards.
 import React from 'react';
-import {AbsoluteFill, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
+import {AbsoluteFill, Freeze, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import k17 from './data/day17k.json';
 import {ROUND} from './fonts';
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
-const TERRA = '#E2725B', SAP = '#507D2A', CREAM = '#F3EDE2', INK = '#2E2A26';
+const FOREST = '#2E6B3F', CREAM = '#F3EDE2', INK = '#2E2A26';
 type Seg = {a: number; b: number; rate: number; o: number};
 type Word = {w: string; t: number; e: number; src: number};
 const D = k17 as {segs: Seg[]; words: Word[]; total: number};
@@ -24,6 +26,7 @@ const outOf = (src: number) => { const s = SEGS.find((x) => src >= x.a && src < 
 
 const fixAt = (w: Word): string => {
 	if (w.src > 54.8 && w.src < 54.9) return '';
+	if (/^susanna/i.test(w.w)) return w.w.replace(/susanna/i, 'Sisanda');
 	if (w.w === 'Takshila') return 'takshila.co';
 	if (w.w === '.co.') return '';
 	if (w.w === 'plus') return '+';
@@ -45,21 +48,22 @@ const groups: CW[][] = (() => {
 	if (cur.length) res.push(cur);
 	return res;
 })();
-const KEY = /^(meaningful|nobody|sees|susanna|takshila\.co|ring|loves|truly|loud|gestures|secret|two|know|where|somewhere|tucked|inside|band|wear|story|marks|yours|say|comment|lovely)$/i;
+const KEY = /^(meaningful|nobody|sees|sisanda|takshila\.co|ring|loves|truly|loud|gestures|secret|two|know|where|somewhere|tucked|inside|band|wear|story|marks|yours|say|comment|lovely)$/i;
 const clean = (w: string) => w.replace(/[.,!?]+$/, '');
+// output times where each sentence starts (for the wide/close alternation)
+const SENT: number[] = capWords.reduce<number[]>((acc, w, i) => (i === 0 || /[.?!]$/.test(capWords[i - 1].w) ? [...acc, w.t - 0.05] : acc), []);
 const keyIndex = (g: CW[]) => g.findIndex((w) => KEY.test(clean(w.w)));
 
 // giant words behind her, on the key lines (source time of the spoken word → output time)
 const BEHIND: {word: string; src: number; dur: number; col?: string}[] = [
-	{word: 'NOBODY', src: 3.9, dur: 1.7},
-	{word: 'TRULY', src: 14.2, dur: 1.4},
-	{word: 'LOUD', src: 17.0, dur: 1.6, col: SAP},
 	{word: 'TWO', src: 26.6, dur: 1.4},
-	{word: 'WHERE?', src: 29.2, dur: 1.4, col: SAP},
 	{word: 'INSIDE', src: 50.4, dur: 1.9},
 	{word: 'STORY', src: 76.5, dur: 1.7},
-	{word: 'YOURS?', src: 80.7, dur: 1.5},
+	{word: 'YOURS?', src: 80.7, dur: 0.9},
 ];
+// effect windows (output time) baked into take_fx2.mp4: no punch-in there, so their overlays stay whole
+const FX_WIN: [number, number][] = [[0.2, 3.9], [12.6, 14.6], [14.9, 23.6], [27.6, 32.6], [54.4, 57.6]];
+const NAME0 = 3.93, NAME1 = 4.82, NAME_END = 6.9;
 // the engraving card: from "A plus R" to the end of the date
 const CARD0 = outOf(68.85), CARD1 = outOf(74.7), DATE_AT = outOf(71.2);
 
@@ -68,12 +72,14 @@ const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'}> = ({s, i, layer}
 	const {fps} = useVideoConfig();
 	const p = frame / (segLen(s) * fps);
 	// alternate wide / close per sentence (a jump-cut feel), a slow drift inside each
-	const base = i === 5 ? 1.0 : i % 2 ? 1.12 : 1.0; // sentence 6 is already a close-up in her original clip
-	const z = base + 0.03 * p;
+	const t = s.o + frame / fps;
+	const k = SENT.reduce((n, st, j) => (t >= st ? j : n), 0);
+	const close = k % 2 === 1 && !(t > outOf(20.4) && t < outOf(24.6)) && !FX_WIN.some(([a, b]) => t > a - 0.3 && t < b + 0.3);
+	const z = (close ? 1.12 : 1.0) + 0.02 * p;
 	const style: React.CSSProperties = {position: 'absolute', width: 1080, height: 1920, scale: z, transformOrigin: '540px 620px', filter: 'contrast(1.08) saturate(1.04) sepia(0.05)'};
 	return layer === 'base' ? (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-			<OffthreadVideo src={staticFile('media/p11/day17.mp4')} muted trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} style={style} />
+			<OffthreadVideo src={staticFile('media/p11/take_fx2.mp4')} muted trimBefore={Math.round(s.o * fps)} style={style} />
 		</AbsoluteFill>
 	) : (
 		<AbsoluteFill style={{overflow: 'hidden'}}>
@@ -82,7 +88,47 @@ const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'}> = ({s, i, layer}
 	);
 };
 
-const Behind: React.FC<{word: string; dur: number; col?: string}> = ({word, dur, col = TERRA}) => {
+// freeze-frame name tag: the picture holds in the pause before "Hi, I'm Sisanda", a hand-drawn arrow draws to her and
+// her name lands in forest green; the label stays while she says her name
+const NameTag: React.FC = () => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const t = frame / fps;
+	const draw = interpolate(t, [0.1, 0.55], [0, 1], clamp);
+	const lab = spring({frame: frame - 6, fps, config: {damping: 12, mass: 0.5, stiffness: 200}});
+	const out = interpolate(t, [NAME_END - NAME0 - 0.25, NAME_END - NAME0], [1, 0], clamp);
+	const L = 520;
+	return (
+		<AbsoluteFill style={{opacity: out}}>
+			<svg width={1080} height={1920} style={{position: 'absolute'}}>
+				<path d="M 720 470 C 760 560, 720 640, 640 660" fill="none" stroke={FOREST} strokeWidth={9} strokeLinecap="round" strokeDasharray={L} strokeDashoffset={L * (1 - draw)} />
+				{draw >= 1 ? <path d="M 668 632 L 636 662 L 678 676" fill="none" stroke={FOREST} strokeWidth={9} strokeLinecap="round" strokeLinejoin="round" /> : null}
+			</svg>
+			<div style={{position: 'absolute', left: 560, top: 300, rotate: '-4deg', opacity: lab, scale: 1.3 - 0.3 * lab, transformOrigin: 'left bottom'}}>
+				<div style={{fontFamily: ROUND, fontWeight: 900, fontSize: 96, lineHeight: 0.95, color: FOREST, letterSpacing: '-0.02em'}}>SISANDA</div>
+				<div style={{fontFamily: ROUND, fontWeight: 700, fontSize: 30, color: INK, letterSpacing: '0.12em', marginTop: 8}}>DESIGNER · TAKSHILA.CO</div>
+			</div>
+		</AbsoluteFill>
+	);
+};
+const FrozenHer: React.FC = () => {
+	const {fps} = useVideoConfig();
+	const frame = useCurrentFrame();
+	const z = interpolate(frame / fps, [0, NAME1 - NAME0], [1, 1.05], clamp);
+	return (
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
+			<Freeze frame={0}>
+				<OffthreadVideo src={staticFile('media/p11/take_fx2.mp4')} muted trimBefore={Math.round(NAME0 * fps)}
+					style={{position: 'absolute', width: 1080, height: 1920, scale: z, transformOrigin: '540px 620px', filter: 'contrast(1.08) saturate(0.5) sepia(0.1)'}} />
+			</Freeze>
+			<div style={{position: 'absolute', left: 54, top: 120, width: 84, height: 84, borderRadius: 16, background: 'rgba(0,0,0,0.55)', display: 'flex', gap: 14, alignItems: 'center', justifyContent: 'center'}}>
+				<div style={{width: 14, height: 40, background: 'white', borderRadius: 3}} /><div style={{width: 14, height: 40, background: 'white', borderRadius: 3}} />
+			</div>
+		</AbsoluteFill>
+	);
+};
+
+const Behind: React.FC<{word: string; dur: number; col?: string}> = ({word, dur, col = FOREST}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
@@ -113,7 +159,7 @@ const Captions: React.FC = () => {
 				const isKey = i === k;
 				return (
 					<span key={i} style={{display: 'inline-block', marginRight: '0.2em', marginBottom: 8, opacity: shown ? 1 : 0, scale: shown ? 1.3 - 0.3 * s : 1, transformOrigin: 'left bottom',
-						background: isKey ? TERRA : undefined, padding: isKey ? '0 0.14em' : undefined, borderRadius: isKey ? 10 : undefined, textShadow: isKey ? 'none' : undefined}}>{clean(w.w)}</span>
+						background: isKey ? FOREST : undefined, padding: isKey ? '0 0.14em' : undefined, borderRadius: isKey ? 10 : undefined, textShadow: isKey ? 'none' : undefined}}>{clean(w.w)}</span>
 				);
 			})}
 		</div>
@@ -130,9 +176,9 @@ const EngraveCard: React.FC = () => {
 	return (
 		<AbsoluteFill style={{background: CREAM, alignItems: 'center', justifyContent: 'center'}}>
 			<div style={{scale: zoom, textAlign: 'center', fontFamily: ROUND, fontWeight: 900, color: INK, textTransform: 'uppercase', letterSpacing: '-0.03em'}}>
-				<div style={{fontSize: 54, letterSpacing: '0.32em', fontWeight: 700, opacity: a, color: SAP, marginBottom: 46}}>inside the band</div>
-				<div style={{fontSize: 300, lineHeight: 0.9, scale: 1.35 - 0.35 * a, opacity: a}}>A<span style={{color: TERRA}}>+</span>R</div>
-				<div style={{fontSize: 150, lineHeight: 1, marginTop: 34, scale: d > 0.01 ? 1.35 - 0.35 * d : 0, opacity: d, color: TERRA}}>14.02.2024</div>
+				<div style={{fontSize: 54, letterSpacing: '0.32em', fontWeight: 700, opacity: a, color: FOREST, marginBottom: 46}}>inside the band</div>
+				<div style={{fontSize: 300, lineHeight: 0.9, scale: 1.35 - 0.35 * a, opacity: a}}>A<span style={{color: FOREST}}>+</span>R</div>
+				<div style={{fontSize: 150, lineHeight: 1, marginTop: 34, scale: d > 0.01 ? 1.35 - 0.35 * d : 0, opacity: d, color: FOREST}}>14.02.2024</div>
 			</div>
 		</AbsoluteFill>
 	);
@@ -142,14 +188,14 @@ const EndCard: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const s = (o: number) => spring({frame: frame - o, fps, config: {damping: 12, mass: 0.5, stiffness: 200}});
-	const lines = [['WHAT', INK], ['WOULD', INK], ['YOURS', TERRA], ['SAY?', INK]] as const;
+	const lines = [['WHAT', INK], ['WOULD', INK], ['YOURS', FOREST], ['SAY?', INK]] as const;
 	return (
 		<AbsoluteFill style={{background: CREAM, padding: '0 70px', justifyContent: 'center'}}>
 			<div style={{fontFamily: ROUND, fontWeight: 900, fontSize: 190, lineHeight: 0.88, letterSpacing: '-0.03em'}}>
 				{lines.map(([w, c], i) => <div key={w} style={{color: c, opacity: s(i * 4) > 0.02 ? 1 : 0, scale: 1.3 - 0.3 * s(i * 4), transformOrigin: 'left bottom'}}>{w}</div>)}
 			</div>
 			<div style={{marginTop: 60, opacity: s(20), translate: `0 ${(1 - s(20)) * 30}px`}}>
-				<span style={{display: 'inline-block', background: SAP, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 42, padding: '18px 40px', borderRadius: 14}}>COMMENT BELOW · TAKSHILA.CO</span>
+				<span style={{display: 'inline-block', background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 42, padding: '18px 40px', borderRadius: 14}}>COMMENT BELOW · TAKSHILA.CO</span>
 			</div>
 		</AbsoluteFill>
 	);
@@ -182,6 +228,8 @@ export const Day17KineticReel: React.FC = () => {
 					</Sequence>
 				);
 			})}
+			<Sequence name="name freeze" from={f(NAME0)} durationInFrames={f(NAME1) - f(NAME0)}><FrozenHer /></Sequence>
+			<Sequence name="name tag" from={f(NAME0)} durationInFrames={f(NAME_END) - f(NAME0)}><NameTag /></Sequence>
 			<Sequence name="engraving card" from={f(CARD0)} durationInFrames={f(CARD1) - f(CARD0)}><EngraveCard /></Sequence>
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			<Captions />
@@ -191,7 +239,7 @@ export const Day17KineticReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.1, 0.1, 0.28, 0.28, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.065, 0.065, 0.22, 0.22, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };

@@ -1,0 +1,45 @@
+{
+ "effects": [
+  {
+   "fx": "spotlight",
+   "start": 0.2,
+   "end": 3.9
+  },
+  {
+   "fx": "scribble",
+   "start": 12.6,
+   "end": 14.6,
+   "text": "loved",
+   "color": "#2E6B3F"
+  },
+  {
+   "fx": "todo",
+   "start": 14.9,
+   "end": 23.6,
+   "title": "Her brief",
+   "text": "Nothing loud|No big gestures|Keep it a secret",
+   "ticks": "16.3|18.5|22.6"
+  },
+  {
+   "fx": "messages",
+   "start": 27.6,
+   "end": 32.6,
+   "title": "Messages",
+   "text": "can it be just between us?|somewhere only we would know"
+  },
+  {
+   "fx": "comment-box",
+   "start": 54.4,
+   "end": 56.6,
+   "text": "A + R",
+   "look": "bar"
+  },
+  {
+   "fx": "tap",
+   "start": 56.3,
+   "end": 57.55,
+   "at": 56.95,
+   "color": "#2E6B3F"
+  }
+ ]
+}
