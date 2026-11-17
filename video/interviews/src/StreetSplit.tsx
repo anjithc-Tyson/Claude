@@ -106,7 +106,7 @@ const Reveal: React.FC<{s: Seg; nameAt: number}> = ({s, nameAt}) => {
 	const flash = interpolate(t, [0, 0.12, 0.35], [0.8, 0.4, 0], clamp);
 	return (
 		<AbsoluteFill style={{background: '#EDE4D8', overflow: 'hidden'}}>
-			<AbsoluteFill style={{scale: z * 1.9, transformOrigin: '540px 900px'}}>
+			<AbsoluteFill style={{scale: z * 2.05, transformOrigin: '540px 760px'}}>
 				<Freeze frame={0}>
 					<OffthreadVideo src={staticFile('media/p12/rec_s.mp4')} muted trimBefore={Math.round(((s.rec ?? 186) - 130) * fps)} style={{position: 'absolute', left: 0, top: -260, width: RW, height: RH}} />
 				</Freeze>
@@ -192,7 +192,8 @@ export const StreetSplitReel: React.FC = () => {
 		{t: OFF[revealI] + nameAt, f: 'pop', v: 0.16},
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
-		{t: TAKE + 0.6, f: 'click', v: 0.28},
+		{t: TAKE + 0.6, f: 'click', v: 0.45},
+		{t: TAKE + 0.1, f: 'glock', v: 0.25},
 	];
 	return (
 		<AbsoluteFill style={{background: '#000'}}>
@@ -215,7 +216,7 @@ export const StreetSplitReel: React.FC = () => {
 				</Sequence>
 			))}
 			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.04, 0.04, 0.17, 0.17, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 20, durationInFrames], [0, 0.04, 0.04, 0.3, 0.3, 0], clamp)} />
 		</AbsoluteFill>
 	);
 };
