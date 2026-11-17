@@ -2,7 +2,7 @@
 // synced to what she is doing (category grid → typing "gold, shiny and long with more shine" → sketch loading → her
 // rose-gold necklace). When she names it "Brooklyn" the necklace takes the full screen. Natural pace (no speed changes
 // on her), Day-17 kinetic captions in the Takshila palette (forest green #2E6B3F, cream #F3EDE2, ink #2E2A26).
-// Sources: media/p12/alexis.mp4 (upscaled 720p), media/p12/alexis_voice.wav (denoised), media/p8/rec.mp4 (iPad).
+// Sources: media/p12/alexis.mp4 (upscaled 720p), media/p12/alexis_voice.wav (denoised), media/p12/rec_s.mp4 (her iPad recording, 130–192 s of media/p8/rec.mp4 at 1080 wide).
 import React from 'react';
 import {AbsoluteFill, Freeze, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
@@ -87,7 +87,7 @@ const IPad: React.FC<{s: Seg; inFrom: boolean}> = ({s, inFrom}) => {
 	return (
 		<div style={{position: 'absolute', left: 0, top: SPLIT_H, width: 1080, height: 1920 - SPLIT_H, overflow: 'hidden', background: CREAM}}>
 			<div style={{position: 'absolute', left: 0, top: -(s.ry ?? 170), width: RW, height: RH, translate: `0 ${(1 - enter) * 900}px`, scale: s.rz ?? 1, transformOrigin: '20px 330px'}}>
-				<OffthreadVideo src={staticFile('media/p8/rec.mp4')} muted trimBefore={Math.round((s.rec ?? 0) * fps)} playbackRate={s.rr ?? 1} style={{width: RW, height: RH}} />
+				<OffthreadVideo src={staticFile('media/p12/rec_s.mp4')} muted trimBefore={Math.round(((s.rec ?? 130) - 130) * fps)} playbackRate={s.rr ?? 1} style={{width: RW, height: RH}} />
 			</div>
 			<div style={{position: 'absolute', left: 0, right: 0, top: 0, height: 6, background: FOREST}} />
 			<div style={{position: 'absolute', left: 30, top: 24, background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 26, letterSpacing: '0.12em', padding: '10px 20px', borderRadius: 10,
@@ -108,7 +108,7 @@ const Reveal: React.FC<{s: Seg; nameAt: number}> = ({s, nameAt}) => {
 		<AbsoluteFill style={{background: '#EDE4D8', overflow: 'hidden'}}>
 			<AbsoluteFill style={{scale: z * 1.9, transformOrigin: '540px 900px'}}>
 				<Freeze frame={0}>
-					<OffthreadVideo src={staticFile('media/p8/rec.mp4')} muted trimBefore={Math.round((s.rec ?? 186) * fps)} style={{position: 'absolute', left: 0, top: -260, width: RW, height: RH}} />
+					<OffthreadVideo src={staticFile('media/p12/rec_s.mp4')} muted trimBefore={Math.round(((s.rec ?? 186) - 130) * fps)} style={{position: 'absolute', left: 0, top: -260, width: RW, height: RH}} />
 				</Freeze>
 			</AbsoluteFill>
 			<AbsoluteFill style={{background: 'white', opacity: flash}} />
