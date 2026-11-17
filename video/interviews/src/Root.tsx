@@ -19,6 +19,7 @@ import {Day15Reel, day15Total} from './Day15';
 import {Day17Reel, day17Total} from './Day17';
 import {Day17Sample} from './Day17Samples';
 import {Day17KineticReel, k17Total} from './Day17Kinetic';
+import {StreetSplitReel, splitTotal} from './StreetSplit';
 
 const S = street as Data;
 const J = jewel as Data;
@@ -47,6 +48,7 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="D17S2" component={Day17Sample} defaultProps={{n: 2}} durationInFrames={1} fps={30} width={1080} height={1920} />
 		<Composition id="D17S3" component={Day17Sample} defaultProps={{n: 3}} durationInFrames={1} fps={30} width={1080} height={1920} />
 		<Composition id="D17S4" component={Day17Sample} defaultProps={{n: 4}} durationInFrames={1} fps={30} width={1080} height={1920} />
+		<Composition id="StreetSplit" component={StreetSplitReel} durationInFrames={Math.round(splitTotal() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Day17Kinetic" component={Day17KineticReel} durationInFrames={Math.round(k17Total() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Day17Engraving" component={Day17Reel} durationInFrames={Math.round(day17Total() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Day15Ring" component={Day15Reel} durationInFrames={Math.round(day15Total() * 30)} fps={30} width={1080} height={1920} />
