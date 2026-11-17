@@ -17,6 +17,7 @@ import {StreetRevealReel, revealTotal} from './StreetReveal';
 import {Day14Reel, day14Total} from './Day14';
 import {Day15Reel, day15Total} from './Day15';
 import {Day17Reel, day17Total} from './Day17';
+import {Day17Sample} from './Day17Samples';
 
 const S = street as Data;
 const J = jewel as Data;
@@ -41,6 +42,10 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="Script4Magazine" component={MagazineReel} defaultProps={{d: MAG}} durationInFrames={Math.round(magTotal(MAG) * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Script4Engraving" component={EngravingReel} defaultProps={{d: ENG}} durationInFrames={Math.round(engTotal(ENG) * 30)} fps={30} width={1080} height={1920} />
 		{[1, 2, 3, 4, 5, 6].map((n) => <Composition key={n} id={`Sample${n}`} component={StyleSample} defaultProps={{n}} durationInFrames={1} fps={30} width={1080} height={1920} />)}
+		<Composition id="D17S1" component={Day17Sample} defaultProps={{n: 1}} durationInFrames={1} fps={30} width={1080} height={1920} />
+		<Composition id="D17S2" component={Day17Sample} defaultProps={{n: 2}} durationInFrames={1} fps={30} width={1080} height={1920} />
+		<Composition id="D17S3" component={Day17Sample} defaultProps={{n: 3}} durationInFrames={1} fps={30} width={1080} height={1920} />
+		<Composition id="D17S4" component={Day17Sample} defaultProps={{n: 4}} durationInFrames={1} fps={30} width={1080} height={1920} />
 		<Composition id="Day17Engraving" component={Day17Reel} durationInFrames={Math.round(day17Total() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Day15Ring" component={Day15Reel} durationInFrames={Math.round(day15Total() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Day14Bracelet" component={Day14Reel} durationInFrames={Math.round(day14Total() * 30)} fps={30} width={1080} height={1920} />
