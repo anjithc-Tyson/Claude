@@ -67,12 +67,12 @@ const NAME0 = 3.93, NAME1 = 4.82, NAME_END = 6.9;
 // the engraving card: from "A plus R" to the end of the date
 const CARD0 = outOf(68.85), CARD1 = outOf(74.7), DATE_AT = outOf(71.2);
 
-const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'}> = ({s, i, layer}) => {
+const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'; skip?: number}> = ({s, i, layer, skip = 0}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const p = frame / (segLen(s) * fps);
+	const p = (skip + frame / fps) / segLen(s);
 	// alternate wide / close per sentence (a jump-cut feel), a slow drift inside each
-	const t = s.o + frame / fps;
+	const t = s.o + skip + frame / fps;
 	const k = SENT.reduce((n, st, j) => (t >= st ? j : n), 0);
 	const close = k % 2 === 1 && !(t > outOf(20.4) && t < outOf(24.6)) && !FX_WIN.some(([a, b]) => t > a - 0.3 && t < b + 0.3);
 	const z = (close ? 1.12 : 1.0) + 0.02 * p;
@@ -83,7 +83,7 @@ const Her: React.FC<{s: Seg; i: number; layer: 'base' | 'cut'}> = ({s, i, layer}
 		</AbsoluteFill>
 	) : (
 		<AbsoluteFill style={{overflow: 'hidden'}}>
-			<OffthreadVideo src={staticFile('media/p11/day17_cut.webm')} transparent muted trimBefore={Math.round(s.a * fps)} playbackRate={s.rate} style={style} />
+			<OffthreadVideo src={staticFile('media/p11/day17_cut.webm')} transparent muted trimBefore={Math.round((s.a + skip) * fps)} playbackRate={s.rate} style={style} />
 		</AbsoluteFill>
 	);
 };
@@ -145,7 +145,7 @@ const Captions: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	if (t >= TAKE || (t >= CARD0 && t < CARD1)) return null;
+	if (t >= TAKE || (t >= CARD0 && t < CARD1) || (t >= 54.4 && t < 56.7)) return null; // the comment bar carries this line
 	const gi = groups.findIndex((g, i) => t >= g[0].t - 0.05 && t < Math.min(g[g.length - 1].e + 0.35, groups[i + 1]?.[0].t ?? 1e9));
 	if (gi < 0) return null;
 	const g = groups[gi], k = keyIndex(g);
@@ -222,7 +222,11 @@ export const Day17KineticReel: React.FC = () => {
 						{bh.map((b, j) => (
 							<Sequence key={j} name={`behind ${b.word}`} from={f(outOf(b.src) - s.o)} durationInFrames={f(b.dur)}><Behind word={b.word} dur={b.dur} col={b.col} /></Sequence>
 						))}
-						{bh.length ? <Her s={s} i={i} layer="cut" /> : null}
+						{bh.map((b, j) => {
+							// her cut-out only while a word is behind her, so it never covers the baked-in overlays
+							const skip = outOf(b.src) - s.o;
+							return <Sequence key={`c${j}`} name={`cut-out ${b.word}`} from={f(skip)} durationInFrames={f(b.dur)}><Her s={s} i={i} layer="cut" skip={f(skip) / fps} /></Sequence>;
+						})}
 						<Audio src={staticFile('media/p11/day17.mp4')} trimBefore={f(s.a)} playbackRate={s.rate}
 							volume={(fr) => interpolate(fr, [0, 2, dur - 2, dur], [0, 1, 1, 0], clamp)} />
 					</Sequence>
