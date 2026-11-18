@@ -77,7 +77,7 @@ const SNAPS: {t: number; d: number}[] = [
 ];
 const snapZoom = (t: number) => {
 	for (const z of SNAPS) {
-		if (t >= z.t && t < z.t + z.d + 0.15) return 1 + 0.28 * Math.min(1, (t - z.t) / 0.08) * (t > z.t + z.d ? 1 - (t - z.t - z.d) / 0.15 : 1);
+		if (t >= z.t && t < z.t + z.d + 0.15) return 1 + 0.2 * Math.min(1, (t - z.t) / 0.08) * (t > z.t + z.d ? 1 - (t - z.t - z.d) / 0.15 : 1);
 	}
 	return 1;
 };
@@ -86,7 +86,7 @@ const snapShake = (t: number): [number, number] => {
 	return [0, 0];
 };
 const scr = SEGS.findIndex((s) => s.mode === 'screen' && s.a === 52.75);
-const WOW_AT = OFF[scr] + (182.0 - (SEGS[scr].rec ?? 174)) / (SEGS[scr].rr ?? 1);
+const WOW_AT = OFF[scr] + (179.63 - (SEGS[scr].rec ?? 174)) / (SEGS[scr].rr ?? 1);   // necklace image first appears at rec 179.63
 const Sticker: React.FC<{text: string; x: number; y: number; big?: boolean}> = ({text, x, y, big}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
@@ -117,14 +117,17 @@ const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	const t = OFF[i] + frame / fps;
 	// full frame, no crop zoom (zooming the 720p-sourced footage softens it); only the brief meme snap zooms
 	const sz = snapZoom(t);
-	const z = sz;
-	const k = Math.min(1, (sz - 1) / 0.1);   // shake only once zoomed in enough to hide the frame edges
+	const z = 1.25;   // user's reference framing: tighter, anchored low so heads sit high and less sky
+	const k = 1;
 	const sh = snapShake(t).map((v) => v * k);
 	void p;
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-			<OffthreadVideo src={staticFile('media/p12/alexis_sharp.mp4')} muted trimBefore={Math.round(s.a * fps)}
-				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 900px', filter: 'contrast(1.06) saturate(1.04) url(#refgrade)'}} />
+			{/* meme snap zoom + shake centred on the faces, around the base framing */}
+			<AbsoluteFill style={{scale: sz, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 640px'}}>
+				<OffthreadVideo src={staticFile('media/p12/alexis_sharp.mp4')} muted trimBefore={Math.round(s.a * fps)}
+					style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, transformOrigin: '540px 1840px', filter: 'contrast(1.06) saturate(1.04) url(#refgrade)'}} />
+			</AbsoluteFill>
 		</AbsoluteFill>
 	);
 };
@@ -287,10 +290,10 @@ export const StreetSplitReel: React.FC = () => {
 	const sfx: {t: number; f: string; v: number}[] = [
 		...SEGS.map((s, i) => (s.mode === 'screen' && SEGS[i - 1]?.mode !== 'screen' ? {t: OFF[i] - 0.06, f: 'whoosh', v: 0.12} : null)).filter((x): x is {t: number; f: string; v: number} => !!x),
 		{t: OFF[revealI] - 0.05, f: 'whoosh', v: 0.18},
-		{t: OFF[revealI] + nameAt - 0.12, f: 'x:tada', v: 0.6},
-		{t: outOf(111.4), f: 'x:money', v: 0.65},
-		{t: outOf(128.0), f: 'x:aww', v: 0.6},
-		{t: WOW_AT, f: 'x:wow', v: 0.55},
+		{t: OFF[revealI] + nameAt - 0.12, f: 'x:tada', v: 1.0},
+		{t: outOf(114.0), f: 'x:money', v: 1.0},
+		{t: outOf(128.08), f: 'x:aww', v: 1.0},
+		{t: WOW_AT - 0.05, f: 'x:wow', v: 0.8},
 		...SNAPS.map((z) => ({t: z.t - 0.04, f: 'pop', v: 0.18})),
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
@@ -320,7 +323,7 @@ export const StreetSplitReel: React.FC = () => {
 					<Audio src={staticFile(h.f.startsWith('x:') ? `sfx/extra/${h.f.slice(2)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
-			<Sequence name="money rain" from={f(outOf(111.3))} durationInFrames={f(3.0)}><MoneyRain /></Sequence>
+			<Sequence name="money rain" from={f(outOf(113.95))} durationInFrames={f(3.0)}><MoneyRain /></Sequence>
 			<Sequence name="wow" from={f(WOW_AT)} durationInFrames={f(1.6)}><Sticker text="WOW!" x={540} y={520} big /></Sequence>
 		</AbsoluteFill>
 	);
