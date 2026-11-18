@@ -27,7 +27,7 @@ const SEGS: Seg[] = [
 	{a: 25.75, b: 30.25, mode: 'screen', rec: 149.6, rr: 3.6},   // she types (silent)
 	{a: 41.0, b: 42.75, mode: 'full'},
 	{a: 44.9, b: 52.75, mode: 'full'},                                                     // she tells us her prompt
-	{a: 52.75, b: 55.75, mode: 'screen', rec: 172.0, rr: 3.4},                             // then the sketch loads → her necklace
+	{a: 52.75, b: 56.6, mode: 'screen', rec: 174.0, rr: 3.0},                             // then the sketch loads → her necklace
 	{a: 59.2, b: 63.6, mode: 'full'},
 	{a: 63.6, b: 66.7, mode: 'reveal', rec: 186.0},                                          // "I would name this Brooklyn"
 	{a: 66.7, b: 75.5, mode: 'full'},
@@ -67,15 +67,49 @@ const KEY = /^(dream|blingy|shiny|stands|own|necklace|type|generate|prompt|gold|
 const clean = (w: string) => w.replace(/[.,!?]+$/, '');
 const modeAt = (t: number) => { let k = 0; OFF.forEach((o, i) => { if (t >= o) k = i; }); return SEGS[k]; };
 
+// meme layer: snap zooms with a little shake on the punchy reactions, emoji stickers, and the "WOW" when her
+// necklace appears on the iPad (output times)
+const SNAPS: {t: number; d: number; emoji?: string; x?: number; y?: number}[] = [
+	{t: outOf(14.22), d: 0.75, emoji: '😎'},                 // "I sure will."
+	{t: outOf(81.88), d: 1.2, emoji: '💯', x: 230},          // "My own design jewelry, for sure."
+	{t: outOf(94.78), d: 0.8},                              // "For sure."
+	{t: outOf(133.0), d: 1.1, emoji: '🌉'},                  // "That's Brooklyn Bridge."
+];
+const snapZoom = (t: number) => {
+	for (const z of SNAPS) {
+		if (t >= z.t && t < z.t + z.d + 0.15) return 1 + 0.28 * Math.min(1, (t - z.t) / 0.08) * (t > z.t + z.d ? 1 - (t - z.t - z.d) / 0.15 : 1);
+	}
+	return 1;
+};
+const snapShake = (t: number): [number, number] => {
+	for (const z of SNAPS) if (t >= z.t && t < z.t + 0.25) { const k = (t - z.t) * 60; return [Math.sin(k * 2.1) * 10 * (1 - (t - z.t) / 0.25), Math.cos(k * 1.7) * 8 * (1 - (t - z.t) / 0.25)]; }
+	return [0, 0];
+};
+const scr = SEGS.findIndex((s) => s.mode === 'screen' && s.a === 52.75);
+const WOW_AT = OFF[scr] + (182.0 - (SEGS[scr].rec ?? 174)) / (SEGS[scr].rr ?? 1);
+const Sticker: React.FC<{text: string; x: number; y: number; big?: boolean}> = ({text, x, y, big}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const a = spring({frame, fps, config: {damping: 8, mass: 0.45, stiffness: 220}});
+	const rot = (big ? -6 : 10) + Math.sin(frame / 3) * 4;
+	return (
+		<div style={{position: 'absolute', left: x, top: y, translate: '-50% -50%', scale: a, rotate: `${rot}deg`, fontFamily: ROUND, fontWeight: 900, fontSize: big ? 130 : 200,
+			color: 'white', whiteSpace: 'nowrap', textShadow: big ? '0 6px 0 #1d3f27, 0 0 30px rgba(0,0,0,0.3)' : 'none',
+			background: big ? FOREST : undefined, padding: big ? '6px 34px' : undefined, borderRadius: big ? 24 : undefined}}>{text}</div>
+	);
+};
+
 const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const p = frame / (segLen(s) * fps);
-	const z = (i % 2 ? 1.22 : 1.1) + 0.03 * p;   // a two-shot crop that alternates wide/close per segment
+	const t = OFF[i] + frame / fps;
+	const z = ((i % 2 ? 1.22 : 1.1) + 0.03 * p) * snapZoom(t);   // two-shot crop, wide/close per segment, meme snap zooms
+	const sh = snapShake(t);
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
 			<OffthreadVideo src={staticFile('media/p12/alexis.mp4')} muted trimBefore={Math.round(s.a * fps)}
-				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, transformOrigin: '540px 980px', filter: 'contrast(1.06) saturate(1.04)'}} />
+				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 900px', filter: 'contrast(1.06) saturate(1.04)'}} />
 		</AbsoluteFill>
 	);
 };
@@ -257,10 +291,11 @@ export const StreetSplitReel: React.FC = () => {
 	const sfx: {t: number; f: string; v: number}[] = [
 		...SEGS.map((s, i) => (s.mode === 'screen' && SEGS[i - 1]?.mode !== 'screen' ? {t: OFF[i] - 0.06, f: 'whoosh', v: 0.12} : null)).filter((x): x is {t: number; f: string; v: number} => !!x),
 		{t: OFF[revealI] - 0.05, f: 'whoosh', v: 0.18},
-		{t: OFF[revealI] + nameAt - 0.15, f: 'x:tada', v: 0.55},
-		{t: outOf(111.4), f: 'x:coins', v: 0.6},
-		{t: outOf(114.1), f: 'x:coins', v: 0.45},
-		{t: outOf(128.05), f: 'x:sparkle', v: 0.55},
+		{t: OFF[revealI] + nameAt - 0.12, f: 'x:tada', v: 0.6},
+		{t: outOf(111.4), f: 'x:money', v: 0.65},
+		{t: outOf(128.0), f: 'x:aww', v: 0.6},
+		{t: WOW_AT, f: 'x:wow', v: 0.55},
+		...SNAPS.map((z) => ({t: z.t - 0.04, f: 'pop', v: 0.18})),
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
 		{t: TAKE + 0.1, f: 'glock', v: 0.45},
@@ -290,6 +325,8 @@ export const StreetSplitReel: React.FC = () => {
 			))}
 			<Sequence name="dollars" from={f(outOf(111.35))} durationInFrames={f(3.6)}><Dollars /></Sequence>
 			<Sequence name="pookie" from={f(outOf(128.0))} durationInFrames={f(2.4)}><Pookie /></Sequence>
+			<Sequence name="wow" from={f(WOW_AT)} durationInFrames={f(1.6)}><Sticker text="WOW 🤩" x={540} y={520} big /></Sequence>
+			{SNAPS.map((z, k) => z.emoji ? <Sequence key={`st${k}`} name={`sticker ${z.emoji}`} from={f(z.t)} durationInFrames={f(z.d + 0.3)}><Sticker text={z.emoji} x={z.x ?? 820} y={z.y ?? 560} /></Sequence> : null)}
 		</AbsoluteFill>
 	);
 };
