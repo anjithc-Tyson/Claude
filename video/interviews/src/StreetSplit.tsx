@@ -67,13 +67,13 @@ const KEY = /^(dream|blingy|shiny|stands|own|necklace|type|generate|prompt|gold|
 const clean = (w: string) => w.replace(/[.,!?]+$/, '');
 const modeAt = (t: number) => { let k = 0; OFF.forEach((o, i) => { if (t >= o) k = i; }); return SEGS[k]; };
 
-// meme layer: snap zooms with a little shake on the punchy reactions, emoji stickers, and the "WOW" when her
+// meme layer: snap zooms with a little shake on the punchy reactions, and the "WOW" when her
 // necklace appears on the iPad (output times)
-const SNAPS: {t: number; d: number; emoji?: string; x?: number; y?: number}[] = [
-	{t: outOf(14.22), d: 0.75, emoji: '😎'},                 // "I sure will."
-	{t: outOf(81.88), d: 1.2, emoji: '💯', x: 230},          // "My own design jewelry, for sure."
+const SNAPS: {t: number; d: number}[] = [
+	{t: outOf(14.22), d: 0.75},                 // "I sure will."
+	{t: outOf(81.88), d: 1.2},          // "My own design jewelry, for sure."
 	{t: outOf(94.78), d: 0.8},                              // "For sure."
-	{t: outOf(133.0), d: 1.1, emoji: '🌉'},                  // "That's Brooklyn Bridge."
+	{t: outOf(133.0), d: 1.1},                  // "That's Brooklyn Bridge."
 ];
 const snapZoom = (t: number) => {
 	for (const z of SNAPS) {
@@ -96,6 +96,17 @@ const Sticker: React.FC<{text: string; x: number; y: number; big?: boolean}> = (
 		<div style={{position: 'absolute', left: x, top: y, translate: '-50% -50%', scale: a, rotate: `${rot}deg`, fontFamily: ROUND, fontWeight: 900, fontSize: big ? 130 : 200,
 			color: 'white', whiteSpace: 'nowrap', textShadow: big ? '0 6px 0 #1d3f27, 0 0 30px rgba(0,0,0,0.3)' : 'none',
 			background: big ? FOREST : undefined, padding: big ? '6px 34px' : undefined, borderRadius: big ? 24 : undefined}}>{text}</div>
+	);
+};
+
+// commission line: the real money-rain clip (user asset, ProRes 4444 with alpha -> VP9 alpha webm), over everything
+const MoneyRain: React.FC = () => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	return (
+		<AbsoluteFill style={{opacity: interpolate(frame / fps, [0, 0.1, 2.6, 3.0], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'})}}>
+			<OffthreadVideo src={staticFile('media/p13/money_rain.webm')} transparent muted style={{width: 1080, height: 1920}} />
+		</AbsoluteFill>
 	);
 };
 
@@ -192,7 +203,7 @@ const Tag: React.FC<{kind: string}> = ({kind}) => {
 	const {fps} = useVideoConfig();
 	const a = spring({frame, fps, config: {damping: 13, mass: 0.6}});
 	const out = interpolate(frame / fps, [2.6, 3.0], [1, 0], clamp);
-	const txt = kind === 'rapid' ? '⚡ RAPID FIRE' : 'GET PAID WHEN SOMEONE BUYS YOUR DESIGN';
+	const txt = kind === 'rapid' ? 'RAPID FIRE' : 'GET PAID WHEN SOMEONE BUYS YOUR DESIGN';
 	return (
 		<div style={{position: 'absolute', left: 0, right: 0, top: 220, display: 'flex', justifyContent: 'center', opacity: a * (kind === 'rapid' ? out : 1)}}>
 			<div style={{background: kind === 'rapid' ? FOREST : CREAM, color: kind === 'rapid' ? 'white' : FOREST, fontFamily: ROUND, fontWeight: 900, fontSize: kind === 'rapid' ? 46 : 38,
@@ -231,40 +242,6 @@ const Captions: React.FC = () => {
 };
 
 // "get paid": dollar bills and coins pop up and float across the frame
-const Dollars: React.FC = () => {
-	const frame = useCurrentFrame();
-	const {fps} = useVideoConfig();
-	const items = React.useMemo(() => Array.from({length: 16}).map((_, i) => ({x: 80 + ((i * 397) % 920), y: 900 - ((i * 233) % 560), d: (i % 6) * 4, e: i % 3 === 0 ? '💰' : '💵', r: ((i * 53) % 50) - 25, s: 90 + ((i * 37) % 70)})), []);
-	return (
-		<AbsoluteFill style={{pointerEvents: 'none'}}>
-			{items.map((it, i) => {
-				const a = spring({frame: frame - it.d, fps, config: {damping: 9, mass: 0.5, stiffness: 180}});
-				const t = Math.max(0, (frame - it.d) / fps);
-				const out = interpolate(frame / fps, [2.9, 3.5], [1, 0], clamp);
-				return <div key={i} style={{position: 'absolute', left: it.x, top: it.y - t * 160, fontSize: it.s, rotate: `${it.r + t * 20}deg`, scale: a, opacity: out * (frame >= it.d ? 1 : 0)}}>{it.e}</div>;
-			})}
-		</AbsoluteFill>
-	);
-};
-
-// "so pretty": a big pookie emoji pops in with a few sparkles
-const Pookie: React.FC = () => {
-	const frame = useCurrentFrame();
-	const {fps} = useVideoConfig();
-	const a = spring({frame, fps, config: {damping: 8, mass: 0.5, stiffness: 200}});
-	const out = interpolate(frame / fps, [1.9, 2.4], [1, 0], clamp);
-	const wob = Math.sin(frame / 3) * 6;
-	const sp = [[-230, -150, '✨', 0], [220, -190, '💖', 4], [-200, 170, '🎀', 7], [240, 140, '✨', 10]] as const;
-	return (
-		<AbsoluteFill style={{pointerEvents: 'none', opacity: out}}>
-			<div style={{position: 'absolute', left: 540 - 150, top: 330, width: 300, height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 260, scale: a, rotate: `${wob}deg`}}>🥹</div>
-			{sp.map(([dx, dy, e, d], i) => {
-				const b = spring({frame: frame - d, fps, config: {damping: 9, mass: 0.4}});
-				return <div key={i} style={{position: 'absolute', left: 540 + dx - 50, top: 480 + dy - 50, fontSize: 100, scale: b}}>{e}</div>;
-			})}
-		</AbsoluteFill>
-	);
-};
 
 const EndCard: React.FC = () => {
 	const frame = useCurrentFrame();
@@ -323,10 +300,8 @@ export const StreetSplitReel: React.FC = () => {
 					<Audio src={staticFile(h.f.startsWith('x:') ? `sfx/extra/${h.f.slice(2)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
-			<Sequence name="dollars" from={f(outOf(111.35))} durationInFrames={f(3.6)}><Dollars /></Sequence>
-			<Sequence name="pookie" from={f(outOf(128.0))} durationInFrames={f(2.4)}><Pookie /></Sequence>
-			<Sequence name="wow" from={f(WOW_AT)} durationInFrames={f(1.6)}><Sticker text="WOW 🤩" x={540} y={520} big /></Sequence>
-			{SNAPS.map((z, k) => z.emoji ? <Sequence key={`st${k}`} name={`sticker ${z.emoji}`} from={f(z.t)} durationInFrames={f(z.d + 0.3)}><Sticker text={z.emoji} x={z.x ?? 820} y={z.y ?? 560} /></Sequence> : null)}
+			<Sequence name="money rain" from={f(outOf(111.3))} durationInFrames={f(3.0)}><MoneyRain /></Sequence>
+			<Sequence name="wow" from={f(WOW_AT)} durationInFrames={f(1.6)}><Sticker text="WOW!" x={540} y={520} big /></Sequence>
 		</AbsoluteFill>
 	);
 };
