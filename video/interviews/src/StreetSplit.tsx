@@ -21,14 +21,13 @@ const WORDS = wordsData as Word[];
 // the 1080×1554 iPad frame), reveal (necklace full screen, "BROOKLYN"); tail = extra seconds of picture after her audio
 type Seg = {a: number; b: number; mode: 'hook' | 'full' | 'screen' | 'reveal'; rec?: number; rr?: number; z?: number; ox?: number; oy?: number; tag?: string; tail?: number};
 const SEGS: Seg[] = [
-	{a: 61.62, b: 63.45, mode: 'hook', rec: 186.0, tail: 0.7},
-	{a: 6.0, b: 14.95, mode: 'full'},
+	{a: 6.42, b: 14.95, mode: 'full', tag: 'hook'},                                          // the hook: "what does your dream jewelry look like?"
 	{a: 15.0, b: 22.35, mode: 'full'},
-	{a: 22.7, b: 25.75, mode: 'screen', rec: 145.3, z: 1.35, ox: 334, oy: 470},
-	{a: 25.75, b: 30.25, mode: 'screen', rec: 149.6, rr: 3.6, z: 1.35, ox: 334, oy: 470},   // she types (silent)
+	{a: 22.7, b: 25.75, mode: 'screen', rec: 145.3},
+	{a: 25.75, b: 30.25, mode: 'screen', rec: 149.6, rr: 3.6},   // she types (silent)
 	{a: 41.0, b: 42.75, mode: 'full'},
-	{a: 44.9, b: 48.1, mode: 'full'},
-	{a: 48.1, b: 52.75, mode: 'screen', rec: 168.6, rr: 2.9, z: 1.0, ox: 437, oy: 760},    // sketch loads → her necklace
+	{a: 44.9, b: 52.75, mode: 'full'},                                                     // she tells us her prompt
+	{a: 52.75, b: 55.75, mode: 'screen', rec: 172.0, rr: 3.4},                             // then the sketch loads → her necklace
 	{a: 59.2, b: 63.6, mode: 'full'},
 	{a: 63.6, b: 66.7, mode: 'reveal', rec: 186.0},                                          // "I would name this Brooklyn"
 	{a: 66.7, b: 75.5, mode: 'full'},
@@ -40,6 +39,7 @@ const SEGS: Seg[] = [
 const segLen = (s: Seg) => s.b - s.a + (s.tail ?? 0);
 const OFF = SEGS.reduce<number[]>((acc, s, i) => [...acc, i === 0 ? 0 : acc[i - 1] + segLen(SEGS[i - 1])], []);
 const TAKE = OFF[OFF.length - 1] + segLen(SEGS[SEGS.length - 1]);
+const outOf = (src: number) => { const i = SEGS.findIndex((s) => src >= s.a && src < s.b); return i < 0 ? 0 : OFF[i] + src - SEGS[i].a; };
 export const SPLIT_END = 3.4;
 export const splitTotal = () => TAKE + SPLIT_END;
 
@@ -81,12 +81,12 @@ const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 };
 
 // her real iPad screen, full frame, zoomed to what matters, with a small "HER SCREEN" tag and a gentle push
-const RW = 1080, RH = 1554, FILL = 1920 / 1554;
+const RW = 1080, RH = 1554;
 const Screen: React.FC<{s: Seg}> = ({s}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;
-	const z = FILL * (s.z ?? 1) * (1 + 0.03 * (t / segLen(s)));
+	const z = (s.z ?? 1) * (1 + 0.025 * (t / segLen(s)));   // the whole page width, not zoomed in
 	const ox = s.ox ?? 540, oy = s.oy ?? 777;
 	const inA = interpolate(t, [0, 0.12], [0, 1], clamp);
 	return (
@@ -153,6 +153,7 @@ const Reveal: React.FC<{s: Seg; nameAt: number}> = ({s, nameAt}) => {
 };
 
 const Tag: React.FC<{kind: string}> = ({kind}) => {
+	if (kind === 'hook') return null;
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const a = spring({frame, fps, config: {damping: 13, mass: 0.6}});
@@ -195,6 +196,42 @@ const Captions: React.FC = () => {
 	);
 };
 
+// "get paid": dollar bills and coins pop up and float across the frame
+const Dollars: React.FC = () => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const items = React.useMemo(() => Array.from({length: 16}).map((_, i) => ({x: 80 + ((i * 397) % 920), y: 900 - ((i * 233) % 560), d: (i % 6) * 4, e: i % 3 === 0 ? '💰' : '💵', r: ((i * 53) % 50) - 25, s: 90 + ((i * 37) % 70)})), []);
+	return (
+		<AbsoluteFill style={{pointerEvents: 'none'}}>
+			{items.map((it, i) => {
+				const a = spring({frame: frame - it.d, fps, config: {damping: 9, mass: 0.5, stiffness: 180}});
+				const t = Math.max(0, (frame - it.d) / fps);
+				const out = interpolate(frame / fps, [2.9, 3.5], [1, 0], clamp);
+				return <div key={i} style={{position: 'absolute', left: it.x, top: it.y - t * 160, fontSize: it.s, rotate: `${it.r + t * 20}deg`, scale: a, opacity: out * (frame >= it.d ? 1 : 0)}}>{it.e}</div>;
+			})}
+		</AbsoluteFill>
+	);
+};
+
+// "so pretty": a big pookie emoji pops in with a few sparkles
+const Pookie: React.FC = () => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const a = spring({frame, fps, config: {damping: 8, mass: 0.5, stiffness: 200}});
+	const out = interpolate(frame / fps, [1.9, 2.4], [1, 0], clamp);
+	const wob = Math.sin(frame / 3) * 6;
+	const sp = [[-230, -150, '✨', 0], [220, -190, '💖', 4], [-200, 170, '🎀', 7], [240, 140, '✨', 10]] as const;
+	return (
+		<AbsoluteFill style={{pointerEvents: 'none', opacity: out}}>
+			<div style={{position: 'absolute', left: 540 - 150, top: 330, width: 300, height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 260, scale: a, rotate: `${wob}deg`}}>🥹</div>
+			{sp.map(([dx, dy, e, d], i) => {
+				const b = spring({frame: frame - d, fps, config: {damping: 9, mass: 0.4}});
+				return <div key={i} style={{position: 'absolute', left: 540 + dx - 50, top: 480 + dy - 50, fontSize: 100, scale: b}}>{e}</div>;
+			})}
+		</AbsoluteFill>
+	);
+};
+
 const EndCard: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
@@ -213,16 +250,17 @@ const EndCard: React.FC = () => {
 };
 
 export const StreetSplitReel: React.FC = () => {
-	const {fps, durationInFrames} = useVideoConfig();
+	const {fps} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
 	const revealI = SEGS.findIndex((s) => s.mode === 'reveal');
 	const nameAt = 64.39 - SEGS[revealI].a; // "Brooklyn"
 	const sfx: {t: number; f: string; v: number}[] = [
-		{t: 0.05, f: 'whoosh', v: 0.16},
-		{t: OFF[1] - 0.12, f: 'whoosh', v: 0.18},
 		...SEGS.map((s, i) => (s.mode === 'screen' && SEGS[i - 1]?.mode !== 'screen' ? {t: OFF[i] - 0.06, f: 'whoosh', v: 0.12} : null)).filter((x): x is {t: number; f: string; v: number} => !!x),
 		{t: OFF[revealI] - 0.05, f: 'whoosh', v: 0.18},
-		{t: OFF[revealI] + nameAt, f: 'pop', v: 0.16},
+		{t: OFF[revealI] + nameAt - 0.15, f: 'x:tada', v: 0.55},
+		{t: outOf(111.4), f: 'x:coins', v: 0.6},
+		{t: outOf(114.1), f: 'x:coins', v: 0.45},
+		{t: outOf(128.05), f: 'x:sparkle', v: 0.55},
 		{t: OFF[SEGS.findIndex((s) => s.tag === 'rapid')], f: 'tick', v: 0.25},
 		{t: TAKE - 0.08, f: 'whoosh', v: 0.18},
 		{t: TAKE + 0.1, f: 'glock', v: 0.45},
@@ -247,11 +285,11 @@ export const StreetSplitReel: React.FC = () => {
 			<Captions />
 			{sfx.map((h, i) => (
 				<Sequence key={`s${i}`} name={`sfx ${h.f}`} from={Math.max(0, f(h.t))} durationInFrames={f(2.2)} layout="none">
-					<Audio src={staticFile(`sfx/reel/${h.f}.wav`)} volume={h.v} />
+					<Audio src={staticFile(h.f.startsWith('x:') ? `sfx/extra/${h.f.slice(2)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
-			<Audio name="music" src={staticFile('media/p11/night_sky.mp3')}
-				volume={(fr) => interpolate(fr, [0, 10, f(TAKE) - 10, f(TAKE) + 6, durationInFrames - 6, durationInFrames], [0, 0.03, 0.03, 0.6, 0.6, 0], clamp)} />
+			<Sequence name="dollars" from={f(outOf(111.35))} durationInFrames={f(3.6)}><Dollars /></Sequence>
+			<Sequence name="pookie" from={f(outOf(128.0))} durationInFrames={f(2.4)}><Pookie /></Sequence>
 		</AbsoluteFill>
 	);
 };
