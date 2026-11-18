@@ -120,7 +120,7 @@ const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
 			<OffthreadVideo src={staticFile('media/p12/alexis.mp4')} muted trimBefore={Math.round(s.a * fps)}
-				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 900px', filter: 'contrast(1.06) saturate(1.04)'}} />
+				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 900px', filter: 'contrast(1.06) saturate(1.04) url(#refgrade)'}} />
 		</AbsoluteFill>
 	);
 };
@@ -260,6 +260,21 @@ const EndCard: React.FC = () => {
 	);
 };
 
+// colour grade matched to the user's reference frame (warm golden skin, softer lighter sky): a colour-transfer
+// matrix fitted to the reference (mean + covariance match) plus a slight gamma lift, applied to the street footage only
+const RefGrade: React.FC = () => (
+	<svg width={0} height={0} style={{position: 'absolute'}}>
+		<filter id="refgrade" colorInterpolationFilters="sRGB">
+			<feColorMatrix type="matrix" values="1.0058 -0.0797 0.1118 0 0.0473 -0.0797 1.1762 -0.1314 0 0.0402 0.1118 -0.1314 1.0555 0 -0.0605 0 0 0 1 0" />
+			<feComponentTransfer>
+				<feFuncR type="gamma" amplitude={1} exponent={0.94} offset={0} />
+				<feFuncG type="gamma" amplitude={1} exponent={0.94} offset={0} />
+				<feFuncB type="gamma" amplitude={1} exponent={0.94} offset={0} />
+			</feComponentTransfer>
+		</filter>
+	</svg>
+);
+
 export const StreetSplitReel: React.FC = () => {
 	const {fps} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
@@ -281,6 +296,7 @@ export const StreetSplitReel: React.FC = () => {
 	];
 	return (
 		<AbsoluteFill style={{background: '#000'}}>
+			<RefGrade />
 			{SEGS.map((s, i) => {
 				const from = f(OFF[i]), dur = Math.max(1, f(OFF[i] + segLen(s)) - from), aud = f(s.b - s.a);
 				return (
