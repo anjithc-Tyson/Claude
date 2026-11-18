@@ -3,7 +3,7 @@
 // iPad session as full-screen cut-ins at the moments that matter (the empty prompt, her typing "gold, shiny and long",
 // the sketch loading into her rose-gold necklace), and the full-screen "BROOKLYN" reveal when she names it.
 // Kinetic captions in the Takshila palette (forest green #2E6B3F, cream #F3EDE2, ink #2E2A26).
-// Sources: media/p12/alexis.mp4 (upscaled 720p), media/p12/alexis_voice2.wav (light clean-up, Alexis's off-mic lines
+// Sources: media/p12/alexis_sharp.mp4 (upscaled 720p, denoise + CAS + unsharp), media/p12/alexis_voice2.wav (light clean-up, Alexis's off-mic lines
 // lifted to the host's level), media/p12/rec_s.mp4 (her iPad recording, 130–192 s of media/p8/rec.mp4 at 1080 wide).
 import React from 'react';
 import {AbsoluteFill, Freeze, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
@@ -115,11 +115,15 @@ const Her: React.FC<{s: Seg; i: number}> = ({s, i}) => {
 	const {fps} = useVideoConfig();
 	const p = frame / (segLen(s) * fps);
 	const t = OFF[i] + frame / fps;
-	const z = ((i % 2 ? 1.22 : 1.1) + 0.03 * p) * snapZoom(t);   // two-shot crop, wide/close per segment, meme snap zooms
-	const sh = snapShake(t);
+	// full frame, no crop zoom (zooming the 720p-sourced footage softens it); only the brief meme snap zooms
+	const sz = snapZoom(t);
+	const z = sz;
+	const k = Math.min(1, (sz - 1) / 0.1);   // shake only once zoomed in enough to hide the frame edges
+	const sh = snapShake(t).map((v) => v * k);
+	void p;
 	return (
 		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
-			<OffthreadVideo src={staticFile('media/p12/alexis.mp4')} muted trimBefore={Math.round(s.a * fps)}
+			<OffthreadVideo src={staticFile('media/p12/alexis_sharp.mp4')} muted trimBefore={Math.round(s.a * fps)}
 				style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, scale: z, translate: `${sh[0]}px ${sh[1]}px`, transformOrigin: '540px 900px', filter: 'contrast(1.06) saturate(1.04) url(#refgrade)'}} />
 		</AbsoluteFill>
 	);
