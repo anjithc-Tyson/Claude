@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Takshila Heist Carousels</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Afacad+Flux:wght@400;500;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ivory:#F5EFE7; --ink:#2B1016; --night:#140A0E; --plum:#6D3B54;
+  --pumpkin:#E8862A; --gold:#C09435; --gold-hi:#F2C766; --stone:#EFE5D8;
+  --hud:rgba(14,6,9,.78);
+  --display:'Anton',Impact,sans-serif; --sans:'Afacad Flux',system-ui,sans-serif; --hand:'Permanent Marker',cursive;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0b0507;font-family:var(--sans);color:var(--ivory);padding:40px;display:flex;flex-direction:column;gap:40px;align-items:center}
+h1.set{font:500 20px var(--sans);letter-spacing:.2em;color:#9a8a8f;text-transform:uppercase;align-self:flex-start;max-width:1080px;margin:0 auto}
+
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;flex:none;isolation:isolate}
+
+/* ---------- skies ---------- */
+.sky-dusk{background:linear-gradient(180deg,#1E0B1C 0%,#4A1E3A 26%,#8E3A4C 48%,#D4623A 66%,#E8862A 78%,#F4C26B 92%,#F7DCA0 100%)}
+.sky-night{background:radial-gradient(120% 70% at 50% 110%,#6D3B54 0%,#2B1016 45%,#140A0E 80%)}
+.sky-ember{background:linear-gradient(160deg,#140A0E 0%,#2B1016 40%,#6D3B54 75%,#E8862A 130%)}
+.sky-gold{background:linear-gradient(180deg,#F7DCA0 0%,#E8862A 45%,#8E3A4C 85%,#4A1E3A 100%)}
+
+/* sun with horizontal cut stripes */
+.sun{position:absolute;border-radius:50%;background:linear-gradient(180deg,#FFE3A1 0%,#F2B24E 45%,#E8862A 70%,#C2554A 100%);
+  -webkit-mask:repeating-linear-gradient(180deg,#000 0 26px,transparent 26px 34px);mask:repeating-linear-gradient(180deg,#000 0 26px,transparent 26px 34px);z-index:0}
+.skyline{position:absolute;left:0;right:0;bottom:0;z-index:1}
+
+/* texture */
+.grain::after{content:"";position:absolute;inset:0;z-index:50;pointer-events:none;opacity:.22;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+.halftone{position:absolute;inset:0;z-index:2;pointer-events:none;opacity:.18;
+  background-image:radial-gradient(circle,#000 2.2px,transparent 2.6px);background-size:12px 12px;
+  -webkit-mask:linear-gradient(180deg,transparent 30%,#000 100%);mask:linear-gradient(180deg,transparent 30%,#000 100%)}
+.speed{position:absolute;inset:-20%;z-index:1;opacity:.08;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg at 50% 50%,#fff 0 1.2deg,transparent 1.2deg 9deg)}
+
+/* ---------- HUD ---------- */
+.hud-top{position:absolute;top:52px;left:60px;right:60px;display:flex;justify-content:space-between;align-items:center;z-index:20}
+.logo{height:54px;filter:drop-shadow(3px 3px 0 #000)}
+.stars{display:flex;gap:8px}
+.stars svg{width:40px;height:40px;filter:drop-shadow(3px 3px 0 #000)}
+.stars .on{fill:var(--gold-hi);stroke:#000;stroke-width:1.6}
+.stars .off{fill:rgba(255,255,255,.12);stroke:rgba(255,255,255,.55);stroke-width:1.6}
+.cash{font:400 46px/1 var(--display);color:var(--gold-hi);letter-spacing:.02em;text-shadow:3px 3px 0 #000,-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000;text-align:right;margin-top:8px}
+.hud-r{display:flex;flex-direction:column;align-items:flex-end}
+
+.counter{position:absolute;bottom:56px;right:60px;z-index:20;font:600 24px var(--sans);letter-spacing:.18em;color:var(--ivory);
+  background:var(--hud);padding:12px 20px;border-radius:6px;border:2px solid rgba(245,239,231,.2)}
+.counter b{color:var(--gold-hi)}
+
+/* minimap */
+.radar{position:absolute;bottom:52px;left:60px;width:170px;height:170px;border-radius:50%;z-index:20;overflow:hidden;
+  background:radial-gradient(circle,#3a2a2e 0%,#22161a 100%);border:6px solid #0d0709;box-shadow:0 0 0 3px rgba(245,239,231,.35),6px 6px 0 rgba(0,0,0,.5)}
+.radar::before{content:"";position:absolute;inset:0;background:
+  linear-gradient(90deg,transparent 46%,rgba(245,239,231,.18) 46% 54%,transparent 54%),
+  linear-gradient(20deg,transparent 30%,rgba(245,239,231,.12) 30% 36%,transparent 36%),
+  linear-gradient(115deg,transparent 60%,rgba(245,239,231,.12) 60% 66%,transparent 66%)}
+.radar .me{position:absolute;left:50%;top:50%;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:30px solid var(--ivory);transform:translate(-50%,-60%);filter:drop-shadow(0 0 2px #000)}
+.radar .blip{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--gold-hi);border:3px solid #000;display:grid;place-items:center;font:700 16px var(--sans);color:#000}
+.radar .n{position:absolute;top:6px;left:50%;transform:translateX(-50%);font:700 15px var(--sans);color:var(--ivory)}
+
+/* ---------- type ---------- */
+.mega{font:400 1em/0.86 var(--display);text-transform:uppercase;color:var(--ivory);letter-spacing:.005em;
+  -webkit-text-stroke:5px #000;paint-order:stroke fill;text-shadow:8px 8px 0 #000}
+.mega.gold{color:var(--gold-hi)}
+.mega.pump{color:var(--pumpkin)}
+.tag{display:inline-block;font:400 34px/1 var(--display);letter-spacing:.06em;text-transform:uppercase;background:#000;color:var(--gold-hi);padding:12px 18px 10px;transform:skew(-8deg)}
+.tag span{display:inline-block;transform:skew(8deg)}
+.hand{font-family:var(--hand);color:var(--ivory)}
+
+/* comic photo panel */
+.panel{position:absolute;border:12px solid var(--ivory);outline:6px solid #000;box-shadow:16px 16px 0 #000;overflow:hidden;background:#000;z-index:5}
+.panel img{width:100%;height:100%;object-fit:cover;display:block;filter:contrast(1.08) saturate(1.1)}
+
+/* objective help box (top-left game hint) */
+.objective{position:absolute;z-index:15;background:var(--hud);border-radius:10px;padding:26px 30px;border-left:8px solid var(--gold-hi);
+  font:500 34px/1.28 var(--sans);color:var(--ivory);box-shadow:8px 8px 0 rgba(0,0,0,.45)}
+.objective small{display:block;font:600 20px var(--sans);letter-spacing:.2em;color:var(--gold-hi);margin-bottom:10px}
+.objective em{font-style:normal;color:var(--gold-hi)}
+
+/* cutscene subtitle */
+.subtitle{position:absolute;left:60px;right:60px;z-index:15;text-align:center;font:600 40px/1.25 var(--sans);color:var(--ivory);
+  text-shadow:3px 3px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000,0 0 18px rgba(0,0,0,.6)}
+.subtitle b{color:var(--gold-hi);font-weight:700}
+
+.checklist{list-style:none;display:flex;flex-direction:column;gap:14px}
+.checklist li{display:flex;gap:16px;align-items:center;font:500 32px/1.2 var(--sans)}
+.checklist li i{flex:none;width:40px;height:40px;border:3px solid var(--gold-hi);border-radius:6px;display:grid;place-items:center;font:700 26px var(--sans);font-style:normal;color:#000;background:var(--gold-hi)}
+
+.swipe{position:absolute;z-index:20;font:400 40px/1 var(--display);letter-spacing:.06em;color:#000;background:var(--gold-hi);padding:18px 28px 16px;border:5px solid #000;box-shadow:8px 8px 0 #000;transform:rotate(-3deg)}
+
+/* stripes band */
+.band{position:absolute;left:-40px;right:-40px;z-index:12;background:#000;transform:rotate(-4deg);padding:22px 0;text-align:center;
+  border-top:8px solid var(--gold-hi);border-bottom:8px solid var(--gold-hi)}
+
+/* ---------- WANTED poster ---------- */
+.poster{position:absolute;left:90px;right:90px;top:170px;bottom:150px;background:var(--stone);color:#000;z-index:6;border:6px solid #000;box-shadow:20px 20px 0 #000;transform:rotate(-1.5deg);padding:34px 40px;display:flex;flex-direction:column}
+.poster::before{content:"";position:absolute;inset:0;opacity:.35;pointer-events:none;background:
+  radial-gradient(60% 40% at 10% 0%,rgba(140,99,34,.35),transparent),radial-gradient(50% 40% at 100% 100%,rgba(109,59,84,.3),transparent)}
+.poster .head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:5px solid #000;padding-bottom:16px}
+.poster .wanted{font:400 120px/.85 var(--display);text-transform:uppercase;letter-spacing:.01em;color:var(--ink)}
+.poster .stars svg{width:46px;height:46px;filter:none}
+.poster .stars .on{fill:var(--gold);stroke:#000;stroke-width:1.6}
+.poster .shot{flex:1;margin:24px 0 20px;border:6px solid #000;overflow:hidden;position:relative}
+.poster .shot img{width:100%;height:100%;object-fit:cover;filter:contrast(1.06) saturate(1.08)}
+.poster .shot .id{position:absolute;left:16px;top:16px;background:#000;color:var(--gold-hi);font:400 28px/1 var(--display);padding:10px 14px 8px;letter-spacing:.06em}
+.poster .name{font:400 74px/.95 var(--display);text-transform:uppercase;color:var(--ink)}
+.poster .meta{display:flex;justify-content:space-between;align-items:flex-end;margin-top:12px;gap:20px}
+.poster .rap{font:500 26px/1.35 var(--sans);color:#3b2a2e}
+.poster .rap b{color:#000;font-weight:700}
+.poster .bounty{text-align:right;flex:none}
+.poster .bounty small{display:block;font:700 20px var(--sans);letter-spacing:.2em;color:var(--plum)}
+.poster .bounty strong{font:400 84px/1 var(--display);color:var(--ink)}
+.stamp{position:absolute;z-index:9;font:400 46px/1 var(--display);letter-spacing:.08em;color:#B3261E;border:6px solid #B3261E;padding:12px 20px 8px;transform:rotate(12deg);opacity:.85;mix-blend-mode:multiply;background:rgba(245,239,231,.2)}
+</style>
+</head>
+<body>
+
+<!-- reusable defs -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="star" viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5L7 14.3l-5.3-5 7.2-.9z"/></symbol>
+    <symbol id="city" viewBox="0 0 1080 260" preserveAspectRatio="none">
+      <path d="M0 260V170h40v-40h30v-50h50v90h30v-60h60v100h20V90h70v50h20v-80l30-20 30 20v130h40v-60h50v-90h70v150h30v-40h40v70h20V70h60v40h30v110h40v-70h60v40h40V60h80v120h40v-30h60v110z"/>
+      <path d="M760 70l40-30 40 30z M330 60l30-30 30 30z"/>
+    </symbol>
+    <symbol id="palm" viewBox="0 0 200 400"><path d="M98 400c4-80 10-160 2-250l6-1c10 90 4 170-2 251z"/><path d="M103 150c-30-30-70-36-100-20 34-6 64 4 92 26-36-12-70-6-90 14 30-14 62-14 92 0-26 6-46 26-52 50 18-22 40-36 62-40 6 22 4 46-8 70 22-22 30-48 26-74 26 6 48 24 62 50-4-30-24-54-50-64 30-4 60 6 86 26-22-30-56-42-88-38 28-18 60-22 92-14-34-20-72-16-100 6 10-26 30-46 58-56-34 0-62 20-74 50z"/></symbol>
+  </defs>
+</svg>
+
+<h1 class="set">Carousel A · The Takshila Job (7 slides)</h1>
+
+<!-- ============ A1 COVER ============ -->
+<section class="slide sky-dusk grain" data-name="A1-cover">
+  <div class="sun" style="width:720px;height:720px;left:180px;top:300px"></div>
+  <svg class="skyline" style="height:300px;fill:#140A0E;opacity:.9"><use href="#city"/></svg>
+  <svg style="position:absolute;left:-40px;bottom:120px;width:260px;height:520px;fill:#140A0E;z-index:1"><use href="#palm"/></svg>
+  <svg style="position:absolute;right:-30px;bottom:150px;width:220px;height:440px;fill:#140A0E;z-index:1;transform:scaleX(-1)"><use href="#palm"/></svg>
+  <div class="halftone"></div>
+
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+    </div>
+  </div>
+
+  <div class="panel" style="left:70px;top:160px;width:600px;height:380px;transform:rotate(-3deg)"><img src="assets/hand-ring.jpg" alt=""></div>
+  <div class="panel" style="left:650px;top:180px;width:350px;height:420px;transform:rotate(4deg)"><img src="assets/lariat.jpg" alt="" style="object-position:50% 30%"></div>
+  <div class="panel" style="left:280px;top:500px;width:420px;height:280px;transform:rotate(2deg);z-index:6"><img src="assets/vine-bracelet.jpg" alt=""></div>
+
+  <div style="position:absolute;left:60px;right:60px;top:840px;z-index:10">
+    <div class="tag" style="margin-bottom:22px"><span>A Takshila original · Part 1</span></div>
+    <div class="mega" style="font-size:215px">The&nbsp;<span class="gold">Gold</span></div>
+    <div class="mega pump" style="font-size:215px;margin-left:100px">Job</div>
+  </div>
+  <div class="swipe" style="right:60px;bottom:70px">Start mission ▸</div>
+</section>
+
+<!-- ============ A2 MISSION 1 ============ -->
+<section class="slide sky-night grain" data-name="A2-the-pitch">
+  <div class="speed"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:60px;top:150px;z-index:10">
+    <div class="tag"><span>Mission 01</span></div>
+    <div class="mega" style="font-size:200px;margin-top:14px">The <span class="gold">Pitch</span></div>
+  </div>
+  <div class="objective" style="left:60px;top:470px;width:470px">
+    <small>OBJECTIVE</small>
+    Describe the piece you can't stop thinking about — <em>in your own words.</em> A sketch or photo works too.
+  </div>
+  <div class="panel" style="right:60px;top:440px;width:470px;height:560px;transform:rotate(3deg)"><img src="assets/vine-bracelet.jpg" alt=""></div>
+  <div class="subtitle" style="bottom:200px"><b>YOU:</b> "a vine bracelet with tiny marquise diamonds."</div>
+  <div class="counter"><b>02</b> / 07</div>
+  <div class="hand" style="position:absolute;left:70px;bottom:80px;font-size:34px;color:var(--gold-hi);transform:rotate(-4deg);z-index:15">No design skills needed.</div>
+</section>
+
+<!-- ============ A3 MISSION 2 ============ -->
+<section class="slide sky-ember grain" data-name="A3-the-plan">
+  <div class="halftone" style="opacity:.25"></div>
+  <!-- blueprint grid -->
+  <div style="position:absolute;inset:0;z-index:0;opacity:.14;background-image:linear-gradient(var(--gold-hi) 1px,transparent 1px),linear-gradient(90deg,var(--gold-hi) 1px,transparent 1px);background-size:54px 54px"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:60px;top:150px;z-index:10">
+    <div class="tag"><span>Mission 02</span></div>
+    <div class="mega" style="font-size:200px;margin-top:14px">The <span class="gold">Plan</span></div>
+  </div>
+  <div class="panel" style="left:60px;top:480px;width:520px;height:620px;transform:rotate(-3deg)"><img src="assets/pear-ring.jpg" alt=""></div>
+  <div class="objective" style="right:60px;top:520px;width:420px">
+    <small>CREW</small>
+    Our <em>AI Design Studio</em> drafts it in moments.
+    <br><br>A <em>Takshila jeweler</em> refines every detail with you — in 3D.
+  </div>
+  <div class="hand" style="position:absolute;right:80px;top:1010px;font-size:36px;color:var(--gold-hi);transform:rotate(-5deg);z-index:15;text-align:right;line-height:1.2">Every heist needs<br>a planner.</div>
+  <div class="counter"><b>03</b> / 07</div>
+</section>
+
+<!-- ============ A4 MISSION 3 ============ -->
+<section class="slide sky-night grain" data-name="A4-the-green-light">
+  <div class="sun" style="width:900px;height:900px;left:90px;top:620px;opacity:.55"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:60px;top:150px;z-index:10">
+    <div class="tag"><span>Mission 03</span></div>
+    <div class="mega" style="font-size:200px;margin-top:14px">Green<br><span class="gold">Light</span></div>
+  </div>
+  <div class="panel" style="right:70px;top:170px;width:400px;height:500px;transform:rotate(4deg)"><img src="assets/pear-solitaire.jpg" alt=""></div>
+  <div class="objective" style="left:60px;right:60px;top:740px">
+    <small>RULES OF THE JOB</small>
+    <ul class="checklist">
+      <li><i>✓</i>Change the band, the stone, the size.</li>
+      <li><i>✓</i>Tweak it until it feels like yours.</li>
+      <li><i>✓</i>Nothing is made until you say <em>yes.</em></li>
+    </ul>
+  </div>
+  <div class="subtitle" style="bottom:140px;font-size:44px">You call the shots. <b>Always.</b></div>
+  <div class="counter"><b>04</b> / 07</div>
+</section>
+
+<!-- ============ A5 MISSION 4 ============ -->
+<section class="slide sky-ember grain" data-name="A5-the-craft">
+  <div class="speed" style="opacity:.06"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+    </div>
+  </div>
+  <div class="panel" style="left:60px;top:150px;width:960px;height:560px;transform:rotate(-1.5deg)"><img src="assets/twist-hoops.jpg" alt="" style="object-position:50% 55%"></div>
+  <div class="tag" style="position:absolute;left:90px;top:640px;z-index:12"><span>Mission 04</span></div>
+  <div style="position:absolute;left:60px;top:730px;z-index:10">
+    <div class="mega" style="font-size:200px">The <span class="pump">Craft</span></div>
+  </div>
+  <div class="objective" style="left:60px;right:60px;top:950px">
+    <small>OBJECTIVE IN PROGRESS</small>
+    Cast in <em>solid gold</em>. Set, engraved and polished <em>by hand</em> by our master artisans.
+  </div>
+  <div class="counter"><b>05</b> / 07</div>
+  <div class="hand" style="position:absolute;left:70px;bottom:80px;font-size:32px;color:var(--gold-hi);transform:rotate(-3deg);z-index:15">Photo updates at every step.</div>
+</section>
+
+<!-- ============ A6 MISSION 5 ============ -->
+<section class="slide sky-night grain" data-name="A6-the-drop">
+  <svg class="skyline" style="height:260px;fill:#2B1016"><use href="#city"/></svg>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:60px;top:150px;z-index:10">
+    <div class="tag"><span>Mission 05 · Final</span></div>
+    <div class="mega" style="font-size:200px;margin-top:14px">The <span class="gold">Drop</span></div>
+  </div>
+  <!-- timer -->
+  <div style="position:absolute;right:70px;top:860px;z-index:12;text-align:right">
+    <div style="font:600 22px var(--sans);letter-spacing:.2em;color:var(--gold-hi)">ETA</div>
+    <div class="mega" style="font-size:170px;text-shadow:6px 6px 0 #000">15<span style="font-size:70px">DAYS</span></div>
+  </div>
+  <div class="panel" style="left:70px;top:450px;width:460px;height:560px;transform:rotate(-3deg)"><img src="assets/gift-heart.jpg" alt=""></div>
+  <div class="objective" style="right:60px;top:500px;width:450px">
+    <small>LOOT SECURED</small>
+    <ul class="checklist" style="gap:18px">
+      <li><i>✓</i>Hallmarked</li>
+      <li><i>✓</i>GIA &amp; IGI certified</li>
+      <li><i>✓</i>Fully insured</li>
+      <li><i>✓</i>Gift-wrapped + a handwritten note</li>
+    </ul>
+  </div>
+  <div class="subtitle" style="bottom:110px">Straight to your door. <b>No getaway car needed.</b></div>
+  <div class="counter" style="bottom:40px;right:60px"><b>06</b> / 07</div>
+</section>
+
+<!-- ============ A7 COMPLETE ============ -->
+<section class="slide sky-dusk grain" data-name="A7-mission-complete">
+  <div class="sun" style="width:820px;height:820px;left:130px;top:360px"></div>
+  <svg class="skyline" style="height:320px;fill:#140A0E"><use href="#city"/></svg>
+  <svg style="position:absolute;right:-30px;bottom:140px;width:240px;height:480px;fill:#140A0E;z-index:1;transform:scaleX(-1)"><use href="#palm"/></svg>
+  <div class="halftone"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r">
+      <div class="stars"><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+      <div class="cash">+ 1 ONE-OF-ONE</div>
+    </div>
+  </div>
+  <div class="panel" style="left:290px;top:180px;width:500px;height:420px;transform:rotate(-2deg)"><img src="assets/hand-ring.jpg" alt="" style="object-position:40% 50%"></div>
+  <div class="band" style="top:610px">
+    <div class="mega gold" style="font-size:150px;text-shadow:6px 6px 0 #6D3B54">Mission complete</div>
+  </div>
+  <div style="position:absolute;left:60px;right:60px;top:880px;z-index:12;text-align:center">
+    <div class="subtitle" style="position:static;font-size:46px">Loot: <b>one piece, made only for you.</b></div>
+    <div class="subtitle" style="position:static;font-size:38px;margin-top:10px">Wanted level cleared. Respect earned.</div>
+  </div>
+  <div class="swipe" style="left:50%;bottom:150px;transform:translateX(-50%) rotate(-2deg);font-size:54px;white-space:nowrap">Start designing — link in bio</div>
+  <div class="counter" style="bottom:50px"><b>07</b> / 07</div>
+</section>
+
+
+<h1 class="set">Carousel B · Most Wanted (6 slides)</h1>
+
+<!-- ============ B1 COVER ============ -->
+<section class="slide sky-night grain" data-name="B1-most-wanted-cover">
+  <div style="position:absolute;inset:0;z-index:0;background:radial-gradient(50% 35% at 0% 20%,rgba(232,134,42,.55),transparent 70%),radial-gradient(50% 35% at 100% 30%,rgba(109,59,84,.9),transparent 70%)"></div>
+  <div class="speed"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r"><div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div></div>
+  </div>
+  <div class="panel" style="left:60px;top:170px;width:300px;height:380px;transform:rotate(-5deg)"><img src="assets/lariat.jpg" alt=""></div>
+  <div class="panel" style="left:390px;top:150px;width:300px;height:380px;transform:rotate(2deg)"><img src="assets/pear-ring.jpg" alt=""></div>
+  <div class="panel" style="left:720px;top:180px;width:300px;height:380px;transform:rotate(5deg)"><img src="assets/ruby-halo.jpg" alt=""></div>
+  <div style="position:absolute;left:0;right:0;top:640px;z-index:10;text-align:center">
+    <div class="mega" style="font-size:270px">Most</div>
+    <div class="mega gold" style="font-size:270px">Wanted</div>
+  </div>
+  <div class="subtitle" style="top:1150px">The pieces everyone's after. <b>Proceed with caution.</b></div>
+  <div class="counter"><b>01</b> / 06</div>
+</section>
+
+<!-- ============ B2-B5 POSTERS ============ -->
+<section class="slide sky-ember grain" data-name="B2-lariat">
+  <div class="hud-top"><img class="logo" src="assets/logo-light.png" alt="Takshila"><div class="cash" style="margin:0">#1 SUSPECT</div></div>
+  <div class="poster">
+    <div class="head"><div class="wanted">Wanted</div><div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div></div>
+    <div class="shot"><img src="assets/lariat.jpg" alt="" style="object-position:50% 35%"><div class="id">BESTSELLER</div></div>
+    <div class="name">Diamond Drop Lariat</div>
+    <div class="meta">
+      <div class="rap"><b>Known for:</b> stopping conversations mid-sentence.<br><b>Description:</b> 14K gold · lab-grown diamonds</div>
+      <div class="bounty"><small>BOUNTY</small><strong>$680</strong></div>
+    </div>
+  </div>
+  <div class="stamp" style="right:70px;top:400px">Armed &amp; dazzling</div>
+  <div class="counter"><b>02</b> / 06</div>
+</section>
+
+<section class="slide sky-ember grain" data-name="B3-pear-bypass">
+  <div class="hud-top"><img class="logo" src="assets/logo-light.png" alt="Takshila"><div class="cash" style="margin:0">#2 SUSPECT</div></div>
+  <div class="poster" style="transform:rotate(1.5deg)">
+    <div class="head"><div class="wanted">Wanted</div><div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div></div>
+    <div class="shot"><img src="assets/pear-ring.jpg" alt="" style="object-position:50% 60%"><div class="id">CUSTOMIZABLE</div></div>
+    <div class="name">Pear Bypass Ring</div>
+    <div class="meta">
+      <div class="rap"><b>Known for:</b> two stones, zero chill.<br><b>Description:</b> 14K gold · lab-grown pear</div>
+      <div class="bounty"><small>BOUNTY</small><strong>$620</strong></div>
+    </div>
+  </div>
+  <div class="stamp" style="left:70px;top:420px;transform:rotate(-10deg)">Last seen: your wishlist</div>
+  <div class="counter"><b>03</b> / 06</div>
+</section>
+
+<section class="slide sky-ember grain" data-name="B4-tennis-bracelet">
+  <div class="hud-top"><img class="logo" src="assets/logo-light.png" alt="Takshila"><div class="cash" style="margin:0">#3 SUSPECT</div></div>
+  <div class="poster">
+    <div class="head"><div class="wanted">Wanted</div><div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div></div>
+    <div class="shot"><img src="assets/tennis.jpg" alt="" style="object-position:50% 60%"><div class="id">NEW</div></div>
+    <div class="name">Classic Tennis Bracelet</div>
+    <div class="meta">
+      <div class="rap"><b>Known for:</b> a 1.5 ct getaway on your wrist.<br><b>Description:</b> 14K gold · 1.5 ct lab-grown</div>
+      <div class="bounty"><small>BOUNTY</small><strong>$780</strong></div>
+    </div>
+  </div>
+  <div class="stamp" style="right:70px;top:420px">Do not approach. Admire.</div>
+  <div class="counter"><b>04</b> / 06</div>
+</section>
+
+<section class="slide sky-ember grain" data-name="B5-ruby-halo">
+  <div class="hud-top"><img class="logo" src="assets/logo-light.png" alt="Takshila"><div class="cash" style="margin:0">#4 SUSPECT</div></div>
+  <div class="poster" style="transform:rotate(1.5deg)">
+    <div class="head"><div class="wanted">Wanted</div><div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div></div>
+    <div class="shot"><img src="assets/ruby-halo.jpg" alt=""><div class="id">ENGAGEMENT</div></div>
+    <div class="name">Ruby Halo Ring</div>
+    <div class="meta">
+      <div class="rap"><b>Known for:</b> stealing hearts. Repeatedly.<br><b>Description:</b> yellow gold · ruby · diamond halo</div>
+      <div class="bounty"><small>BOUNTY</small><strong>$2,450</strong></div>
+    </div>
+  </div>
+  <div class="stamp" style="right:80px;top:430px;mix-blend-mode:normal;opacity:1;background:var(--stone)">Heart thief</div>
+  <div class="counter"><b>05</b> / 06</div>
+</section>
+
+<!-- ============ B6 CTA ============ -->
+<section class="slide sky-gold grain" data-name="B6-design-your-own">
+  <div class="sun" style="width:760px;height:760px;left:160px;top:200px;opacity:.75"></div>
+  <svg class="skyline" style="height:300px;fill:#140A0E"><use href="#city"/></svg>
+  <svg style="position:absolute;left:-40px;bottom:130px;width:250px;height:500px;fill:#140A0E;z-index:1"><use href="#palm"/></svg>
+  <div class="halftone"></div>
+  <div class="hud-top">
+    <img class="logo" src="assets/logo-light.png" alt="Takshila">
+    <div class="hud-r"><div class="stars"><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div></div>
+  </div>
+  <div style="position:absolute;left:60px;right:60px;top:180px;z-index:10">
+    <div class="tag"><span>Want to lose the heat?</span></div>
+    <div class="mega" style="font-size:190px;margin-top:20px">Go one</div>
+    <div class="mega gold" style="font-size:190px">of one.</div>
+  </div>
+  <div class="objective" style="left:60px;width:600px;top:720px">
+    <small>NEW OBJECTIVE</small>
+    Design a piece <em>nobody else has</em>. Describe it, approve it in 3D, and it's hand-crafted for you in <em>15 days</em>.
+  </div>
+  <div class="panel" style="right:60px;top:660px;width:330px;height:420px;transform:rotate(5deg)"><img src="assets/peridot.jpg" alt=""></div>
+  <div class="swipe" style="left:60px;bottom:120px;font-size:52px">Start designing — link in bio</div>
+  <div class="counter" style="bottom:40px"><b>06</b> / 06</div>
+</section>
+
+</body>
+</html>
