@@ -32,3 +32,7 @@ Pricedown (Typodermic) is free for commercial **static** work like these images,
 
 1. Download it from dafont.com/pricedown.font.
 2. Save `Pricedown Bl.otf` as `fonts/pricedown.otf`.
+
+## Art
+
+`assets/gen/` holds 11 AI-generated illustrations in a crime-game loading-screen style, made with Figma's image generator (Figma file: "Takshila GTA carousel art" in the Filament team). They're used for scenes, characters and backgrounds. Priced products on the Most Wanted slides use real product photos, so the jewellery shown is what's actually sold.
