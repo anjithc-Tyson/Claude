@@ -221,8 +221,8 @@ const EndCard: React.FC = () => {
 
 // film burn transition: warm light-leak blobs sweep across (screen blend), flare to a near-white flash on the cut,
 // then burn out; the user's film-camera clack lands on the cut
-const BURN = 0.9, BURN_AT = 0.4;
-const FilmBurn: React.FC<{seed: number}> = ({seed}) => {
+export const BURN = 0.9, BURN_AT = 0.4;
+export const FilmBurn: React.FC<{seed: number}> = ({seed}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
 	const t = frame / fps;

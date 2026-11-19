@@ -1,13 +1,14 @@
 // "Your partner is not a Pinterest board": her single take (media/p18/her.mp4) with "Pinterest to personal" visuals:
-// a saved-rings board that tears away on "board", identical pins with climbing save counts on "copying what everybody
-// is saving", this-or-that split cards (bold / quietly romantic, vintage / modern), a "recommended for you" feed that
-// glitches apart on "no algorithm could ever predict", and a macro push into the hidden sapphire. Captions as the
+// a Pinterest-style board (replica look, no logo) that tears away on "board", identical pins with climbing save counts,
+// this-or-that split cards (bold / quietly romantic, vintage / modern), a search for "ring that feels like her" that keeps
+// returning the same ring and ends in "No results for her", a macro push into the hidden sapphire, film burn transitions. Captions as the
 // driftwood reel (Instrument Serif, no box, spoken word highlighted in the logo green). Rings are generated images.
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import wordsData from './data/pin_words.json';
 import {AFACAD, INSTRUMENT, SANS} from './fonts';
+import {BURN, BURN_AT, FilmBurn} from './Driftwood';
 
 const FOREST = '#2E6B3F', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
@@ -22,7 +23,7 @@ const INS: {a: number; b: number; kind: Kind}[] = [
 	{a: 0, b: 3.9, kind: 'board'},
 	{a: 16.0, b: 21.3, kind: 'split1'},
 	{a: 21.3, b: 30.6, kind: 'split2'},
-	{a: 35.7, b: 38.75, kind: 'algo'},
+	{a: 35.7, b: 39.3, kind: 'algo'},
 	{a: 39.3, b: 48.6, kind: 'sapphire'},
 ];
 const insAt = (t: number) => INS.find((s) => t >= s.a && t < s.b);
@@ -40,34 +41,70 @@ const Her: React.FC = () => {
 	);
 };
 
-// ---------- a saved-pins board (generic, no platform branding) ----------
-const Pin: React.FC<{src: string; h: number; saves?: string}> = ({src, h, saves}) => (
-	<div style={{position: 'relative', width: '100%', height: h, borderRadius: 26, overflow: 'hidden', marginBottom: 18, background: '#eee'}}>
-		<Img src={M(src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
-		<div style={{position: 'absolute', right: 14, top: 14, padding: '10px 20px', borderRadius: 999, background: INK, color: 'white', fontFamily: SANS, fontWeight: 700, fontSize: 24}}>Saved</div>
-		{saves && <div style={{position: 'absolute', left: 14, bottom: 14, padding: '8px 16px', borderRadius: 999, background: 'rgba(255,255,255,0.92)', color: INK, fontFamily: SANS, fontWeight: 600, fontSize: 22}}>{saves}</div>}
+// ---------- a Pinterest-style mobile board (replica of the app's look; no logo) ----------
+const PRED = '#E60023';
+const Icon: React.FC<{d: string; size?: number; fill?: boolean; color?: string}> = ({d, size = 54, fill, color = '#111'}) => (
+	<svg width={size} height={size} viewBox="0 0 24 24"><path d={d} fill={fill ? color : 'none'} stroke={fill ? 'none' : color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" /></svg>
+);
+const IC = {
+	back: 'M15 5 8 12l7 7',
+	share: 'M12 3v12M7 8l5-5 5 5M5 14v5h14v-5',
+	home: 'M3 11 12 3l9 8v10h-6v-6H9v6H3z',
+	search: 'M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM20 20l-4.6-4.6',
+	plus: 'M12 5v14M5 12h14',
+	chat: 'M4 5h16v11H9l-5 4z',
+};
+const Dots: React.FC<{color?: string}> = ({color = '#111'}) => (
+	<div style={{display: 'flex', gap: 6}}>{[0, 1, 2].map((i) => <div key={i} style={{width: 9, height: 9, borderRadius: 5, background: color}} />)}</div>
+);
+const Pin: React.FC<{src: string; h: number; saves?: string; save?: boolean}> = ({src, h, saves, save = true}) => (
+	<div style={{marginBottom: 26}}>
+		<div style={{position: 'relative', width: '100%', height: h, borderRadius: 32, overflow: 'hidden', background: '#efefef'}}>
+			<Img src={M(src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+			{save && <div style={{position: 'absolute', right: 16, top: 16, padding: '16px 28px', borderRadius: 999, background: PRED, color: 'white', fontFamily: SANS, fontWeight: 700, fontSize: 28}}>Save</div>}
+			{saves && <div style={{position: 'absolute', left: 16, bottom: 16, padding: '10px 18px', borderRadius: 999, background: 'rgba(255,255,255,0.94)', color: '#111', fontFamily: SANS, fontWeight: 700, fontSize: 24}}>{saves}</div>}
+		</div>
+		<div style={{display: 'flex', justifyContent: 'flex-end', padding: '14px 10px 0'}}><Dots /></div>
 	</div>
 );
-const BoardUI: React.FC<{title: string; scroll: number; grey?: number}> = ({title, scroll, grey = 0}) => {
-	const colA = [0, 2, 4, 1, 3, 5, 0, 2], colB = [3, 1, 5, 2, 0, 4, 3, 1];
-	const hA = [520, 420, 560, 460, 500, 430, 520, 450], hB = [440, 540, 420, 520, 460, 540, 430, 520];
-	return (
-		<AbsoluteFill style={{background: 'white', filter: `grayscale(${grey})`}}>
-			<div style={{position: 'absolute', left: 40, right: 40, top: 70, display: 'flex', alignItems: 'center', gap: 20}}>
-				<div style={{flex: 1, height: 84, borderRadius: 999, background: '#EFEFEF', display: 'flex', alignItems: 'center', padding: '0 34px', fontFamily: SANS, fontSize: 32, color: '#6b6b6b'}}>
-					<svg width={34} height={34} viewBox="0 0 24 24" style={{marginRight: 16}}><circle cx={10} cy={10} r={7} fill="none" stroke="#6b6b6b" strokeWidth={2.4} /><path d="M15.5 15.5 21 21" stroke="#6b6b6b" strokeWidth={2.4} strokeLinecap="round" /></svg>
-					engagement ring ideas
-				</div>
+const COL_A = [0, 2, 4, 1, 3, 5, 0, 2], COL_B = [3, 1, 5, 2, 0, 4, 3, 1];
+const H_A = [520, 420, 560, 460, 500, 430, 520, 450], H_B = [440, 540, 420, 520, 460, 540, 430, 520];
+const Grid: React.FC<{top: number; shift?: number}> = ({top, shift = 0}) => (
+	<div style={{position: 'absolute', left: 26, right: 26, top, display: 'flex', gap: 18}}>
+		<div style={{flex: 1}}>{COL_A.map((p, i) => <Pin key={i} src={PINS[(p + shift) % 6]} h={H_A[i]} />)}</div>
+		<div style={{flex: 1}}>{COL_B.map((p, i) => <Pin key={i} src={PINS[(p + shift) % 6]} h={H_B[i]} />)}</div>
+	</div>
+);
+const NavBar: React.FC<{active: 'home' | 'search'}> = ({active}) => (
+	<div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: 150, background: 'white', borderTop: '1px solid #e6e6e6', display: 'flex', justifyContent: 'space-around', alignItems: 'center', paddingBottom: 20}}>
+		<Icon d={IC.home} fill={active === 'home'} />
+		<Icon d={IC.search} color={active === 'search' ? '#111' : '#767676'} />
+		<Icon d={IC.plus} color="#767676" />
+		<Icon d={IC.chat} color="#767676" />
+		<div style={{width: 54, height: 54, borderRadius: 27, background: '#C9B8A6', border: active === 'home' ? '3px solid #111' : 'none'}} />
+	</div>
+);
+// the board page: back / share / more, centered title, pin count, collaborators, chips, masonry, bottom nav
+const BoardUI: React.FC<{scroll: number; grey?: number}> = ({scroll, grey = 0}) => (
+	<AbsoluteFill style={{background: 'white', filter: `grayscale(${grey})`, overflow: 'hidden'}}>
+		<div style={{position: 'absolute', left: 0, right: 0, top: -scroll}}>
+			<div style={{position: 'absolute', left: 36, right: 36, top: 70, display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+				<Icon d={IC.back} />
+				<div style={{display: 'flex', gap: 34, alignItems: 'center'}}><Icon d={IC.share} /><Dots /></div>
 			</div>
-			<div style={{position: 'absolute', left: 40, top: 190, fontFamily: SANS, fontWeight: 700, fontSize: 52, color: INK}}>{title}</div>
-			<div style={{position: 'absolute', left: 40, top: 262, fontFamily: SANS, fontSize: 28, color: '#767676'}}>1,284 pins · saved by everyone</div>
-			<div style={{position: 'absolute', left: 30, right: 30, top: 330 - scroll, display: 'flex', gap: 18}}>
-				<div style={{flex: 1}}>{colA.map((p, i) => <Pin key={i} src={PINS[p]} h={hA[i]} />)}</div>
-				<div style={{flex: 1}}>{colB.map((p, i) => <Pin key={i} src={PINS[p]} h={hB[i]} />)}</div>
+			<div style={{position: 'absolute', left: 0, right: 0, top: 170, textAlign: 'center', fontFamily: SANS, fontWeight: 800, fontSize: 68, color: '#111', letterSpacing: '-0.02em'}}>Engagement rings</div>
+			<div style={{position: 'absolute', left: 0, right: 0, top: 266, display: 'flex', justifyContent: 'center', gap: 0}}>
+				{['#C9B8A6', '#9FB7C9', '#D9A9A0'].map((c, i) => <div key={c} style={{width: 64, height: 64, borderRadius: 32, background: c, border: '4px solid white', marginLeft: i ? -18 : 0}} />)}
 			</div>
-		</AbsoluteFill>
-	);
-};
+			<div style={{position: 'absolute', left: 0, right: 0, top: 350, textAlign: 'center', fontFamily: SANS, fontSize: 30, color: '#111'}}>1,284 Pins · 3 sections · 2y</div>
+			<div style={{position: 'absolute', left: 0, right: 0, top: 420, display: 'flex', justifyContent: 'center', gap: 16}}>
+				{['Organize', 'More ideas'].map((c) => <div key={c} style={{padding: '22px 38px', borderRadius: 999, background: '#E9E9E9', fontFamily: SANS, fontWeight: 700, fontSize: 30, color: '#111'}}>{c}</div>)}
+			</div>
+			<Grid top={540} />
+		</div>
+		<NavBar active="home" />
+	</AbsoluteFill>
+);
 
 // 0 -> "board.": the board scrolls, greys out on "not", and tears down the middle on "board" to reveal her
 const BoardOpen: React.FC = () => {
@@ -81,7 +118,7 @@ const BoardOpen: React.FC = () => {
 	for (let i = 0; i <= 30; i++) edge.push(`${50 + (i % 2 ? 2.2 : -2.2) + Math.sin(i * 1.9) * 1.4}% ${(i / 30) * 100}%`);
 	const left = `polygon(0% 0%, ${edge.join(', ')}, 0% 100%)`;
 	const right = `polygon(100% 0%, ${edge.join(', ')}, 100% 100%)`;
-	const board = <BoardUI title="Rings everyone saved" scroll={t * 60} grey={grey} />;
+	const board = <BoardUI scroll={t * 70} grey={grey} />;
 	return (
 		<AbsoluteFill>
 			<AbsoluteFill style={{clipPath: left, translate: `${-p * 700}px ${p * 40}px`, rotate: `${-p * 6}deg`, transformOrigin: '0px 1920px'}}>{board}</AbsoluteFill>
@@ -154,26 +191,41 @@ const Split: React.FC<{top: string; bottom: string; topLabel: string; bottomLabe
 	);
 };
 
-// "no algorithm could ever predict": a "recommended for you" feed glitches and breaks apart
-const Algo: React.FC = () => {
+// "no algorithm could ever predict": a search types "ring that feels like her", the results keep refreshing to the
+// same solitaire, and on "predict" everything clears to an empty state: no results for her
+const QUERY = 'ring that feels like her';
+const Algo: React.FC<{from: number; predictAt: number}> = ({from, predictAt}) => {
 	const frame = useCurrentFrame();
-	const {fps, durationInFrames} = useVideoConfig();
-	const t = frame / fps;
-	const len = durationInFrames / fps;
-	const g = interpolate(t, [0, 0.4, len - 0.6, len], [0.35, 0.8, 0.9, 1.2], clamp);
-	const jitter = (k: number) => Math.sin(frame * 3.1 + k * 7.3) * 70 * g;
-	const slices = [0, 1, 2, 3, 4, 5, 6, 7];
-	const fade = interpolate(t, [len - 0.25, len], [1, 0], clamp);
+	const {fps} = useVideoConfig();
+	const t = from + frame / fps;
+	const typed = QUERY.slice(0, Math.max(0, Math.floor((t - from - 0.05) * 30)));
+	const refresh = [from + 1.0, from + 1.7, from + 2.3];
+	const k = refresh.filter((r) => t >= r).length;
+	const sinceR = k ? t - refresh[k - 1] : 9;
+	const shimmer = sinceR < 0.22;
+	const empty = spring({frame: frame - Math.round((predictAt - from) * fps), fps, config: {damping: 16, mass: 0.6}});
+	const gridOut = interpolate(t, [predictAt - 0.05, predictAt + 0.25], [1, 0], clamp);
 	return (
-		<AbsoluteFill style={{background: 'white', opacity: fade}}>
-			{slices.map((i) => (
-				<AbsoluteFill key={i} style={{clipPath: `inset(${i * 12.5}% 0 ${100 - (i + 1) * 12.5}% 0)`, translate: `${(frame + i) % 3 === 0 ? jitter(i) : jitter(i) * 0.2}px 0`}}>
-					<BoardUI title="Recommended for you" scroll={t * 40} />
-				</AbsoluteFill>
-			))}
-			<AbsoluteFill style={{mixBlendMode: 'multiply', opacity: 0.55 * g, translate: `${10 * g}px 0`, background: 'rgba(0,255,255,0.35)'}} />
-			<AbsoluteFill style={{mixBlendMode: 'multiply', opacity: 0.55 * g, translate: `${-10 * g}px 0`, background: 'rgba(255,0,80,0.25)'}} />
-			{frame % 4 < 2 && <div style={{position: 'absolute', left: 0, right: 0, top: 300 + ((frame * 97) % 1300), height: 18 + 30 * g, background: 'rgba(0,0,0,0.85)'}} />}
+		<AbsoluteFill style={{background: 'white', overflow: 'hidden'}}>
+			<div style={{position: 'absolute', left: 30, right: 30, top: 60, display: 'flex', alignItems: 'center', gap: 22}}>
+				<Icon d={IC.back} />
+				<div style={{flex: 1, height: 96, borderRadius: 999, background: '#E9E9E9', display: 'flex', alignItems: 'center', padding: '0 32px', gap: 18, fontFamily: SANS, fontSize: 36, color: '#111'}}>
+					<Icon d={IC.search} size={40} />{typed}<span style={{opacity: frame % 16 < 8 ? 1 : 0, color: PRED}}>|</span>
+				</div>
+			</div>
+			<div style={{position: 'absolute', left: 30, top: 190, display: 'flex', gap: 14, opacity: gridOut}}>
+				{['Solitaire', 'Round cut', 'Trending', 'Most saved'].map((c) => <div key={c} style={{padding: '18px 30px', borderRadius: 999, background: '#E9E9E9', fontFamily: SANS, fontWeight: 700, fontSize: 28, color: '#111'}}>{c}</div>)}
+			</div>
+			<div style={{opacity: gridOut * (shimmer ? 0.25 : 1)}}><Grid top={300} shift={k} /></div>
+			{shimmer && <div style={{position: 'absolute', left: 26, right: 26, top: 300, bottom: 150, display: 'flex', gap: 18}}>
+				{[0, 1].map((c) => <div key={c} style={{flex: 1}}>{[0, 1, 2].map((r) => <div key={r} style={{height: 420, borderRadius: 32, background: '#EFEFEF', marginBottom: 26}} />)}</div>)}
+			</div>}
+			<div style={{position: 'absolute', left: 80, right: 80, top: 560, textAlign: 'center', opacity: empty, translate: `0 ${(1 - empty) * 30}px`}}>
+				<div style={{width: 150, height: 150, borderRadius: 75, background: '#EFEFEF', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center'}}><Icon d={IC.search} size={80} color="#767676" /></div>
+				<div style={{marginTop: 44, fontFamily: SANS, fontWeight: 800, fontSize: 56, color: '#111', lineHeight: 1.15}}>No results for &ldquo;her&rdquo;</div>
+				<div style={{marginTop: 20, fontFamily: SANS, fontSize: 32, color: '#767676', lineHeight: 1.35}}>Try designing it instead.</div>
+			</div>
+			<NavBar active="search" />
 		</AbsoluteFill>
 	);
 };
@@ -207,7 +259,7 @@ const Insert: React.FC<{kind: Kind; from: number}> = ({kind, from}) => {
 	case 'board': return <BoardOpen />;
 	case 'split1': return <Split top="bold.png" bottom="romantic.png" topLabel="BOLD & UNAPOLOGETIC" bottomLabel="QUIETLY ROMANTIC" topAt={16.7} bottomAt={19.42} from={from} />;
 	case 'split2': return <Split top="vintage.png" bottom="modern.png" topLabel="THE DRAMA OF VINTAGE" bottomLabel="CLEAN MODERN LINES" topAt={23.66} bottomAt={28.88} from={from} />;
-	case 'algo': return <Algo />;
+	case 'algo': return <Algo from={from} predictAt={38.42} />;
 	case 'sapphire': return <Sapphire at={41.26} from={from} />;
 	}
 };
@@ -292,15 +344,19 @@ const EndCard: React.FC = () => {
 export const PinBoardReel: React.FC = () => {
 	const {fps, durationInFrames} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
+	// film burns on the story transitions (into / out of the this-or-that cards, the search, the sapphire, the end card)
+	const BURNS = [16.0, 30.6, 35.7, 39.3, 48.6, TAKE];
 	const sfx: {t: number; f: string; v: number}[] = [
 		{t: 3.3, f: 'pin:tear', v: 0.5},
 		...[0, 1, 2].map((i) => ({t: 6.65 + i * 0.17, f: 'pop', v: 0.16})),
 		{t: 9.84, f: 'pop', v: 0.14},
-		{t: 15.95, f: 'whoosh', v: 0.08}, {t: 16.7, f: 'click', v: 0.22}, {t: 19.42, f: 'click', v: 0.22},
+		...BURNS.map((t) => ({t: t - 0.13, f: 'film:burn', v: 0.32})),
+		{t: 16.7, f: 'click', v: 0.22}, {t: 19.42, f: 'click', v: 0.22},
 		{t: 23.66, f: 'click', v: 0.22}, {t: 28.88, f: 'click', v: 0.22},
-		{t: 35.75, f: 'pin:glitch', v: 0.22}, {t: 38.3, f: 'pin:glitch', v: 0.3},
+		{t: 35.75, f: 'typing', v: 0.16},
+		...[36.7, 37.4, 38.0].map((t) => ({t, f: 'pop', v: 0.12})),
+		{t: 38.42, f: 'tick', v: 0.2},
 		{t: 41.2, f: 'glock', v: 0.14},
-		{t: TAKE - 0.1, f: 'whoosh', v: 0.08},
 		{t: TAKE + 0.5, f: 'glock', v: 0.1},
 	];
 	return (
@@ -311,6 +367,7 @@ export const PinBoardReel: React.FC = () => {
 			{INS.map((s, i) => (
 				<Sequence key={i} name={`insert ${s.kind}`} from={f(s.a)} durationInFrames={f(s.b) - f(s.a)}><Insert kind={s.kind} from={s.a} /></Sequence>
 			))}
+			{BURNS.map((t, i) => <Sequence key={`b${i}`} name="film burn" from={f(t - BURN_AT)} durationInFrames={f(BURN)}><FilmBurn seed={i * 1.9 + 0.7} /></Sequence>)}
 			<Captions />
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			<Sequence name="voice" durationInFrames={f(TAKE)} layout="none">
@@ -320,7 +377,7 @@ export const PinBoardReel: React.FC = () => {
 				volume={(fr) => interpolate(fr, [0, f(0.4), f(TAKE - 0.5), f(TAKE + 0.4), durationInFrames - f(1), durationInFrames], [0, 0.035, 0.035, 0.24, 0.24, 0], clamp)} />
 			{sfx.map((h, i) => (
 				<Sequence key={`s${i}`} name={`sfx ${h.f}`} from={Math.max(0, f(h.t))} durationInFrames={f(2.2)} layout="none">
-					<Audio src={staticFile(h.f.startsWith('pin:') ? `sfx/pin/${h.f.slice(4)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
+					<Audio src={staticFile(h.f.startsWith('pin:') ? `sfx/pin/${h.f.slice(4)}.wav` : h.f.startsWith('film:') ? `sfx/film/${h.f.slice(5)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
 		</AbsoluteFill>
