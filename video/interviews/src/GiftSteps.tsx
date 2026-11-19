@@ -8,7 +8,7 @@ import {Audio} from '@remotion/media';
 import wordsData from './data/gift_words.json';
 import {AFACAD, INSTRUMENT, ROUND, SANS} from './fonts';
 
-const FOREST = '#2E6B3F', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
+const FOREST = '#2E6B3F', TERRA = '#E2725B', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const M = (f: string) => staticFile(`media/${f}`);
 type W = {w: string; t: number; e: number};
@@ -201,6 +201,31 @@ const Clip: React.FC<{src: string; from: number; z0?: number; z1?: number; oy?: 
 		</AbsoluteFill>
 	);
 };
+// "shape it together with designers and artisans": the craft on the actual ring (no ring-making footage exists in the
+// assets; the bench clip was a bracelet): macro pushes over the hand-engraved band photos, then the engraved shank turning
+const Photo: React.FC<{src: string; z0: number; z1: number; ox: number; oy: number}> = ({src, z0, z1, ox, oy}) => {
+	const frame = useCurrentFrame();
+	const {durationInFrames} = useVideoConfig();
+	const p = frame / Math.max(1, durationInFrames);
+	const fade = interpolate(frame, [0, 5], [0, 1], clamp);
+	return (
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000', opacity: fade}}>
+			<Img src={M(src)} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z0 + (z1 - z0) * p, transformOrigin: `${ox}px ${oy}px`, filter: 'contrast(1.05) saturate(1.05)'}} />
+		</AbsoluteFill>
+	);
+};
+const Craft: React.FC = () => {
+	const {fps} = useVideoConfig();
+	const f = (t: number) => Math.round(t * fps);
+	return (
+		<AbsoluteFill>
+			<Sequence durationInFrames={f(1.75)}><Photo src="p15/art_side.jpg" z0={1.08} z1={1.28} ox={540} oy={1000} /></Sequence>
+			<Sequence from={f(1.75)} durationInFrames={f(1.75)}><Photo src="p15/art_side_ang.jpg" z0={1.12} z1={1.32} ox={560} oy={900} /></Sequence>
+			<Sequence from={f(3.5)}><Clip src="p15/art_reveal_v.mp4" from={37.0} z0={1.15} z1={1.25} oy={1060} /></Sequence>
+		</AbsoluteFill>
+	);
+};
+
 const Tag: React.FC<{text: string}> = ({text}) => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
@@ -218,7 +243,7 @@ const Insert: React.FC<{s: Ins}> = ({s}) => {
 	case 'concepts': return <ConceptScreen from={s.a} />;
 	case 'shot': return <ShotScreen />;
 	case 'send': return <SendScreen />;
-	case 'bench': return <><Clip src="p15/bts_v.mp4" from={0.6} z0={1.05} z1={1.14} /><Tag text="OUR ARTISANS AT THE BENCH" /></>;
+	case 'bench': return <><Craft /><Tag text="HAND-ENGRAVED BY OUR ARTISANS" /></>;
 	case 'gloves': return <Clip src="p15/art_reveal_v.mp4" from={45.6} z0={1.1} z1={1.2} oy={1060} />;
 	case 'hand': return <Clip src="p15/oval_r3_v.mp4" from={1.0} z0={1.04} z1={1.12} />;
 	}
@@ -296,8 +321,8 @@ const SendPill: React.FC = () => {
 	const a = spring({frame, fps, config: {damping: 10, mass: 0.45, stiffness: 200}});
 	const tap = spring({frame: frame - 34, fps, config: {damping: 12, mass: 0.4}});
 	return (
-		<div style={{position: 'absolute', left: 540, top: 560, translate: '-50% 0', scale: a * (1 - 0.08 * Math.sin(Math.min(1, tap) * Math.PI)), display: 'flex', alignItems: 'center', gap: 22,
-			padding: '26px 52px', borderRadius: 999, background: tap > 0.5 ? FOREST : CREAM, color: tap > 0.5 ? CREAM : FOREST, boxShadow: '0 14px 40px rgba(0,0,0,0.25)', fontFamily: INSTRUMENT, fontSize: 64}}>
+		<div style={{position: 'absolute', left: 540, top: 230, translate: '-50% 0', scale: a * (1 - 0.08 * Math.sin(Math.min(1, tap) * Math.PI)), display: 'flex', alignItems: 'center', gap: 22,
+			padding: '26px 52px', borderRadius: 999, background: tap > 0.5 ? TERRA : CREAM, color: tap > 0.5 ? 'white' : FOREST, boxShadow: '0 14px 40px rgba(0,0,0,0.25)', fontFamily: INSTRUMENT, fontSize: 64}}>
 			<svg width={52} height={52} viewBox="0 0 24 24"><path d="M3 11.5 21 3l-8.5 18-2-7.5L3 11.5z" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinejoin="round" /></svg>
 			{tap > 0.5 ? 'Sent' : <i>Send this</i>}
 		</div>
