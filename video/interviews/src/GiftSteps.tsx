@@ -334,7 +334,7 @@ export const GiftStepsReel: React.FC = () => {
 		{t: 13.0, f: 'click', v: 0.3},
 		...[0, 1, 2, 3].map((i) => ({t: 13.5 + i * 0.32, f: 'pop', v: 0.18})),
 		{t: 16.45, f: 'click', v: 0.3},
-		{t: 19.22, f: 'sms:shutter', v: 0.6},                 // screenshot
+		{t: 19.22, f: 'sms:shutter', v: 1.0},                 // screenshot
 		{t: 20.45, f: 'whoosh', v: 0.14},                     // message goes out
 		{t: 20.52, f: 'sms:bubble', v: 0.34},                 // photo bubble
 		{t: 20.92, f: 'sms:bubble', v: 0.3},                  // text bubble
