@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Takshila Gold Job</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:ital,wght@0,500;0,600;0,700;0,800;0,900;1,800;1,900&family=Pinyon+Script&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#C09435; --gold-hi:#F0C24B; --cash:#72CC72; --cash-dk:#2E6B2E; --hp:#5FB35F; --ar:#4C9BD6;
+  --ivory:#F5EFE7; --bur:#2B1016; --ink:#000;
+  --A:'Anton',Impact,sans-serif; --M:'Montserrat',system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#111;padding:40px;display:flex;flex-wrap:wrap;gap:40px;justify-content:center;font-family:var(--M);color:#fff}
+.slide{width:1080px;height:1350px;position:relative;overflow:hidden;background:#000;flex:none;isolation:isolate}
+.abs{position:absolute}
+
+/* cinematic grade: punchy, warm highlights, teal-ish shadows */
+.graded{filter:contrast(1.14) saturate(1.22) brightness(.98)}
+.grade-ov{position:absolute;inset:0;pointer-events:none;mix-blend-mode:soft-light;background:linear-gradient(180deg,rgba(255,170,60,.35),rgba(20,60,90,.45))}
+.vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 90% at 50% 45%,transparent 50%,rgba(0,0,0,.75) 100%)}
+.grain::after{content:"";position:absolute;inset:0;z-index:90;pointer-events:none;opacity:.2;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* ===== HUD ===== */
+.cash{position:absolute;top:44px;right:52px;z-index:40;font:400 70px/1 var(--A);color:var(--cash);letter-spacing:.01em;
+  -webkit-text-stroke:5px #000;paint-order:stroke fill;text-align:right}
+.stars{position:absolute;top:128px;right:50px;z-index:40;display:flex;gap:6px}
+.stars svg{width:46px;height:46px}
+.stars .on{fill:#fff;stroke:#000;stroke-width:1.8}
+.stars .off{fill:rgba(0,0,0,.35);stroke:#fff;stroke-width:1.4}
+.stars.blink .on{fill:#fff}
+
+.help{position:absolute;top:44px;left:44px;z-index:40;width:560px;background:rgba(0,0,0,.78);padding:24px 28px;font:600 29px/1.38 var(--M);color:#fff}
+.help em{font-style:normal;color:var(--gold-hi)}
+.key{display:inline-grid;place-items:center;width:40px;height:40px;border-radius:50%;background:#fff;color:#000;font:800 22px var(--M);vertical-align:-6px;margin:0 4px}
+
+.radar{position:absolute;left:44px;bottom:44px;width:300px;z-index:40}
+.radar .map{height:200px;border:4px solid rgba(0,0,0,.85);border-radius:10px;overflow:hidden;position:relative;
+  background:#5c6b5a;background-image:
+  linear-gradient(0deg,transparent 47%,#c9c3b2 47% 53%,transparent 53%),
+  linear-gradient(90deg,transparent 30%,#c9c3b2 30% 35%,transparent 35% 72%,#c9c3b2 72% 76%,transparent 76%),
+  linear-gradient(35deg,transparent 60%,#a9a392 60% 64%,transparent 64%),
+  radial-gradient(60% 50% at 85% 15%,#4a7fa3 0 60%,transparent 61%),
+  linear-gradient(180deg,#6d7b66,#56634f)}
+.radar .me{position:absolute;left:50%;top:56%;width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:30px solid #fff;transform:translate(-50%,-50%) rotate(20deg);filter:drop-shadow(0 0 2px #000)}
+.radar .blip{position:absolute;width:30px;height:30px;border-radius:50%;background:var(--gold-hi);border:3px solid #000;display:grid;place-items:center;font:900 15px var(--M);color:#000}
+.radar .bars{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.radar .bars i{height:12px;background:rgba(0,0,0,.6);border:2px solid rgba(0,0,0,.85);position:relative;display:block}
+.radar .bars i::after{content:"";position:absolute;inset:0;width:var(--v,100%);background:var(--c,var(--hp))}
+
+.sub{position:absolute;left:80px;right:80px;bottom:290px;z-index:40;text-align:center;font:700 38px/1.35 var(--M);color:#fff;
+  text-shadow:0 0 4px #000,2px 2px 0 #000,-2px -2px 0 #000,2px -2px 0 #000,-2px 2px 0 #000}
+.sub .n1{color:var(--gold-hi)} .sub .n2{color:#8FD0FF}
+.logo{position:absolute;right:48px;bottom:48px;height:46px;z-index:40;filter:drop-shadow(2px 2px 0 #000)}
+.swipe{position:absolute;right:48px;bottom:120px;z-index:40;font:800 24px var(--M);letter-spacing:.2em;color:#fff;background:rgba(0,0,0,.78);padding:12px 18px}
+.swipe b{color:var(--gold-hi)}
+
+/* big game display type */
+.mtitle{font:400 1em/.9 var(--A);text-transform:uppercase;color:#fff;letter-spacing:.01em;transform:skew(-7deg);
+  -webkit-text-stroke:6px #000;paint-order:stroke fill;text-shadow:6px 7px 0 #000,0 0 40px rgba(0,0,0,.6)}
+.mtitle.gold{color:var(--gold-hi)}
+.mlabel{font:800 30px var(--M);letter-spacing:.32em;text-transform:uppercase;color:var(--gold-hi);text-shadow:2px 2px 0 #000}
+
+/* ===== S1 box-art grid ===== */
+.grid-p{position:absolute;overflow:hidden;background:#222}
+.grid-p img{width:100%;height:100%;object-fit:cover;display:block}
+.titlebox{position:absolute;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.titlebox .t1{font:400 196px/.82 var(--A);color:#fff;letter-spacing:.005em;transform:skew(-6deg);-webkit-text-stroke:3px #fff;
+  text-shadow:0 0 0 #000,7px 7px 0 var(--gold)}
+.titlebox .t2{font:900 italic 46px/1 var(--M);letter-spacing:.24em;color:var(--gold-hi);margin-top:18px}
+.titlebox .t3{font:700 18px var(--M);letter-spacing:.4em;color:rgba(255,255,255,.6);margin-top:14px}
+
+/* ===== S3 wheel ===== */
+.wheel{position:absolute;left:90px;top:372px;width:900px;height:900px;border-radius:50%;transform:scale(.9);transform-origin:50% 0}
+.wedge{position:absolute;inset:0}
+.wedge img{position:absolute;width:330px;height:330px;object-fit:cover}
+.wedge .dim{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+.wedge .lbl{position:absolute;font:800 22px var(--M);letter-spacing:.14em;color:#fff;text-shadow:2px 2px 0 #000;transform:translate(-50%,-50%);white-space:nowrap}
+.hub{position:absolute;left:50%;top:50%;width:380px;height:380px;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(circle,#1a1a1a,#000);border:6px solid #000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;z-index:5;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
+.hub b{font:400 76px/1 var(--A);color:#fff;letter-spacing:.02em}
+.hub span{font:700 24px var(--M);color:var(--gold-hi);margin-top:8px;letter-spacing:.08em}
+.hub small{font:600 20px/1.35 var(--M);color:rgba(255,255,255,.7);margin-top:14px;max-width:270px}
+
+/* ===== S4 crew ===== */
+.crew{position:absolute;top:290px;width:316px;height:840px;background:rgba(8,8,8,.92);border:3px solid rgba(255,255,255,.18);display:flex;flex-direction:column}
+.crew.sel{border:5px solid var(--gold-hi);box-shadow:0 0 0 4px #000,0 0 40px rgba(240,194,75,.35)}
+.crew .ph{height:340px;overflow:hidden;position:relative}
+.crew .ph img{width:100%;height:100%;object-fit:cover}
+.crew .role{position:absolute;left:0;top:0;background:#000;color:var(--gold-hi);font:800 18px var(--M);letter-spacing:.2em;padding:10px 14px}
+.crew h3{font:400 46px/1 var(--A);text-transform:uppercase;padding:22px 22px 6px}
+.crew p{font:600 22px/1.4 var(--M);color:rgba(255,255,255,.75);padding:0 22px;min-height:96px}
+.skill{padding:10px 22px 0}
+.skill label{display:flex;justify-content:space-between;font:800 18px var(--M);letter-spacing:.14em;color:rgba(255,255,255,.85);margin-bottom:8px}
+.seg{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.seg i{height:16px;background:rgba(255,255,255,.15)}
+.seg i.f{background:var(--c,var(--gold-hi))}
+.crew .cut{margin-top:auto;display:flex;justify-content:space-between;align-items:center;padding:18px 22px;background:rgba(255,255,255,.06);font:800 22px var(--M);letter-spacing:.14em}
+.crew .cut b{font:400 48px/1 var(--A);color:var(--cash);letter-spacing:0;-webkit-text-stroke:2px #000;paint-order:stroke fill}
+
+/* ===== S5 interaction menu ===== */
+.imenu{position:absolute;left:60px;top:250px;width:560px;z-index:20;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.imenu .banner{height:130px;background:linear-gradient(135deg,#8C6322,#F0C24B 45%,#C09435 70%,#6b4a14);display:grid;place-items:center;position:relative;overflow:hidden}
+.imenu .banner::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(255,255,255,.12) 0 2px,transparent 2px 22px)}
+.imenu .banner span{font:400 92px/1 'Pinyon Script',cursive;color:#fff;text-shadow:3px 3px 0 rgba(0,0,0,.55);position:relative;z-index:1}
+.imenu .head{background:#000;display:flex;justify-content:space-between;padding:14px 20px;font:800 22px var(--M);letter-spacing:.12em;color:#fff}
+.imenu .head b{color:rgba(255,255,255,.7);font-weight:700}
+.imenu ul{list-style:none;background:rgba(0,0,0,.72)}
+.imenu li{display:flex;justify-content:space-between;align-items:center;padding:20px 22px;font:700 28px var(--M);color:#fff;border-bottom:1px solid rgba(255,255,255,.07)}
+.imenu li.on{background:#fff;color:#000}
+.imenu li .arw{font:800 26px var(--M);opacity:.8}
+.imenu li .val{color:var(--gold-hi);font-weight:800}
+.imenu li.on .val{color:#8C6322}
+.imenu .desc{background:rgba(0,0,0,.85);border-top:4px solid #fff;padding:20px 22px;font:600 25px/1.4 var(--M);color:#fff}
+.imenu .desc em{font-style:normal;color:var(--gold-hi)}
+
+/* ===== S6 pause menu ===== */
+.pm{position:absolute;left:44px;right:44px;top:120px;bottom:44px}
+.pm .brand{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:22px}
+.pm .brand h2{font:400 84px/.9 var(--A);text-transform:uppercase;letter-spacing:.01em}
+.pm .brand small{font:700 22px/1.4 var(--M);color:rgba(255,255,255,.75);text-align:right}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tabs div{background:rgba(0,0,0,.75);text-align:center;padding:18px 0 16px;font:800 22px var(--M);letter-spacing:.16em;color:rgba(255,255,255,.8);border-bottom:6px solid transparent}
+.tabs div.on{background:#fff;color:#000;border-bottom-color:var(--gold)}
+.pm .body{display:grid;grid-template-columns:400px 1fr;gap:6px;margin-top:6px;height:900px}
+.pm .left{background:rgba(0,0,0,.78);display:flex;flex-direction:column}
+.pm .left .rowi{padding:20px 24px;font:700 26px var(--M);border-bottom:1px solid rgba(255,255,255,.08)}
+.pm .left .rowi.on{background:#fff;color:#000}
+.pm .left .shot{margin-top:auto;height:420px;overflow:hidden}
+.pm .left .shot img{width:100%;height:100%;object-fit:cover}
+.pm .right{background:rgba(0,0,0,.78);padding:34px 36px;display:flex;flex-direction:column;gap:28px}
+.stat label{display:flex;justify-content:space-between;font:800 25px var(--M);letter-spacing:.06em;margin-bottom:12px}
+.stat label b{color:var(--gold-hi)}
+.stat .seg i{height:22px}
+.pm .note{margin-top:auto;font:600 24px/1.45 var(--M);color:rgba(255,255,255,.75);border-top:2px solid rgba(255,255,255,.15);padding-top:22px}
+.pm .note em{font-style:normal;color:var(--gold-hi)}
+
+/* ===== S7 complete ===== */
+.band{position:absolute;left:0;right:0;top:470px;height:300px;background:linear-gradient(90deg,transparent,rgba(0,0,0,.82) 18%,rgba(0,0,0,.82) 82%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20}
+.band .big{font:400 150px/.95 var(--A);text-transform:uppercase;color:var(--gold-hi);letter-spacing:.01em;-webkit-text-stroke:5px #000;paint-order:stroke fill;text-shadow:5px 6px 0 #000;transform:skew(-6deg)}
+.band .sm{font:800 30px var(--M);letter-spacing:.36em;color:#fff;margin-top:10px}
+.results{position:absolute;left:150px;right:150px;top:800px;z-index:20;background:rgba(0,0,0,.78);padding:12px 34px}
+.results div{display:flex;justify-content:space-between;padding:16px 0;font:700 30px var(--M);border-bottom:1px solid rgba(255,255,255,.12)}
+.results div:last-child{border:0}
+.results b{color:var(--gold-hi);font-weight:800}
+.results .g{color:var(--cash)}
+.cta{position:absolute;left:50%;transform:translateX(-50%);bottom:110px;z-index:30;white-space:nowrap;background:#fff;color:#000;font:900 34px var(--M);letter-spacing:.12em;padding:24px 36px;border-left:12px solid var(--gold-hi)}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="star" viewBox="0 0 24 24"><path d="M12 1.8l3.1 6.6 7.2.9-5.3 5 1.4 7.1L12 17.9l-6.4 3.5L7 14.3l-5.3-5 7.2-.9z"/></symbol>
+</defs></svg>
+
+<!-- ================= S1 · BOX-ART COVER ================= -->
+<section class="slide grain" data-name="1-cover">
+  <div class="grid-p" style="left:14px;top:14px;width:520px;height:346px"><img class="graded" src="assets/hand-ring.jpg" style="object-position:35% 50%"></div>
+  <div class="grid-p" style="left:548px;top:14px;width:250px;height:346px"><img class="graded" src="assets/ruby-halo.jpg"></div>
+  <div class="grid-p" style="left:812px;top:14px;width:254px;height:346px"><img class="graded" src="assets/pear-ring.jpg"></div>
+  <div class="titlebox" style="left:14px;top:374px;width:1052px;height:300px">
+    <img src="assets/logo-light.png" style="height:0">
+    <div class="t1">TAKSHILA</div>
+    <div class="t2">THE GOLD JOB</div>
+    <div class="t3">HAND-CRAFTED · ONE OF ONE · 15 DAYS</div>
+  </div>
+  <div class="grid-p" style="left:14px;top:688px;width:520px;height:648px"><img class="graded" src="assets/lariat-neck.jpg" style="object-position:50% 30%"></div>
+  <div class="grid-p" style="left:548px;top:688px;width:518px;height:300px"><img class="graded" src="assets/tennis.jpg" style="object-position:50% 60%"></div>
+  <div class="grid-p" style="left:548px;top:1002px;width:250px;height:334px"><img class="graded" src="assets/anklet.jpg" style="object-position:60% 50%"></div>
+  <div class="grid-p" style="left:812px;top:1002px;width:254px;height:334px"><img class="graded" src="assets/hand-roses.jpg"></div>
+  <div class="stars" style="top:30px;right:30px"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+  <div class="swipe" style="right:30px;bottom:30px">SWIPE TO PLAY <b>▶</b></div>
+</section>
+
+<!-- ================= S2 · MISSION START ================= -->
+<section class="slide grain" data-name="2-mission-the-pitch">
+  <img class="bg graded" src="assets/hand-ring.jpg" style="object-position:38% 50%">
+  <div class="grade-ov"></div><div class="vig"></div>
+  <div class="help">Describe your dream piece <em>in your own words.</em> Press <span class="key">A</span> to add a sketch or photo.</div>
+  <div class="cash">$0</div>
+  <div class="stars"><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+  <div class="abs" style="left:0;right:0;top:250px;text-align:center;z-index:30">
+    <div class="mlabel">Mission 01</div>
+    <div class="mtitle" style="font-size:210px;margin-top:10px">The Pitch</div>
+  </div>
+  <div class="sub"><span class="n1">Ana (Takshila jeweler):</span> So… what are we making?<br><span class="n2">You:</span> A vine bracelet with tiny marquise diamonds.</div>
+  <div class="radar"><div class="map"><div class="me"></div><div class="blip" style="left:212px;top:40px">T</div></div><div class="bars"><i></i><i style="--c:var(--ar);--v:60%"></i></div></div>
+  <img class="logo" src="assets/logo-light.png" alt="Takshila">
+</section>
+
+<!-- ================= S3 · SELECTION WHEEL ================= -->
+<section class="slide grain" data-name="3-choose-your-loot">
+  <img class="bg" src="assets/hand-roses.jpg" style="filter:blur(26px) brightness(.45) saturate(1.3);transform:scale(1.15)">
+  <div class="cash">$0</div>
+  <div class="abs" style="left:44px;top:60px;z-index:30">
+    <div class="mlabel">Mission 01</div>
+    <div class="mtitle" style="font-size:120px;margin-top:8px">Choose your<br><span style="color:var(--gold-hi)">loot</span></div>
+  </div>
+  <div class="wheel" id="wheel"><div class="hub"><b>RINGS</b><span>140+ DESIGNS</span><small>Or describe anything. We'll make it.</small></div></div>
+  <div class="abs" style="left:44px;bottom:44px;z-index:30;background:rgba(0,0,0,.78);padding:18px 24px;font:600 26px var(--M)"><span class="key">L</span> Browse 9 categories &nbsp; <span class="key">A</span> Select</div>
+  <img class="logo" src="assets/logo-light.png" alt="Takshila">
+</section>
+
+<!-- ================= S4 · CREW ================= -->
+<section class="slide grain" data-name="4-pick-your-crew">
+  <img class="bg" src="assets/pear-solitaire.jpg" style="filter:blur(24px) brightness(.4) saturate(1.3);transform:scale(1.15)">
+  <div class="cash">$0</div>
+  <div class="abs" style="left:44px;top:60px;z-index:30">
+    <div class="mlabel">Mission 02 · The plan</div>
+    <div class="mtitle" style="font-size:130px;margin-top:8px">Pick your crew</div>
+  </div>
+  <div class="crew" style="left:44px">
+    <div class="ph"><img class="graded" src="assets/pear-solitaire.jpg"><div class="role">PLANNER</div></div>
+    <h3>AI Design Studio</h3>
+    <p>Drafts your idea into a real design in moments.</p>
+    <div class="skill"><label>SPEED <span>100%</span></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    <div class="skill"><label>IMAGINATION <span>100%</span></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    <div class="cut">CUT <b>0%</b></div>
+  </div>
+  <div class="crew" style="left:382px">
+    <div class="ph"><img class="graded" src="assets/twist-hoops.jpg"><div class="role">SPECIALIST</div></div>
+    <h3>Master Jeweler</h3>
+    <p>Refines every detail with you, in 3D. Then crafts it by hand.</p>
+    <div class="skill"><label>CRAFT <span>100%</span></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    <div class="skill"><label>PRECISION <span>100%</span></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    <div class="cut">CUT <b>0%</b></div>
+  </div>
+  <div class="crew sel" style="left:720px">
+    <div class="ph"><img class="graded" src="assets/hand-ring2.jpg"><div class="role" style="background:var(--gold-hi);color:#000">THE BOSS</div></div>
+    <h3>You</h3>
+    <p>Final say on everything. Nothing moves without your yes.</p>
+    <div class="skill"><label>VISION <span>100%</span></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    <div class="skill"><label>DESIGN SKILLS NEEDED <span>0%</span></label><div class="seg"><i></i><i></i><i></i><i></i><i></i></div></div>
+    <div class="cut">CUT <b>100%</b></div>
+  </div>
+  <div class="abs" style="left:44px;bottom:44px;z-index:30;background:rgba(0,0,0,.78);padding:18px 24px;font:600 26px var(--M)"><span class="key">A</span> Confirm crew</div>
+  <img class="logo" src="assets/logo-light.png" alt="Takshila">
+</section>
+
+<!-- ================= S5 · INTERACTION MENU ================= -->
+<section class="slide grain" data-name="5-approve-design">
+  <img class="bg graded" src="assets/pear-solitaire.jpg" style="object-position:60% 50%">
+  <div class="grade-ov"></div><div class="vig"></div>
+  <div class="cash">$0</div>
+  <div class="stars"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+  <div class="imenu">
+    <div class="banner"><span>Takshila</span></div>
+    <div class="head"><span>YOUR 3D DESIGN</span><b>1 / 5</b></div>
+    <ul>
+      <li class="on">Approve &amp; craft it <span class="arw">✓</span></li>
+      <li>Change the band <span class="val">‹ 14K Gold ›</span></li>
+      <li>Change the stone <span class="val">‹ Pear ›</span></li>
+      <li>Change the size <span class="val">‹ 6 ›</span></li>
+      <li>Keep tweaking <span class="arw">›</span></li>
+    </ul>
+    <div class="desc"><em>Nothing gets made until you say yes.</em> Change the band, the stone or the size as many times as you like.</div>
+  </div>
+  <div class="abs" style="right:44px;bottom:250px;z-index:30;text-align:right">
+    <div class="mlabel">Mission 03</div>
+    <div class="mtitle" style="font-size:150px;margin-top:8px">Green<br><span style="color:var(--cash)">light</span></div>
+  </div>
+  <div class="radar"><div class="map"><div class="me"></div><div class="blip" style="left:150px;top:20px">T</div></div><div class="bars"><i></i><i style="--c:var(--ar);--v:80%"></i></div></div>
+  <img class="logo" src="assets/logo-light.png" alt="Takshila">
+</section>
+
+<!-- ================= S6 · PAUSE MENU STATS ================= -->
+<section class="slide grain" data-name="6-piece-stats">
+  <img class="bg" src="assets/twist-hoops.jpg" style="filter:blur(22px) brightness(.5) saturate(1.4);transform:scale(1.15)">
+  <div class="pm">
+    <div class="brand"><h2>Mission 04<br><span style="color:var(--gold-hi)">The Craft</span></h2><small>CREW: AI · JEWELER · YOU<br>STATUS: IN PROGRESS</small></div>
+    <div class="tabs"><div>MAP</div><div>BRIEF</div><div class="on">STATS</div><div>DELIVERY</div></div>
+    <div class="body">
+      <div class="left">
+        <div class="rowi">Skills</div>
+        <div class="rowi on">Your piece</div>
+        <div class="rowi">Certificates</div>
+        <div class="rowi">Updates</div>
+        <div class="shot"><img class="graded" src="assets/twist-hoops.jpg"></div>
+      </div>
+      <div class="right">
+        <div class="stat"><label>SOLID GOLD <b>14K / 18K</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+        <div class="stat"><label>HAND-SET &amp; POLISHED <b>100%</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+        <div class="stat"><label>HALLMARKED <b>✓</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+        <div class="stat"><label>GIA &amp; IGI CERTIFIED <b>✓</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+        <div class="stat"><label>INSURED DELIVERY <b>✓</b></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+        <div class="stat"><label>ETA <b>15 DAYS</b></label><div class="seg" style="--c:var(--ar)"><i class="f"></i><i class="f"></i><i class="f"></i><i></i><i></i></div></div>
+        <div class="note">Cast in solid gold, then set, engraved and polished <em>by hand.</em> Photo updates at every step, from wax model to final polish.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= S7 · HEIST COMPLETE ================= -->
+<section class="slide grain" data-name="7-heist-complete">
+  <img class="bg graded" src="assets/lariat-neck.jpg" style="object-position:50% 25%">
+  <div class="grade-ov"></div><div class="vig"></div>
+  <div class="abs" style="inset:0;background:rgba(0,0,0,.25)"></div>
+  <div class="cash">+ ONE OF ONE</div>
+  <div class="stars"><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+  <div class="band"><div class="big">Heist complete</div><div class="sm">THE GOLD JOB</div></div>
+  <div class="results">
+    <div><span>Loot</span><b>1 piece, made only for you</b></div>
+    <div><span>Time</span><b>15 days</b></div>
+    <div><span>Design skills needed</span><b>0</b></div>
+    <div><span>Your cut</span><b class="g">100%</b></div>
+  </div>
+  <div class="cta">START DESIGNING → LINK IN BIO</div>
+  <img class="logo" src="assets/logo-light.png" style="left:50%;right:auto;transform:translateX(-50%);bottom:40px" alt="Takshila">
+</section>
+
+<script>
+// selection wheel: 8 photo wedges, first one selected
+(function(){
+  const cats=[['RINGS','rings'],['EARRINGS','earrings'],['NECKLACES','necklaces'],['PENDANTS','pendants'],['BRACELETS','bracelets'],['ANKLETS','anklets'],['CHARMS','charms'],['CUFFLINKS','cufflinks']];
+  const W=document.getElementById('wheel'),C=450,R=450,gap=1.6;
+  cats.forEach(([label,f],i)=>{
+    const mid=-90+i*45, a0=mid-22.5+gap, a1=mid+22.5-gap, pts=[`${C}px ${C}px`];
+    for(let k=0;k<=12;k++){const a=(a0+(a1-a0)*k/12)*Math.PI/180;pts.push(`${(C+R*Math.cos(a)).toFixed(1)}px ${(C+R*Math.sin(a)).toFixed(1)}px`)}
+    const w=document.createElement('div');w.className='wedge';w.style.clipPath=`polygon(${pts.join(',')})`;
+    const m=mid*Math.PI/180, cx=C+300*Math.cos(m), cy=C+300*Math.sin(m);
+    const img=document.createElement('img');img.src=`assets/cat/${f}.jpg`;img.className='graded';img.style.left=(cx-165)+'px';img.style.top=(cy-165)+'px';
+    w.appendChild(img);
+    if(i){const d=document.createElement('div');d.className='dim';w.appendChild(d)}
+    const l=document.createElement('div');l.className='lbl';l.textContent=label;l.style.left=(C+365*Math.cos(m))+'px';l.style.top=(C+365*Math.sin(m))+'px';
+    if(!i){l.style.color='#000';l.style.textShadow='none';l.style.background='#F0C24B';l.style.padding='6px 10px'}
+    w.appendChild(l);W.insertBefore(w,W.firstChild);
+  });
+  // selected outline
+  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+  svg.setAttribute('viewBox','0 0 900 900');svg.style.cssText='position:absolute;inset:0;width:900px;height:900px;z-index:4;overflow:visible';
+  const a0=(-112.5+gap)*Math.PI/180,a1=(-67.5-gap)*Math.PI/180,r1=192,r2=452;
+  const p=document.createElementNS(ns,'path');
+  p.setAttribute('d',`M${C+r1*Math.cos(a0)} ${C+r1*Math.sin(a0)} L${C+r2*Math.cos(a0)} ${C+r2*Math.sin(a0)} A${r2} ${r2} 0 0 1 ${C+r2*Math.cos(a1)} ${C+r2*Math.sin(a1)} L${C+r1*Math.cos(a1)} ${C+r1*Math.sin(a1)} A${r1} ${r1} 0 0 0 ${C+r1*Math.cos(a0)} ${C+r1*Math.sin(a0)}Z`);
+  p.setAttribute('fill','none');p.setAttribute('stroke','#F0C24B');p.setAttribute('stroke-width','10');svg.appendChild(p);W.appendChild(svg);
+})();
+</script>
+</body>
+</html>
