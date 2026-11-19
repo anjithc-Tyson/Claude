@@ -8,7 +8,7 @@ import {Audio} from '@remotion/media';
 import wordsData from './data/gift_words.json';
 import {AFACAD, INSTRUMENT, ROUND, SANS} from './fonts';
 
-const FOREST = '#2E6B3F', CREAM = '#F3EDE2', INK = '#2E2A26';
+const FOREST = '#2E6B3F', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const M = (f: string) => staticFile(`media/${f}`);
 type W = {w: string; t: number; e: number};
@@ -247,8 +247,9 @@ const groups: W[][] = (() => {
 	}
 	return res;
 })();
-// elegant captions: Instrument Serif, sentence case, cream on a forest green box, key words in italic; the phrase
-// appears whole and the word being spoken gets a cream highlight with forest green text
+// elegant captions: Instrument Serif, sentence case, no box (white with a soft shadow on footage, ink on the cream app
+// screens), key words in italic; the phrase appears whole and only the word being spoken is highlighted in the
+// logo's forest green (#123726) with cream text
 const Captions: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
@@ -262,10 +263,10 @@ const Captions: React.FC = () => {
 	const top = ins ? (ins.kind === 'concepts' ? 1700 : ins.kind === 'send' ? 1560 : ins.kind === 'prompt' ? 1120 : 1480) : 1380;
 	const box = spring({frame: frame - Math.round((g[0].t - 0.08) * fps), fps, config: {damping: 16, mass: 0.5, stiffness: 200}});
 	const shown = g;   // the whole phrase at once, softly
+	const light = !!ins && ['prompt', 'concepts', 'send'].includes(ins.kind);
 	return (
 		<div style={{position: 'absolute', left: 60, right: 60, top, display: 'flex', justifyContent: 'center'}}>
-			<div style={{background: FOREST, borderRadius: 22, padding: '14px 34px 20px', boxShadow: '0 12px 34px rgba(0,0,0,0.18)', opacity: box, scale: 0.94 + 0.06 * box,
-				fontFamily: INSTRUMENT, fontSize: 84, lineHeight: 1.08, color: CREAM, textAlign: 'center', maxWidth: 900}}>
+			<div style={{opacity: box, translate: `0 ${(1 - box) * 12}px`, fontFamily: INSTRUMENT, fontSize: 88, lineHeight: 1.12, textAlign: 'center', maxWidth: 940}}>
 				{shown.map((w, i) => {
 					const sp = 1;
 					const isKey = KEY.test(clean(w.w));
@@ -276,9 +277,10 @@ const Captions: React.FC = () => {
 					const active = t >= w.t - 0.04 && t < Math.min(nextT - 0.02, Math.max(w.e, w.t + 0.18) + 0.25);
 					return (
 						<span key={i} style={{position: 'relative', display: 'inline-block', marginRight: i < shown.length - 1 ? '0.12em' : 0, opacity: sp, padding: '0 0.12em', borderRadius: 12,
-							background: active ? CREAM : 'transparent', color: active ? FOREST : CREAM, fontStyle: isKey ? 'italic' : 'normal'}}>
+							background: active ? LOGO : 'transparent', color: active ? CREAM : light ? INK : 'white', fontStyle: isKey ? 'italic' : 'normal',
+							textShadow: active || light ? 'none' : '0 2px 3px rgba(0,0,0,0.55), 0 0 22px rgba(0,0,0,0.45)'}}>
 							{word}
-							{strike && <span style={{position: 'absolute', left: -4, top: '56%', height: 5, width: `calc(${st * 100}% + ${8 * st}px)`, background: active ? FOREST : CREAM, borderRadius: 3}} />}
+							{strike && <span style={{position: 'absolute', left: -4, top: '56%', height: 5, width: `calc(${st * 100}% + ${8 * st}px)`, background: active ? CREAM : light ? INK : 'white', borderRadius: 3}} />}
 						</span>
 					);
 				})}
