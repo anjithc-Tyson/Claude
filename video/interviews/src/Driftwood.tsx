@@ -3,7 +3,7 @@
 // coastline -> the couple -> salt, air and sun -> driftwood -> driftwood curve becomes the sketch -> the weathered gold
 // band -> the ring on her hand -> "simple, quiet, beautiful". Stock: Mixkit (coast, couple, waves); driftwood, sketch,
 // ring and hand images generated (Figma). Captions as the holiday reel: Instrument Serif, no box, the spoken word
-// highlighted in the logo green. Music: Mixkit solo piano, sea ambience under the beach shots.
+// highlighted in the logo green. Music: La vie en rose (user's track), user's ocean waves under the beach shots.
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
@@ -108,7 +108,7 @@ const Trio: React.FC<{times: number[]; from: number}> = ({times, from}) => {
 	const t = from + frame / fps;
 	return (
 		<AbsoluteFill>
-			<Still src="ring.png" z0={1.0} z1={1.08} oy={900} />
+			<Still src="ring2.png" z0={1.0} z1={1.08} oy={900} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0) 40%)'}} />
 			<div style={{position: 'absolute', left: 0, right: 0, top: 230, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18}}>
 				{['simple', 'quiet', 'beautiful'].map((w, i) => {
@@ -123,12 +123,12 @@ const Trio: React.FC<{times: number[]; from: number}> = ({times, from}) => {
 const Insert: React.FC<{kind: Kind; len: number; from: number}> = ({kind, len, from}) => {
 	switch (kind) {
 	case 'coast': return <><Clip src="s44496.mp4" from={0.5} z0={1.0} z1={1.08} /><Label text="A QUIET STRETCH OF COASTLINE" /></>;
-	case 'couple': return <Clip src="s1224.mp4" from={7.5} z0={1.02} z1={1.1} />;
+	case 'couple': return <Still src="couple.png" z0={1.02} z1={1.14} ox={440} oy={1100} />;
 	case 'waves': return <Clip src="s44482.mp4" from={6.0} z0={1.0} z1={1.08} />;
 	case 'drift': return <Still src="driftwood.png" z0={1.02} z1={1.18} oy={1100} />;
 	case 'warmth': return <Clip src="s1925.mp4" from={8.0} z0={1.0} z1={1.08} />;
 	case 'curve': return <Curve len={len} />;
-	case 'band': return <><Still src="ring.png" z0={1.1} z1={1.42} ox={520} oy={720} /><Label text="SOFT, WEATHERED TEXTURES" /></>;
+	case 'band': return <><Still src="ring2.png" z0={1.08} z1={1.38} ox={540} oy={900} /><Label text="SOFT, WEATHERED TEXTURES" /></>;
 	case 'hand': return <Still src="hand.png" z0={1.05} z1={1.2} ox={480} oy={900} />;
 	case 'trio': return <Trio times={TRIO} from={from} />;
 	}
@@ -241,11 +241,12 @@ export const DriftwoodReel: React.FC = () => {
 			))}
 			<Captions />
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
-			<Audio name="music" src={M('music.mp3')}
-				volume={(fr) => interpolate(fr, [0, f(1), f(TAKE - 0.5), f(TAKE + 0.3), durationInFrames - f(1), durationInFrames], [0, 0.1, 0.1, 0.24, 0.24, 0], clamp)} />
+			{/* La vie en rose (user's track) from the top: piano intro under the hook, the trumpet melody enters at 0:18 with the coastline */}
+			<Audio name="music" src={M('lavie.mp3')}
+				volume={(fr) => interpolate(fr, [0, f(0.6), f(TAKE - 0.5), f(TAKE + 0.4), durationInFrames - f(1.2), durationInFrames], [0, 0.06, 0.06, 0.32, 0.32, 0], clamp)} />
 			{beach.map((s, i) => (
 				<Sequence key={`sea${i}`} name="sea" from={f(s.a)} durationInFrames={f(s.b) - f(s.a)} layout="none">
-					<Audio src={M('sea_long.wav')} trimBefore={f(s.a)} volume={(fr) => interpolate(fr, [0, 8, f(s.b - s.a) - 8, f(s.b - s.a)], [0, 0.07, 0.07, 0], clamp)} />
+					<Audio src={M('waves_user.mp3')} trimBefore={f((i * 3.1) % 9)} volume={(fr) => interpolate(fr, [0, 8, f(s.b - s.a) - 8, f(s.b - s.a)], [0, 0.09, 0.09, 0], clamp)} />
 				</Sequence>
 			))}
 			{sfx.map((h, i) => (
