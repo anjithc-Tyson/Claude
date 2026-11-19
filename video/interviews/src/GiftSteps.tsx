@@ -1,14 +1,14 @@
 // Holiday gift reel ("create something for them instead of just buying it"): her single take (media/p14/gift.mp4) with
 // a cut-in for every step she names. The app screens are built here (prompt typing, concept cards from the real rings
-// in media/p15), the stone / bench / ring shots are the user's own clips. Kinetic Montserrat 900 captions, keyword on a
-// forest-green block (ink on the cream app screens), forest/cream/ink palette.
+// in media/p15), the stone / bench / ring shots are the user's own clips.
+// Instrument Serif captions in a sap green box (key word italic), forest/sap/cream/ink palette.
 import React from 'react';
 import {AbsoluteFill, Img, interpolate, OffthreadVideo, Sequence, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {Audio} from '@remotion/media';
 import wordsData from './data/gift_words.json';
 import {AFACAD, INSTRUMENT, ROUND, SANS} from './fonts';
 
-const FOREST = '#2E6B3F', CREAM = '#F3EDE2', INK = '#2E2A26';
+const SAP = '#507D2A', CREAM = '#F3EDE2', INK = '#2E2A26';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const M = (f: string) => staticFile(`media/${f}`);
 type W = {w: string; t: number; e: number};
@@ -29,7 +29,6 @@ const INS: Ins[] = [
 	{a: 33.8, b: 38.7, kind: 'hand'},
 ];
 const insAt = (t: number) => INS.find((s) => t >= s.a && t < s.b);
-const LIGHT = new Set(['prompt', 'concepts', 'send']);
 
 const CONCEPTS = ['p15/oval_top.jpg', 'p15/art_top.jpg', 'p15/art_side_ang.jpg', 'p15/oval_side.jpg'];
 const PICK = 0;   // the oval: it is the ring that carries through to the screenshot, the send and the hand shot
@@ -50,7 +49,7 @@ const Her: React.FC = () => {
 const Wordmark: React.FC = () => (
 	<div style={{position: 'absolute', left: 70, right: 70, top: 150, display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
 		<div style={{fontFamily: INSTRUMENT, fontSize: 64, color: INK}}>Takshila</div>
-		<div style={{fontFamily: AFACAD, fontSize: 26, letterSpacing: '0.3em', color: FOREST}}>HOLIDAY EDIT</div>
+		<div style={{fontFamily: AFACAD, fontSize: 26, letterSpacing: '0.3em', color: SAP}}>HOLIDAY EDIT</div>
 	</div>
 );
 const PROMPT = [
@@ -70,7 +69,7 @@ const typed = (t: number) => {
 const Chip: React.FC<{label: string; at: number; t: number; fps: number; frame: number}> = ({label, at, t, fps, frame}) => {
 	if (t < at) return null;
 	const a = spring({frame: frame - Math.round(at * fps), fps, config: {damping: 11, mass: 0.4, stiffness: 220}});
-	return <span style={{display: 'inline-block', marginRight: 14, padding: '12px 26px', borderRadius: 999, background: FOREST, color: 'white', fontFamily: SANS, fontWeight: 600, fontSize: 30, scale: a}}>{label}</span>;
+	return <span style={{display: 'inline-block', marginRight: 14, padding: '12px 26px', borderRadius: 999, background: SAP, color: 'white', fontFamily: SANS, fontWeight: 600, fontSize: 30, scale: a}}>{label}</span>;
 };
 const PromptCard: React.FC<{t: number; generating?: boolean}> = ({t, generating}) => {
 	const frame = useCurrentFrame();
@@ -81,7 +80,7 @@ const PromptCard: React.FC<{t: number; generating?: boolean}> = ({t, generating}
 		<div style={{position: 'absolute', left: 60, right: 60, top: 270, background: 'white', borderRadius: 34, padding: '40px 44px', boxShadow: '0 18px 50px rgba(46,42,38,0.12)'}}>
 			<div style={{fontFamily: AFACAD, fontSize: 24, letterSpacing: '0.28em', color: '#8A7F72'}}>DESCRIBE THE ONE YOU LOVE</div>
 			<div style={{marginTop: 18, minHeight: 150, fontFamily: SANS, fontSize: 46, lineHeight: 1.25, color: INK}}>
-				{txt}<span style={{opacity: caret && !generating ? 1 : 0, color: FOREST}}>|</span>
+				{txt}<span style={{opacity: caret && !generating ? 1 : 0, color: SAP}}>|</span>
 			</div>
 			<div style={{marginTop: 20, minHeight: 60}}>
 				<Chip label="Memory" at={8.56} t={t} fps={fps} frame={frame} />
@@ -89,7 +88,7 @@ const PromptCard: React.FC<{t: number; generating?: boolean}> = ({t, generating}
 				<Chip label="Stone" at={11.24} t={t} fps={fps} frame={frame} />
 			</div>
 			<div style={{marginTop: 28, display: 'flex', justifyContent: 'flex-end'}}>
-				<span style={{padding: '18px 40px', borderRadius: 16, background: generating ? INK : FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 30, letterSpacing: '0.04em'}}>
+				<span style={{padding: '18px 40px', borderRadius: 16, background: generating ? INK : SAP, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 30, letterSpacing: '0.04em'}}>
 					{generating ? 'CREATING…' : 'CREATE'}
 				</span>
 			</div>
@@ -122,7 +121,7 @@ const ConceptScreen: React.FC<{from: number}> = ({from}) => {
 			<div style={{position: 'absolute', left: 60, right: 60, top: 270, fontFamily: AFACAD, fontSize: 30, letterSpacing: '0.24em', color: '#8A7F72'}}>
 				{loading ? 'CREATING CONCEPTS…' : `4 CONCEPTS · ${Math.min(t - 12.95, 2.4).toFixed(1)}s`}
 			</div>
-			{loading && <div style={{position: 'absolute', left: 60, top: 330, height: 8, width: 960 * Math.min(1, (t - from) / (T0 - from)), background: FOREST, borderRadius: 4}} />}
+			{loading && <div style={{position: 'absolute', left: 60, top: 330, height: 8, width: 960 * Math.min(1, (t - from) / (T0 - from)), background: SAP, borderRadius: 4}} />}
 			{CONCEPTS.map((src, i) => {
 				const at = T0 + i * 0.32;
 				if (t < at) return null;
@@ -133,7 +132,7 @@ const ConceptScreen: React.FC<{from: number}> = ({from}) => {
 				const s = picked ? 1 + 0.06 * pickP : 1;
 				return (
 					<div key={src} style={{position: 'absolute', left: 60 + col * 490, top: 380 + row * 640, width: 470, height: 620, borderRadius: 28, overflow: 'hidden', background: 'white',
-						scale: a * s, opacity: dim, zIndex: picked ? 2 : 1, boxShadow: picked && pickP > 0.01 ? `0 0 0 ${10 * pickP}px ${FOREST}, 0 24px 60px rgba(0,0,0,0.25)` : '0 12px 34px rgba(46,42,38,0.14)'}}>
+						scale: a * s, opacity: dim, zIndex: picked ? 2 : 1, boxShadow: picked && pickP > 0.01 ? `0 0 0 ${10 * pickP}px ${SAP}, 0 24px 60px rgba(0,0,0,0.25)` : '0 12px 34px rgba(46,42,38,0.14)'}}>
 						<Img src={M(src)} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
 						<div style={{position: 'absolute', left: 20, bottom: 18, padding: '8px 18px', borderRadius: 999, background: 'rgba(255,255,255,0.9)', fontFamily: AFACAD, fontSize: 22, letterSpacing: '0.18em', color: INK}}>CONCEPT {i + 1}</div>
 					</div>
@@ -172,13 +171,13 @@ const SendScreen: React.FC = () => {
 	return (
 		<AbsoluteFill style={{background: CREAM}}>
 			<div style={{position: 'absolute', left: 0, right: 0, top: 0, height: 250, background: 'white', borderBottom: '1px solid #E6DFD3', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 28}}>
-				<div style={{width: 96, height: 96, borderRadius: 48, background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 42, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>M</div>
+				<div style={{width: 96, height: 96, borderRadius: 48, background: SAP, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 42, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>M</div>
 				<div style={{marginTop: 10, fontFamily: SANS, fontWeight: 600, fontSize: 30, color: INK}}>Maya</div>
 			</div>
 			<div style={{position: 'absolute', right: 50, top: 340, width: 600, scale: a, transformOrigin: 'right bottom', borderRadius: 34, overflow: 'hidden', boxShadow: '0 12px 30px rgba(0,0,0,0.12)'}}>
 				<Img src={M(CONCEPTS[PICK])} style={{width: 600, height: 720, objectFit: 'cover', display: 'block'}} />
 			</div>
-			<div style={{position: 'absolute', right: 50, top: 1090, maxWidth: 640, padding: '26px 36px', borderRadius: 36, borderBottomRightRadius: 10, background: FOREST, color: 'white', fontFamily: SANS, fontSize: 40, lineHeight: 1.25, scale: b, transformOrigin: 'right bottom'}}>
+			<div style={{position: 'absolute', right: 50, top: 1090, maxWidth: 640, padding: '26px 36px', borderRadius: 36, borderBottomRightRadius: 10, background: SAP, color: 'white', fontFamily: SANS, fontSize: 40, lineHeight: 1.25, scale: b, transformOrigin: 'right bottom'}}>
 				made this thinking of us. design it with me?
 			</div>
 			<div style={{position: 'absolute', right: 60, top: 1250, fontFamily: SANS, fontSize: 24, color: '#8A7F72', opacity: d}}>Delivered</div>
@@ -203,7 +202,7 @@ const Tag: React.FC<{text: string}> = ({text}) => {
 	const a = spring({frame: frame - 3, fps, config: {damping: 14, mass: 0.5}});
 	return (
 		<div style={{position: 'absolute', left: 60, top: 170, opacity: a, translate: `${(1 - a) * -40}px 0`, padding: '12px 26px', borderRadius: 10, background: 'rgba(243,237,226,0.94)',
-			fontFamily: AFACAD, fontSize: 28, letterSpacing: '0.26em', color: FOREST}}>{text}</div>
+			fontFamily: AFACAD, fontSize: 28, letterSpacing: '0.26em', color: SAP}}>{text}</div>
 	);
 };
 
@@ -232,11 +231,19 @@ const groups: W[][] = (() => {
 	WORDS.forEach((w) => {
 		if (cur.length && w.t - cur[cur.length - 1].e > 0.6) { res.push(cur); cur = []; }
 		cur.push(w);
-		if (/[.,!?]$/.test(w.w) || cur.length === 3) { res.push(cur); cur = []; }
+		const len = cur.map((x) => x.w).join(' ').length;
+		if (/[.,!?]$/.test(w.w) || cur.length === 6 || len > 30) { res.push(cur); cur = []; }
 	});
 	if (cur.length) res.push(cur);
+	// never leave a single word on its own when it continues the previous phrase
+	for (let i = res.length - 1; i > 0; i--) {
+		const prev = res[i - 1];
+		if (res[i].length === 1 && !/[.,!?]$/.test(prev[prev.length - 1].w) && res[i][0].t - prev[prev.length - 1].e < 0.6) { prev.push(...res[i]); res.splice(i, 1); }
+	}
 	return res;
 })();
+// elegant captions: Instrument Serif, sentence case, cream on a sap green box; the key word in italic; words rise in
+// as a whole phrase with the box (soft fade + settle)
 const Captions: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
@@ -247,25 +254,28 @@ const Captions: React.FC = () => {
 	const gi = groups.findIndex((g, i) => t >= g[0].t - 0.05 && t < Math.min(g[g.length - 1].e + 0.35, groups[i + 1]?.[0].t ?? 1e9));
 	if (gi < 0) return null;
 	const g = groups[gi];
-	const light = ins && LIGHT.has(ins.kind);
-	const top = ins ? (ins.kind === 'concepts' ? 1690 : ins.kind === 'send' ? 1420 : ins.kind === 'prompt' ? 1100 : 1430) : 1300;
+	const top = ins ? (ins.kind === 'concepts' ? 1700 : ins.kind === 'send' ? 1440 : ins.kind === 'prompt' ? 1120 : 1480) : 1380;
+	const box = spring({frame: frame - Math.round((g[0].t - 0.08) * fps), fps, config: {damping: 16, mass: 0.5, stiffness: 200}});
+	const shown = g;   // the whole phrase at once, softly
 	return (
-		<div style={{position: 'absolute', left: 50, right: 50, top, fontFamily: ROUND, fontWeight: 900, fontSize: 104, lineHeight: 1.0, letterSpacing: '-0.02em', textTransform: 'uppercase',
-			color: light ? INK : 'white', textShadow: light ? 'none' : '0 5px 22px rgba(0,0,0,0.45)'}}>
-			{g.map((w, i) => {
-				const sp = spring({frame: frame - Math.round((w.t - 0.05) * fps), fps, config: {damping: 13, mass: 0.45, stiffness: 220}});
-				const shown = t >= w.t - 0.05;
-				const isKey = KEY.test(clean(w.w));
-				const strike = /^finished$/i.test(clean(w.w));
-				const st = interpolate(t, [w.t + 0.25, w.t + 0.5], [0, 1], clamp);
-				return (
-					<span key={i} style={{position: 'relative', display: 'inline-block', marginRight: '0.2em', marginBottom: 8, opacity: shown ? 1 : 0, scale: shown ? 1.3 - 0.3 * sp : 1, transformOrigin: 'left bottom',
-						background: isKey ? FOREST : undefined, color: isKey ? 'white' : undefined, padding: isKey ? '0 0.14em' : undefined, borderRadius: isKey ? 10 : undefined, textShadow: isKey ? 'none' : undefined}}>
-						{clean(w.w)}
-						{strike && <span style={{position: 'absolute', left: -8, top: '52%', height: 12, width: `calc(${st * 100}% + ${16 * st}px)`, background: '#E8E1D4', rotate: '-4deg', borderRadius: 6}} />}
-					</span>
-				);
-			})}
+		<div style={{position: 'absolute', left: 60, right: 60, top, display: 'flex', justifyContent: 'center'}}>
+			<div style={{background: SAP, borderRadius: 22, padding: '14px 34px 20px', boxShadow: '0 12px 34px rgba(0,0,0,0.18)', opacity: box, scale: 0.94 + 0.06 * box,
+				fontFamily: INSTRUMENT, fontSize: 84, lineHeight: 1.08, color: CREAM, textAlign: 'center', maxWidth: 900}}>
+				{shown.map((w, i) => {
+					const sp = 1;
+					const isKey = KEY.test(clean(w.w));
+					const strike = /^finished$/i.test(clean(w.w));
+					const st = interpolate(t, [w.t + 0.25, w.t + 0.5], [0, 1], clamp);
+					const word = clean(w.w).replace(/^TAKSHILA\.CO$/, 'takshila.co');
+					return (
+						<span key={i} style={{position: 'relative', display: 'inline-block', marginRight: i < shown.length - 1 ? '0.24em' : 0, opacity: sp, translate: `0 ${(1 - sp) * 14}px`,
+							fontStyle: isKey ? 'italic' : 'normal'}}>
+							{word}
+							{strike && <span style={{position: 'absolute', left: -4, top: '56%', height: 5, width: `calc(${st * 100}% + ${8 * st}px)`, background: CREAM, borderRadius: 3}} />}
+						</span>
+					);
+				})}
+			</div>
 		</div>
 	);
 };
@@ -278,9 +288,9 @@ const SendPill: React.FC = () => {
 	const tap = spring({frame: frame - 34, fps, config: {damping: 12, mass: 0.4}});
 	return (
 		<div style={{position: 'absolute', left: 540, top: 560, translate: '-50% 0', scale: a * (1 - 0.08 * Math.sin(Math.min(1, tap) * Math.PI)), display: 'flex', alignItems: 'center', gap: 22,
-			padding: '26px 52px', borderRadius: 999, background: tap > 0.5 ? FOREST : 'white', color: tap > 0.5 ? 'white' : FOREST, boxShadow: '0 14px 40px rgba(0,0,0,0.25)', fontFamily: ROUND, fontWeight: 900, fontSize: 52}}>
+			padding: '26px 52px', borderRadius: 999, background: tap > 0.5 ? SAP : CREAM, color: tap > 0.5 ? CREAM : SAP, boxShadow: '0 14px 40px rgba(0,0,0,0.25)', fontFamily: INSTRUMENT, fontSize: 64}}>
 			<svg width={52} height={52} viewBox="0 0 24 24"><path d="M3 11.5 21 3l-8.5 18-2-7.5L3 11.5z" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinejoin="round" /></svg>
-			{tap > 0.5 ? 'SENT' : 'SEND THIS'}
+			{tap > 0.5 ? 'Sent' : <i>Send this</i>}
 		</div>
 	);
 };
@@ -288,19 +298,21 @@ const SendPill: React.FC = () => {
 const EndCard: React.FC = () => {
 	const frame = useCurrentFrame();
 	const {fps} = useVideoConfig();
-	const s = (o: number) => spring({frame: frame - o, fps, config: {damping: 12, mass: 0.5, stiffness: 200}});
-	const lines = [['DON’T BUY', INK], ['THE GIFT.', INK], ['CREATE IT.', FOREST]] as const;
+	const s = (o: number) => spring({frame: frame - o, fps, config: {damping: 16, mass: 0.6, stiffness: 160}});
 	return (
-		<AbsoluteFill style={{background: CREAM, padding: '0 70px', justifyContent: 'center'}}>
-			<div style={{fontFamily: ROUND, fontWeight: 900, fontSize: 150, lineHeight: 0.92, letterSpacing: '-0.03em'}}>
-				{lines.map(([w, c], i) => <div key={w} style={{color: c, opacity: s(i * 4) > 0.02 ? 1 : 0, scale: 1.3 - 0.3 * s(i * 4), transformOrigin: 'left bottom'}}>{w}</div>)}
+		<AbsoluteFill style={{background: CREAM, padding: '0 80px', justifyContent: 'center', alignItems: 'center', textAlign: 'center'}}>
+			<div style={{fontFamily: AFACAD, fontSize: 30, letterSpacing: '0.34em', color: SAP, opacity: s(0)}}>THIS HOLIDAY</div>
+			<div style={{marginTop: 30, fontFamily: INSTRUMENT, fontSize: 132, lineHeight: 1.0, color: INK}}>
+				<div style={{opacity: s(4), translate: `0 ${(1 - s(4)) * 24}px`}}>Don’t buy the gift.</div>
+				<div style={{opacity: s(10), translate: `0 ${(1 - s(10)) * 24}px`, fontStyle: 'italic', color: SAP}}>Create it.</div>
 			</div>
-			<div style={{marginTop: 60, opacity: s(16), translate: `0 ${(1 - s(16)) * 30}px`}}>
-				<span style={{display: 'inline-block', background: FOREST, color: 'white', fontFamily: ROUND, fontWeight: 800, fontSize: 42, padding: '18px 40px', borderRadius: 14}}>DESIGN IT · TAKSHILA.CO</span>
+			<div style={{marginTop: 64, opacity: s(18), translate: `0 ${(1 - s(18)) * 24}px`}}>
+				<span style={{display: 'inline-block', background: SAP, color: CREAM, fontFamily: AFACAD, fontSize: 34, letterSpacing: '0.24em', padding: '20px 44px', borderRadius: 999}}>DESIGN IT · TAKSHILA.CO</span>
 			</div>
 		</AbsoluteFill>
 	);
 };
+
 
 export const GiftStepsReel: React.FC = () => {
 	const {fps} = useVideoConfig();
