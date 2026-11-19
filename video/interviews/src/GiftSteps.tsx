@@ -324,7 +324,7 @@ const EndCard: React.FC = () => {
 
 
 export const GiftStepsReel: React.FC = () => {
-	const {fps} = useVideoConfig();
+	const {fps, durationInFrames} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
 	const typing = [8.14, 9.62, 10.85];
 	const sfx: {t: number; f: string; v: number; len?: number}[] = [
@@ -334,12 +334,14 @@ export const GiftStepsReel: React.FC = () => {
 		{t: 13.0, f: 'click', v: 0.3},
 		...[0, 1, 2, 3].map((i) => ({t: 13.5 + i * 0.32, f: 'pop', v: 0.18})),
 		{t: 16.45, f: 'click', v: 0.3},
-		{t: 19.24, f: 'click', v: 0.5},
-		{t: 20.47, f: 'whoosh', v: 0.18},
-		{t: 21.0, f: 'ding', v: 0.22},
+		{t: 19.22, f: 'sms:shutter', v: 0.6},                 // screenshot
+		{t: 20.45, f: 'whoosh', v: 0.14},                     // message goes out
+		{t: 20.52, f: 'sms:bubble', v: 0.34},                 // photo bubble
+		{t: 20.92, f: 'sms:bubble', v: 0.3},                  // text bubble
+		{t: 21.3, f: 'sms:received', v: 0.3},                // delivered
 		{t: 29.7, f: 'glock', v: 0.16},
-		{t: 38.88, f: 'pop', v: 0.22},
-		{t: 40.0, f: 'click', v: 0.3},
+		{t: 38.88, f: 'sms:bubble', v: 0.3},                  // send pill pops
+		{t: 39.95, f: 'sms:received', v: 0.34},               // tapped: sent
 		{t: TAKE - 0.1, f: 'whoosh', v: 0.18},
 		{t: TAKE + 0.6, f: 'pop', v: 0.2},
 	];
@@ -355,9 +357,12 @@ export const GiftStepsReel: React.FC = () => {
 			<Sequence name="voice" durationInFrames={f(TAKE)} layout="none">
 				<Audio src={M('p14/gift.mp4')} volume={(fr) => interpolate(fr, [0, 3, f(TAKE) - 6, f(TAKE)], [0, 1, 1, 0], clamp)} />
 			</Sequence>
+			{/* user's track (instrumental) from the top: the beat drops at 28.13 s, on "So the gift…" */}
+			<Audio name="music" src={M('p16/music.mp3')}
+				volume={(fr) => interpolate(fr, [0, f(0.5), f(27.9), f(28.4), f(TAKE - 0.3), f(TAKE + 0.4), durationInFrames - f(0.9), durationInFrames], [0, 0.085, 0.085, 0.055, 0.055, 0.2, 0.2, 0], clamp)} />
 			{sfx.map((h, i) => (
 				<Sequence key={`s${i}`} name={`sfx ${h.f}`} from={Math.max(0, f(h.t))} durationInFrames={f(h.len ?? 2.2)} layout="none">
-					<Audio src={staticFile(`sfx/reel/${h.f}.wav`)} volume={h.v} />
+					<Audio src={staticFile(h.f.startsWith('sms:') ? `sfx/sms/${h.f.slice(4)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
 		</AbsoluteFill>
