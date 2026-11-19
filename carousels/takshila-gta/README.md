@@ -39,7 +39,14 @@ Pricedown (Typodermic) is free for commercial **static** work like these images,
 
 ## Wanted Posters (5 slides) → `export/wanted-posters/`
 
-One GTA-style wanted poster per piece, with "WANTED" in Pricedown, five stars, the price as the reward, and the description and "known for" line printed on it:
-Diamond Drop Lariat $680 · Pear Bypass Ring $620 · Classic Tennis Bracelet $780 · Ruby Halo Ring $2,450 · Peridot Halo Pendant $390.
+Five original, heist-themed jewellery designs (AI-generated concepts in `assets/gen/d-*.jpg`). Each gets a GTA-style wanted poster with "WANTED" in Pricedown, five stars, the price as the reward, and the description and "known for" line:
 
-The jewellery on these posters is AI-generated (`assets/gen/j-*.jpg`) from each product's description. Check each one against the real piece before posting it with a price.
+| Design | Details | Reward (placeholder) |
+|---|---|---|
+| Five-Star Necklace | 14K gold · five pavé-diamond stars | $1,280 |
+| Vault Dial Ring | 18K gold signet · sapphire · diamonds | $1,650 |
+| Getaway Key Pendant | 14K gold · ruby · pavé diamonds | $890 |
+| Cuffed Link Bracelet | 14K gold curb chain · diamond cuffs | $1,450 |
+| Gold Bar Studs | 18K gold bullion · diamond accent | $420 |
+
+These pieces aren't in the catalogue yet. The prices are placeholders, so set real made-to-order prices before posting.
