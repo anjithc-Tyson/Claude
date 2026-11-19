@@ -8,7 +8,7 @@ import {Audio} from '@remotion/media';
 import wordsData from './data/gift_words.json';
 import {AFACAD, INSTRUMENT, ROUND, SANS} from './fonts';
 
-const FOREST = '#2E6B3F', TERRA = '#E2725B', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
+const FOREST = '#2E6B3F', TERRA = '#B8553A', LOGO = '#123726', CREAM = '#F3EDE2', INK = '#2E2A26';
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;
 const M = (f: string) => staticFile(`media/${f}`);
 type W = {w: string; t: number; e: number};
