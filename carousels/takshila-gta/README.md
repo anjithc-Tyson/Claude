@@ -36,3 +36,10 @@ Pricedown (Typodermic) is free for commercial **static** work like these images,
 ## Art
 
 `assets/gen/` holds 11 AI-generated illustrations in a crime-game loading-screen style, made with Figma's image generator (Figma file: "Takshila GTA carousel art" in the Filament team). They're used for scenes, characters and backgrounds. Priced products on the Most Wanted slides use real product photos, so the jewellery shown is what's actually sold.
+
+## Wanted Posters (5 slides) → `export/wanted-posters/`
+
+One GTA-style wanted poster per piece, with "WANTED" in Pricedown, five stars, the price as the reward, and the description and "known for" line printed on it:
+Diamond Drop Lariat $680 · Pear Bypass Ring $620 · Classic Tennis Bracelet $780 · Ruby Halo Ring $2,450 · Peridot Halo Pendant $390.
+
+The jewellery on these posters is AI-generated (`assets/gen/j-*.jpg`) from each product's description. Check each one against the real piece before posting it with a price.
