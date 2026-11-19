@@ -22,6 +22,7 @@ import {Day17KineticReel, k17Total} from './Day17Kinetic';
 import {StreetSplitReel, splitTotal} from './StreetSplit';
 import {GiftStepsReel, giftTotal} from './GiftSteps';
 import {DriftwoodReel, driftTotal} from './Driftwood';
+import {PinBoardReel, pinTotal} from './PinBoard';
 
 const S = street as Data;
 const J = jewel as Data;
@@ -50,6 +51,7 @@ export const RemotionRoot: React.FC = () => (
 		<Composition id="D17S2" component={Day17Sample} defaultProps={{n: 2}} durationInFrames={1} fps={30} width={1080} height={1920} />
 		<Composition id="D17S3" component={Day17Sample} defaultProps={{n: 3}} durationInFrames={1} fps={30} width={1080} height={1920} />
 		<Composition id="D17S4" component={Day17Sample} defaultProps={{n: 4}} durationInFrames={1} fps={30} width={1080} height={1920} />
+		<Composition id="PinBoard" component={PinBoardReel} durationInFrames={Math.round(pinTotal() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="Driftwood" component={DriftwoodReel} durationInFrames={Math.round(driftTotal() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="GiftSteps" component={GiftStepsReel} durationInFrames={Math.round(giftTotal() * 30)} fps={30} width={1080} height={1920} />
 		<Composition id="StreetSplit" component={StreetSplitReel} durationInFrames={Math.round(splitTotal() * 30)} fps={30} width={1080} height={1920} />
