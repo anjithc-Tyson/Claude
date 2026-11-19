@@ -62,18 +62,18 @@ const Clip: React.FC<{src: string; from: number; z0?: number; z1?: number; oy?: 
 	const {fps, durationInFrames} = useVideoConfig();
 	const p = frame / Math.max(1, durationInFrames);
 	return (
-		<AbsoluteFill style={{overflow: 'hidden', background: '#000', opacity: interpolate(frame, [0, 6], [0, 1], clamp)}}>
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000'}}>
 			<OffthreadVideo src={M(src)} muted trimBefore={Math.round(from * fps)} style={{width: 1080, height: 1920, scale: z0 + (z1 - z0) * p, transformOrigin: `540px ${oy}px`, filter: 'contrast(1.04) saturate(1.02) sepia(0.06)'}} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 58%, rgba(0,0,0,0.42) 80%, rgba(0,0,0,0.5))'}} />
 		</AbsoluteFill>
 	);
 };
-const Still: React.FC<{src: string; z0?: number; z1?: number; ox?: number; oy?: number; fadeIn?: number}> = ({src, z0 = 1.04, z1 = 1.16, ox = 540, oy = 960, fadeIn = 6}) => {
+const Still: React.FC<{src: string; z0?: number; z1?: number; ox?: number; oy?: number; fadeIn?: number}> = ({src, z0 = 1.04, z1 = 1.16, ox = 540, oy = 960, fadeIn = 0}) => {
 	const frame = useCurrentFrame();
 	const {durationInFrames} = useVideoConfig();
 	const p = frame / Math.max(1, durationInFrames);
 	return (
-		<AbsoluteFill style={{overflow: 'hidden', background: '#000', opacity: interpolate(frame, [0, fadeIn], [0, 1], clamp)}}>
+		<AbsoluteFill style={{overflow: 'hidden', background: '#000', opacity: fadeIn ? interpolate(frame, [0, fadeIn], [0, 1], clamp) : 1}}>
 			<Img src={M(src)} style={{width: 1080, height: 1920, objectFit: 'cover', scale: z0 + (z1 - z0) * p, transformOrigin: `${ox}px ${oy}px`}} />
 			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 58%, rgba(0,0,0,0.42) 80%, rgba(0,0,0,0.5))'}} />
 		</AbsoluteFill>
@@ -219,14 +219,41 @@ const EndCard: React.FC = () => {
 	);
 };
 
+// film burn transition: warm light-leak blobs sweep across (screen blend), flare to a near-white flash on the cut,
+// then burn out; the user's film-camera clack lands on the cut
+const BURN = 0.9, BURN_AT = 0.4;
+const FilmBurn: React.FC<{seed: number}> = ({seed}) => {
+	const frame = useCurrentFrame();
+	const {fps} = useVideoConfig();
+	const t = frame / fps;
+	const e = t < BURN_AT ? Math.pow(t / BURN_AT, 1.6) : Math.pow(Math.max(0, 1 - (t - BURN_AT) / (BURN - BURN_AT)), 1.3);
+	const flick = 0.88 + 0.12 * Math.sin(frame * 2.7 + seed);
+	const dir = seed % 2 ? -1 : 1;
+	const x1 = 540 + dir * interpolate(t, [0, BURN], [-900, 700]);
+	const x2 = 540 - dir * interpolate(t, [0, BURN], [-500, 900]);
+	const flash = interpolate(t, [BURN_AT - 0.08, BURN_AT, BURN_AT + 0.12], [0, 0.85, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+	return (
+		<AbsoluteFill style={{pointerEvents: 'none'}}>
+			<AbsoluteFill style={{mixBlendMode: 'screen', opacity: e * flick,
+				background: `radial-gradient(900px 1300px at ${x1}px ${700 + 300 * Math.sin(seed)}px, rgba(255,150,40,0.95), rgba(255,90,20,0.6) 35%, rgba(200,40,10,0) 70%)`}} />
+			<AbsoluteFill style={{mixBlendMode: 'screen', opacity: e * 0.85,
+				background: `radial-gradient(700px 1000px at ${x2}px ${1300 - 200 * Math.cos(seed)}px, rgba(255,60,40,0.85), rgba(190,20,30,0.45) 40%, rgba(120,0,20,0) 72%)`}} />
+			<AbsoluteFill style={{mixBlendMode: 'screen', opacity: e * 0.6, background: 'linear-gradient(90deg, rgba(255,200,120,0.7), rgba(255,120,40,0) 30%, rgba(255,120,40,0) 70%, rgba(255,170,90,0.6))'}} />
+			<AbsoluteFill style={{background: 'rgb(255,238,210)', opacity: flash}} />
+		</AbsoluteFill>
+	);
+};
+
 export const DriftwoodReel: React.FC = () => {
 	const {fps, durationInFrames} = useVideoConfig();
 	const f = (t: number) => Math.round(t * fps);
 	const beach = INS.filter((s) => ['coast', 'couple', 'waves', 'drift', 'warmth'].includes(s.kind));
+	const at = (k: Kind, end = false) => { const x = INS.find((s) => s.kind === k)!; return end ? x.b : x.a; };
+	// film burns on the story transitions (her <-> the story, the sketch moment, the hand, the end card)
+	const BURNS = [at('coast'), at('drift', true), at('warmth'), at('curve'), at('hand'), at('trio', true), TAKE];
 	const sfx: {t: number; f: string; v: number}[] = [
-		...INS.map((s) => ({t: s.a - 0.15, f: 'whoosh', v: 0.07})),
-		{t: TAKE - 0.1, f: 'whoosh', v: 0.1},
-		{t: TAKE + 0.5, f: 'glock', v: 0.12},
+		...BURNS.map((t) => ({t: t - 0.13, f: 'film:burn', v: 0.32})),   // the clack sits 0.13 s into the trimmed sound
+		{t: TAKE + 0.5, f: 'glock', v: 0.08},
 	];
 	return (
 		<AbsoluteFill style={{background: '#000'}}>
@@ -239,19 +266,20 @@ export const DriftwoodReel: React.FC = () => {
 			{INS.map((s, i) => (
 				<Sequence key={`i${i}`} name={`insert ${s.kind}`} from={f(s.a)} durationInFrames={f(s.b) - f(s.a)}><Insert kind={s.kind} len={s.b - s.a} from={s.a} /></Sequence>
 			))}
+			{BURNS.map((t, i) => <Sequence key={`b${i}`} name="film burn" from={f(t - BURN_AT)} durationInFrames={f(BURN)}><FilmBurn seed={i * 1.7 + 0.4} /></Sequence>)}
 			<Captions />
 			<Sequence name="end card" from={f(TAKE)}><EndCard /></Sequence>
 			{/* La vie en rose (user's track) from the top: piano intro under the hook, the trumpet melody enters at 0:18 with the coastline */}
 			<Audio name="music" src={M('lavie.mp3')}
-				volume={(fr) => interpolate(fr, [0, f(0.6), f(TAKE - 0.5), f(TAKE + 0.4), durationInFrames - f(1.2), durationInFrames], [0, 0.06, 0.06, 0.32, 0.32, 0], clamp)} />
+				volume={(fr) => interpolate(fr, [0, f(0.6), f(TAKE - 0.5), f(TAKE + 0.4), durationInFrames - f(1.2), durationInFrames], [0, 0.045, 0.045, 0.26, 0.26, 0], clamp)} />
 			{beach.map((s, i) => (
 				<Sequence key={`sea${i}`} name="sea" from={f(s.a)} durationInFrames={f(s.b) - f(s.a)} layout="none">
-					<Audio src={M('waves_user.mp3')} trimBefore={f((i * 3.1) % 9)} volume={(fr) => interpolate(fr, [0, 8, f(s.b - s.a) - 8, f(s.b - s.a)], [0, 0.09, 0.09, 0], clamp)} />
+					<Audio src={M('waves_user.mp3')} trimBefore={f((i * 3.1) % 9)} volume={(fr) => interpolate(fr, [0, 8, f(s.b - s.a) - 8, f(s.b - s.a)], [0, 0.03, 0.03, 0], clamp)} />
 				</Sequence>
 			))}
 			{sfx.map((h, i) => (
 				<Sequence key={`s${i}`} name={`sfx ${h.f}`} from={Math.max(0, f(h.t))} durationInFrames={f(2.2)} layout="none">
-					<Audio src={staticFile(`sfx/reel/${h.f}.wav`)} volume={h.v} />
+					<Audio src={staticFile(h.f.startsWith('film:') ? `sfx/film/${h.f.slice(5)}.wav` : `sfx/reel/${h.f}.wav`)} volume={h.v} />
 				</Sequence>
 			))}
 		</AbsoluteFill>
