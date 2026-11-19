@@ -1,4 +1,4 @@
-# Takshila — "The Gold Job" (GTA V-style carousel)
+# Takshila — GTA-style carousels
 
 Seven 1080×1350 Instagram slides styled like an open-world crime game UI. Display type is Pricedown, in GTA's HUD colours (cash green, mission-passed gold, white text with heavy black outlines). Uses no game logo, title or characters.
 
@@ -9,6 +9,17 @@ Seven 1080×1350 Instagram slides styled like an open-world crime game UI. Displ
 5. Green light: interaction menu where nothing gets made until you say yes
 6. Mission 04 · The Craft: pause-menu stats (solid gold, hallmarked, GIA & IGI, 15 days)
 7. Mission passed: results screen + CTA
+
+## Most Wanted (6 slides) → `export/most-wanted/`
+
+1. Cover: five flashing wanted stars, 4 mugshots, total bounty $4,530
+2. Suspect 01 · Diamond Drop Lariat ($680)
+3. Suspect 02 · Pear Bypass Ring ($620)
+4. Suspect 03 · Classic Tennis Bracelet ($780)
+5. Suspect 04 · Ruby Halo Ring ($2,450)
+6. Wanted level cleared: "lose the heat, go one of one" + design-your-own CTA
+
+The Gold Job slides export to `export/gold-job/`.
 
 ```bash
 node export.js     # export/*.png at 1080×1350

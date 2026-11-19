@@ -1,4 +1,4 @@
-// Renders every .slide in gta.html to a 1080x1350 PNG in ./export
+// Renders every .slide in gta.html to a 1080x1350 PNG in ./export/<set>/
 // Usage: node export.js [scale]   (2 = 2160x2700)
 const { chromium } = require('playwright');
 const path = require('path');
@@ -14,7 +14,9 @@ const fs = require('fs');
   await page.evaluate(() => document.fonts.ready);
   for (const s of await page.$$('section.slide')) {
     const name = await s.getAttribute('data-name');
-    await s.screenshot({ path: path.join(out, `${name}.png`) });
+    const set = (await s.getAttribute('data-set')) || 'gold-job';
+    fs.mkdirSync(path.join(out, set), { recursive: true });
+    await s.screenshot({ path: path.join(out, set, `${name}.png`) });
     console.log('wrote', name);
   }
   await browser.close();

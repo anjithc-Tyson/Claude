@@ -149,6 +149,35 @@ body{background:#111;padding:40px;display:flex;flex-wrap:wrap;gap:40px;justify-c
 .results b{color:var(--gold-hi);font-weight:800}
 .results .g{color:var(--cash)}
 .cta{position:absolute;left:50%;transform:translateX(-50%);bottom:110px;z-index:30;white-space:nowrap;background:#fff;color:#000;font:900 34px var(--M);letter-spacing:.12em;padding:24px 36px;border-left:12px solid var(--gold-hi)}
+
+/* ===================== MOST WANTED set ===================== */
+.siren{position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(55% 40% at 0% 45%,rgba(255,40,40,.6),transparent 70%),radial-gradient(55% 40% at 100% 55%,rgba(40,110,255,.6),transparent 70%)}
+.siren.flip{background:radial-gradient(55% 40% at 0% 55%,rgba(40,110,255,.6),transparent 70%),radial-gradient(55% 40% at 100% 45%,rgba(255,40,40,.6),transparent 70%)}
+.siren-bar{position:absolute;left:0;right:0;top:0;height:10px;z-index:2;background:linear-gradient(90deg,#ff2a2a 0 50%,#2a6bff 50%)}
+.stars.hot svg{filter:drop-shadow(0 0 10px rgba(255,70,70,.95))}
+.blabel{position:absolute;top:22px;right:56px;z-index:41;font:800 18px var(--M);letter-spacing:.3em;color:#fff;text-shadow:1px 1px 0 #000}
+.mug{position:absolute;overflow:hidden;border:6px solid #000;z-index:10;
+  background:radial-gradient(60% 55% at 50% 50%,#f4f1ea,#c9c5bb 75%,#a9a499);}
+.mug::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(180deg,rgba(0,0,0,.6) 0 3px,transparent 3px 60px),repeating-linear-gradient(180deg,rgba(0,0,0,.22) 0 2px,transparent 2px 15px);
+  -webkit-mask:linear-gradient(90deg,#000 0 8%,transparent 8% 92%,#000 92%);mask:linear-gradient(90deg,#000 0 8%,transparent 8% 92%,#000 92%)}
+.mug::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(0,0,0,.12) 0 2px,transparent 2px 60px)}
+.mug .hn{position:absolute;left:12px;font:800 20px var(--M);color:#222;z-index:1}
+.mug .who{position:absolute;inset:0;display:grid;place-items:center;z-index:3}
+.mug .who img{filter:drop-shadow(10px 18px 14px rgba(0,0,0,.45)) contrast(1.06) saturate(1.1)}
+.placard{position:absolute;z-index:4;background:#111;color:#fff;border:4px solid #000;outline:3px solid #555;padding:12px 16px;font:800 18px/1.35 var(--M);letter-spacing:.14em}
+.placard b{display:block;font:400 34px/1 var(--P);letter-spacing:.02em;color:#fff;margin-bottom:6px}
+.rap{position:absolute;left:60px;right:60px;z-index:20;background:rgba(0,0,0,.82);display:grid;grid-template-columns:1fr 1fr;gap:34px;padding:26px 30px;border-left:8px solid var(--gold-hi)}
+.rap .stat label{font-size:20px;margin-bottom:8px}
+.rap .stat{margin-bottom:16px}.rap .stat:last-child{margin:0}
+.rap .stat .seg i{height:16px}
+.rap dl{font:600 22px/1.35 var(--M)}
+.rap dt{font:800 17px var(--M);letter-spacing:.2em;color:var(--gold-hi);margin-bottom:4px}
+.rap dd{margin-bottom:16px;color:#fff}
+.mini{position:absolute;width:470px;height:280px}
+.mini .tag{position:absolute;left:-6px;bottom:-22px;z-index:12;background:#000;color:#fff;font:800 18px var(--M);letter-spacing:.14em;padding:10px 14px}
+.mini .bty{position:absolute;right:10px;bottom:-30px;z-index:12;font:400 58px/1 var(--P);color:var(--cash);-webkit-text-stroke:6px #000;paint-order:stroke fill}
 </style>
 </head>
 <body>
@@ -311,6 +340,120 @@ body{background:#111;padding:40px;display:flex;flex-wrap:wrap;gap:40px;justify-c
   <img class="logo" src="assets/logo-light.png" style="left:50%;right:auto;transform:translateX(-50%);bottom:40px" alt="Takshila">
 </section>
 
+
+<!-- ======================= MOST WANTED ======================= -->
+<section class="slide grain" data-set="most-wanted" data-name="1-cover">
+  <img class="bg" src="assets/ruby-halo.jpg" style="filter:blur(30px) brightness(.35) saturate(1.4);transform:scale(1.2)">
+  <div class="siren"></div><div class="siren-bar"></div>
+  <div class="blabel">TOTAL BOUNTY</div><div class="cash">$4,530</div>
+  <div class="abs" style="left:0;right:0;top:130px;z-index:30;text-align:center">
+    <div class="stars hot" style="position:static;justify-content:center;gap:14px;margin-bottom:14px"><svg class="on" style="width:88px;height:88px"><use href="#star"/></svg><svg class="on" style="width:88px;height:88px"><use href="#star"/></svg><svg class="on" style="width:88px;height:88px"><use href="#star"/></svg><svg class="on" style="width:88px;height:88px"><use href="#star"/></svg><svg class="on" style="width:88px;height:88px"><use href="#star"/></svg></div>
+    <div class="mtitle" style="font-size:150px">most <span style="color:var(--gold-hi)">wanted</span></div>
+  </div>
+  <div class="mini" style="left:60px;top:460px"><div class="mug" style="left:0;top:0;width:470px;height:280px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><div class="who"><img src="assets/cut/lariat.png" style="height:250px"></div></div><div class="tag">LARIAT</div><div class="bty">$680</div></div><div class="mini" style="left:550px;top:460px"><div class="mug" style="left:0;top:0;width:470px;height:280px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><div class="who"><img src="assets/cut/pear-ring.png" style="width:250px"></div></div><div class="tag">PEAR BYPASS</div><div class="bty">$620</div></div><div class="mini" style="left:60px;top:820px"><div class="mug" style="left:0;top:0;width:470px;height:280px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><div class="who"><img src="assets/cut/tennis.png" style="width:400px"></div></div><div class="tag">TENNIS</div><div class="bty">$780</div></div><div class="mini" style="left:550px;top:820px"><div class="mug" style="left:0;top:0;width:470px;height:280px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><div class="who"><img src="assets/cut/ruby-halo.png" style="width:220px"></div></div><div class="tag">RUBY HALO</div><div class="bty">$2,450</div></div>
+  <div class="sub" style="bottom:70px;font-size:30px;left:60px;right:280px;text-align:left"><span class="n2">Dispatch:</span> 4 suspects at large. Approach with a wishlist.</div>
+  <div class="swipe" style="right:40px;bottom:56px">SWIPE <b>▶</b></div>
+  <img class="logo" src="assets/logo-light.png" style="left:60px;right:auto;top:56px;bottom:auto;height:46px" alt="Takshila">
+</section>
+<section class="slide grain" data-set="most-wanted" data-name="2-diamond-drop-lariat">
+  <img class="bg" src="assets/lariat-neck.jpg" style="filter:blur(30px) brightness(.35) saturate(1.3);transform:scale(1.2)">
+  <div class="siren"></div><div class="siren-bar"></div>
+  <div class="blabel">BOUNTY</div><div class="cash">$680</div>
+  <div class="stars hot"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+  <div class="abs" style="left:60px;top:56px;width:680px;z-index:30">
+    <div class="mlabel" style="font-size:24px;letter-spacing:.24em">Suspect 01 · BESTSELLER</div>
+    <div class="mtitle" style="font-size:96px;margin-top:10px">Diamond Drop Lariat</div>
+  </div>
+  <div class="mug" style="left:60px;top:330px;width:960px;height:580px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><span class="hn" style="top:288px">5</span><span class="hn" style="top:348px">4</span><span class="hn" style="top:408px">3</span><span class="hn" style="top:468px">2</span><span class="hn" style="top:528px">1</span><div class="who"><img src="assets/cut/lariat.png" style="height:540px"></div><div class="placard" style="right:22px;bottom:22px"><b>Takshila PD</b>SUSPECT 001<br>BESTSELLER</div></div>
+  <div class="rap" style="top:940px">
+    <div>
+      <div class="stat"><label>HEAT <b>MAX</b></label><div class="seg" style="--c:#ff4a3d"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>SPARKLE <b>MAX</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>CUSTOMIZABLE <b>✓</b></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    </div>
+    <dl><dt>KNOWN ASSOCIATES</dt><dd>14K gold, lab-grown diamonds</dd><dt>LAST SEEN</dt><dd>On every wishlist in the city</dd></dl>
+  </div>
+  <div class="sub" style="bottom:100px;font-size:32px"><span class="n2">Dispatch:</span> Suspect stops conversations mid-sentence. Approach with caution.</div>
+  <img class="logo" src="assets/logo-light.png" style="bottom:36px;height:40px" alt="Takshila">
+</section>
+<section class="slide grain" data-set="most-wanted" data-name="3-pear-bypass-ring">
+  <img class="bg" src="assets/pear-ring.jpg" style="filter:blur(30px) brightness(.35) saturate(1.3);transform:scale(1.2)">
+  <div class="siren flip"></div><div class="siren-bar"></div>
+  <div class="blabel">BOUNTY</div><div class="cash">$620</div>
+  <div class="stars hot"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+  <div class="abs" style="left:60px;top:56px;width:680px;z-index:30">
+    <div class="mlabel" style="font-size:24px;letter-spacing:.24em">Suspect 02 · CUSTOMIZABLE</div>
+    <div class="mtitle" style="font-size:96px;margin-top:10px">Pear Bypass Ring</div>
+  </div>
+  <div class="mug" style="left:60px;top:330px;width:960px;height:580px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><span class="hn" style="top:288px">5</span><span class="hn" style="top:348px">4</span><span class="hn" style="top:408px">3</span><span class="hn" style="top:468px">2</span><span class="hn" style="top:528px">1</span><div class="who"><img src="assets/cut/pear-ring.png" style="width:470px"></div><div class="placard" style="right:22px;bottom:22px"><b>Takshila PD</b>SUSPECT 002<br>CUSTOMIZABLE</div></div>
+  <div class="rap" style="top:940px">
+    <div>
+      <div class="stat"><label>HEAT <b>MAX</b></label><div class="seg" style="--c:#ff4a3d"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>SPARKLE <b>MAX</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>CUSTOMIZABLE <b>✓</b></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    </div>
+    <dl><dt>KNOWN ASSOCIATES</dt><dd>14K gold, lab-grown pear</dd><dt>LAST SEEN</dt><dd>Two stones, zero chill</dd></dl>
+  </div>
+  <div class="sub" style="bottom:100px;font-size:32px"><span class="n2">Dispatch:</span> Suspect travels in pairs. Do not let it get away.</div>
+  <img class="logo" src="assets/logo-light.png" style="bottom:36px;height:40px" alt="Takshila">
+</section>
+<section class="slide grain" data-set="most-wanted" data-name="4-classic-tennis-bracelet">
+  <img class="bg" src="assets/tennis.jpg" style="filter:blur(30px) brightness(.35) saturate(1.3);transform:scale(1.2)">
+  <div class="siren"></div><div class="siren-bar"></div>
+  <div class="blabel">BOUNTY</div><div class="cash">$780</div>
+  <div class="stars hot"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+  <div class="abs" style="left:60px;top:56px;width:680px;z-index:30">
+    <div class="mlabel" style="font-size:24px;letter-spacing:.24em">Suspect 03 · NEW</div>
+    <div class="mtitle" style="font-size:96px;margin-top:10px">Classic Tennis Bracelet</div>
+  </div>
+  <div class="mug" style="left:60px;top:330px;width:960px;height:580px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><span class="hn" style="top:288px">5</span><span class="hn" style="top:348px">4</span><span class="hn" style="top:408px">3</span><span class="hn" style="top:468px">2</span><span class="hn" style="top:528px">1</span><div class="who"><img src="assets/cut/tennis.png" style="width:800px"></div><div class="placard" style="right:22px;bottom:22px"><b>Takshila PD</b>SUSPECT 003<br>NEW</div></div>
+  <div class="rap" style="top:940px">
+    <div>
+      <div class="stat"><label>HEAT <b>MAX</b></label><div class="seg" style="--c:#ff4a3d"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>SPARKLE <b>MAX</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>CUSTOMIZABLE <b>✓</b></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    </div>
+    <dl><dt>KNOWN ASSOCIATES</dt><dd>14K gold, 1.5 ct lab-grown</dd><dt>LAST SEEN</dt><dd>Making a getaway on someone's wrist</dd></dl>
+  </div>
+  <div class="sub" style="bottom:100px;font-size:32px"><span class="n2">Dispatch:</span> 1.5 carats on the run. Repeat: 1.5 carats.</div>
+  <img class="logo" src="assets/logo-light.png" style="bottom:36px;height:40px" alt="Takshila">
+</section>
+<section class="slide grain" data-set="most-wanted" data-name="5-ruby-halo-ring">
+  <img class="bg" src="assets/ruby-halo.jpg" style="filter:blur(30px) brightness(.35) saturate(1.3);transform:scale(1.2)">
+  <div class="siren flip"></div><div class="siren-bar"></div>
+  <div class="blabel">BOUNTY</div><div class="cash">$2,450</div>
+  <div class="stars hot"><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg><svg class="on"><use href="#star"/></svg></div>
+  <div class="abs" style="left:60px;top:56px;width:680px;z-index:30">
+    <div class="mlabel" style="font-size:24px;letter-spacing:.24em">Suspect 04 · ENGAGEMENT</div>
+    <div class="mtitle" style="font-size:96px;margin-top:10px">Ruby Halo Ring</div>
+  </div>
+  <div class="mug" style="left:60px;top:330px;width:960px;height:580px"><span class="hn" style="top:48px">9</span><span class="hn" style="top:108px">8</span><span class="hn" style="top:168px">7</span><span class="hn" style="top:228px">6</span><span class="hn" style="top:288px">5</span><span class="hn" style="top:348px">4</span><span class="hn" style="top:408px">3</span><span class="hn" style="top:468px">2</span><span class="hn" style="top:528px">1</span><div class="who"><img src="assets/cut/ruby-halo.png" style="width:400px"></div><div class="placard" style="right:22px;bottom:22px"><b>Takshila PD</b>SUSPECT 004<br>ENGAGEMENT</div></div>
+  <div class="rap" style="top:940px">
+    <div>
+      <div class="stat"><label>HEAT <b>MAX</b></label><div class="seg" style="--c:#ff4a3d"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>SPARKLE <b>MAX</b></label><div class="seg"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+      <div class="stat"><label>CUSTOMIZABLE <b>✓</b></label><div class="seg" style="--c:var(--cash)"><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i><i class="f"></i></div></div>
+    </div>
+    <dl><dt>KNOWN ASSOCIATES</dt><dd>Yellow gold, ruby, diamond halo</dd><dt>LAST SEEN</dt><dd>Stealing hearts. Repeatedly.</dd></dl>
+  </div>
+  <div class="sub" style="bottom:100px;font-size:32px"><span class="n2">Dispatch:</span> Suspect wanted for a proposal. Possibly yours.</div>
+  <img class="logo" src="assets/logo-light.png" style="bottom:36px;height:40px" alt="Takshila">
+</section>
+<section class="slide grain" data-set="most-wanted" data-name="6-lose-the-heat">
+  <img class="bg graded" src="assets/peridot.jpg" style="filter:blur(18px) brightness(.45) saturate(1.3);transform:scale(1.15)">
+  <div class="siren" style="opacity:.35"></div>
+  <div class="cash">$0</div>
+  <div class="stars"><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg><svg class="off"><use href="#star"/></svg></div>
+  <div class="help">Everyone's chasing the same pieces. Want one <em>nobody else has?</em> Press <span class="key">A</span> to design your own.</div>
+  <img src="assets/cut/peridot.png" class="abs" style="right:70px;top:300px;height:520px;z-index:15;filter:drop-shadow(12px 20px 16px rgba(0,0,0,.6))">
+  <div class="abs" style="left:60px;top:470px;z-index:30">
+    <div class="mlabel">Wanted level cleared</div>
+    <div class="mtitle" style="font-size:150px;margin-top:12px">lose the<br>heat.</div>
+    <div class="mtitle" style="font-size:118px;margin-top:20px;color:var(--gold-hi)">go one<br>of one.</div>
+  </div>
+  <div class="abs" style="left:60px;right:60px;top:1050px;z-index:30;background:rgba(0,0,0,.8);padding:22px 28px;font:600 28px/1.4 var(--M)">Describe it. Approve it in 3D. Hand-crafted in solid gold and delivered in <span style="color:var(--gold-hi)">15 days.</span></div>
+  <div class="cta" style="bottom:56px">DESIGN YOURS → LINK IN BIO</div>
+</section>
 <script>
 // selection wheel: 8 photo wedges, first one selected
 (function(){
