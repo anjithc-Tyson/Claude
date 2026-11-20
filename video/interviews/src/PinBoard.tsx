@@ -102,6 +102,7 @@ const BoardUI: React.FC<{scroll: number; grey?: number}> = ({scroll, grey = 0}) 
 			</div>
 			<Grid top={540} />
 		</div>
+		<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 62%, rgba(0,0,0,0.38) 76%, rgba(0,0,0,0.42) 86%, rgba(0,0,0,0) 92%)'}} />
 		<NavBar active="home" />
 	</AbsoluteFill>
 );
@@ -225,6 +226,7 @@ const Algo: React.FC<{from: number; predictAt: number}> = ({from, predictAt}) =>
 				<div style={{marginTop: 44, fontFamily: SANS, fontWeight: 800, fontSize: 56, color: '#111', lineHeight: 1.15}}>No results for &ldquo;her&rdquo;</div>
 				<div style={{marginTop: 20, fontFamily: SANS, fontSize: 32, color: '#767676', lineHeight: 1.35}}>Try designing it instead.</div>
 			</div>
+			<AbsoluteFill style={{background: 'linear-gradient(rgba(0,0,0,0) 62%, rgba(0,0,0,0.38) 76%, rgba(0,0,0,0.42) 86%, rgba(0,0,0,0) 92%)'}} />
 			<NavBar active="search" />
 		</AbsoluteFill>
 	);
@@ -301,13 +303,13 @@ const Captions: React.FC = () => {
 	const gi = groups.findIndex((g, i) => t >= g[0].t - 0.05 && t < Math.min(g[g.length - 1].e + 0.35, groups[i + 1]?.[0].t ?? 1e9));
 	if (gi < 0) return null;
 	const g = groups[gi];
-	const light = (ins?.kind === 'board' && t < 3.4) || ins?.kind === 'algo';
+	const light = false;   // one caption look everywhere; light screens get a soft shade behind the caption instead
 	const top = ins?.kind === 'split1' || ins?.kind === 'split2' ? 1560 : 1420;
 	const a = spring({frame: frame - Math.round((g[0].t - 0.08) * fps), fps, config: {damping: 16, mass: 0.5, stiffness: 200}});
 	return (
 		<div style={{position: 'absolute', left: 60, right: 60, top, display: 'flex', justifyContent: 'center'}}>
 			<div style={{opacity: a, translate: `0 ${(1 - a) * 12}px`, fontFamily: INSTRUMENT, fontSize: 88, lineHeight: 1.12, textAlign: 'center', maxWidth: 940,
-				background: light ? 'rgba(255,255,255,0.85)' : undefined, borderRadius: light ? 20 : undefined, padding: light ? '6px 18px' : undefined}}>
+			}}>
 				{g.map((w, i) => {
 					const isKey = KEY.test(clean(w.w));
 					const nextT = g[i + 1]?.t ?? groups[gi + 1]?.[0].t ?? w.e + 0.4;
