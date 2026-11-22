@@ -581,7 +581,7 @@ function checkIn_(me) {
   if (openSession_(me.id)) return { ok: false, error: 'already_checked_in' };
   const now = new Date();
   upsert_('WorkLog', WORK_HEADERS, { id: newId_('w'), date: Utilities.formatDate(now, CFG.TZ_LOCAL, 'yyyy-MM-dd'), personId: me.id, checkIn: now.toISOString(), checkOut: '', minutes: '', source: 'hub', note: '' }, () => false);
-  chatPost_('🟢 *' + me.name + '* checked in · ' + chatTime_(now));
+  chatPost_('🟢 *' + me.name + '* logged in · ' + chatTime_(now));
   return { ok: true, at: now.toISOString() };
 }
 function checkOut_(me, note) {
@@ -592,7 +592,7 @@ function checkOut_(me, note) {
   const mins = Math.max(0, Math.round((now - new Date(s.checkIn)) / 60000) - brk);   // worked time, breaks taken out
   upsert_('WorkLog', WORK_HEADERS, Object.assign({}, s, { checkOut: now.toISOString(), minutes: mins, note: String(note || '').slice(0, 300) }), o => String(o.id) === s.id);
   const worked = String(note || '').trim();
-  chatPost_('🔴 *' + me.name + '* checked out · ' + chatTime_(now) + ' · ' + dur_(mins) + ' worked' + (brk ? ', ' + dur_(brk) + ' break' : '') + (worked ? '\nWorked on: ' + worked.slice(0, 300) : ''));
+  chatPost_('🔴 *' + me.name + '* logged out · ' + chatTime_(now) + ' · ' + dur_(mins) + ' worked' + (brk ? ', ' + dur_(brk) + ' break' : '') + (worked ? '\nWorked on: ' + worked.slice(0, 300) : ''));
   return { ok: true, at: now.toISOString(), minutes: mins };
 }
 
@@ -607,7 +607,7 @@ function autoCloseOpen() {
     const brk = breakMins_(w.id, at), mins = Math.max(0, Math.round((at - new Date(w.checkIn)) / 60000) - brk);
     upsert_('WorkLog', WORK_HEADERS, Object.assign({}, w, { checkOut: at.toISOString(), minutes: mins, source: 'auto-closed' }), o => String(o.id) === w.id);
     const who = (team.find(m => m.id === w.personId) || { name: w.personId }).name;
-    chatPost_('⚠️ *' + who + '* didn\'t check out · closed automatically at ' + chatTime_(at) + ' · ' + dur_(mins) + ' recorded');
+    chatPost_('⚠️ *' + who + '* didn\'t log out · logged out automatically at ' + chatTime_(at) + ' · ' + dur_(mins) + ' recorded');
   });
 }
 
@@ -625,7 +625,7 @@ function chatPost_(text) {
     return true;
   } catch (e) { console.warn('Chat webhook failed: ' + e); return false; }   // never block a check-in because Chat is down
 }
-function testChat() { Logger.log(chatPost_('👋 Team Hub is connected. Check-ins and check-outs will show up here.') ? 'Sent. Look in your Chat space.' : 'Not sent. Check the CHAT_WEBHOOK script property.'); }
+function testChat() { Logger.log(chatPost_('👋 Team Hub is connected. Log-ins and log-outs will show up here.') ? 'Sent. Look in your Chat space.' : 'Not sent. Check the CHAT_WEBHOOK script property.'); }
 const dur_ = m => Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
 
 /* ---- breaks ---- */

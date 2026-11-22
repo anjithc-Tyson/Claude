@@ -3,7 +3,7 @@
  *
  * Drop it on a page, set "API URL" to your Apps Script web app URL (see team-hub/README.md),
  * and style it from the properties panel. People sign in with their work email + a one-time code.
- * Sections (left menu): Dashboard, Tasks, Check-ins (check-in / check-out times), Stand-up attendance,
+ * Sections (left menu): Dashboard, Tasks, Logins (log-in / log-out times), Stand-up attendance,
  * Onboarding (videos and documents people must go through), Documents (folders of links) and, for leadership,
  * Team & emails. Leadership can add documents and onboarding steps, fix check-ins, mark attendance and send emails;
  * everyone else sees only their own data.
@@ -155,7 +155,7 @@ export default function TeamHub(props: Props) {
     const left = onboardingLeft(hub, hub.me.id)
     const tabs: { k: TabKey; l: string; i: string; badge?: number }[] = [
         { k: "dashboard", l: "Dashboard", i: "grid" }, { k: "tasks", l: "Tasks", i: "check" },
-        { k: "time", l: "Check-ins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: leaveOf(hub).filter((l) => l.canDecide).length || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
+        { k: "time", l: "Logins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: leaveOf(hub).filter((l) => l.canDecide).length || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
         { k: "onboarding", l: "Onboarding", i: "play", badge: left || undefined }, { k: "docs", l: "Documents", i: "folder" },
         ...(isLead ? [{ k: "team" as TabKey, l: "Team & emails", i: "mail" }] : []),
     ]
@@ -206,12 +206,12 @@ export default function TeamHub(props: Props) {
             {leaving ? (
                 <div className="th-modal" role="dialog" aria-modal="true" aria-labelledby="th-leave-h" onMouseDown={(e) => e.target === e.currentTarget && setLeaving(false)}>
                     <div className="th-dlg">
-                        <h2 id="th-leave-h">You're still checked in</h2>
-                        <p className="th-note">Checked in at {fmtTime(open!.checkIn)}. Check out now so today's time is saved?</p>
+                        <h2 id="th-leave-h">You're still logged in</h2>
+                        <p className="th-note">Logged in at {fmtTime(open!.checkIn)}. Log out now so today's time is saved?</p>
                         <div className="th-dacts">
                             <button className="th-ghost" onClick={() => setLeaving(false)}>Cancel</button>
                             <button className="th-ghost" onClick={signOut}>Sign out only</button>
-                            <button className="th-cta" onClick={async () => { const r = await act("checkOut", {}, "Checked out"); if (r) signOut() }}>Check out & sign out</button>
+                            <button className="th-cta" onClick={async () => { const r = await act("checkOut", {}, "Logged out"); if (r) signOut() }}>Log out & sign out</button>
                         </div>
                     </div>
                 </div>
@@ -572,10 +572,10 @@ type Act = (a: string, b: Record<string, unknown>, ok?: string) => Promise<any>
 
 const ERRORS: Record<string, string> = {
     not_allowed: "Only leadership can change this.", signed_out: "Your session ended. Sign in again.",
-    already_checked_in: "You're already checked in.", not_checked_in: "You're not checked in.",
+    already_checked_in: "You're already logged in.", not_checked_in: "You're not logged in.",
     folder_not_empty: "Move or remove the documents in this folder first.", bad_url: "Links must start with https://",
     bad_input: "Some details are missing.", not_yours: "You can only edit your own work notes.",
-    note_locked: "Work notes lock 12 hours after check-out.",
+    note_locked: "Work notes lock 12 hours after log-out.",
     already_on_break: "You're already on a break.", not_on_break: "You're not on a break.",
     leave_overlap: "You already have leave on those dates.", own_leave: "Another leader has to approve your own leave.", not_approver: "Only their manager or leadership can decide this.", leave_started: "This leave has started, so it can't be cancelled. Ask leadership.", unknown_action: "Update the Apps Script engine to use this.",
 }
@@ -629,21 +629,21 @@ function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
     const total = today.reduce((n, w) => n + minsOf(w), 0)
     const brk = openBreakOf(hub, hub.me.id)
     const off = leaveOn(hub, hub.me.id, localDay(new Date().toISOString()))
-    const msg: Record<string, string> = { checkIn: "Checked in", checkOut: "Checked out", breakStart: "Enjoy your break", breakEnd: "Welcome back" }
+    const msg: Record<string, string> = { checkIn: "Logged in", checkOut: "Logged out", breakStart: "Enjoy your break", breakEnd: "Welcome back" }
     const go = async (a: "checkIn" | "checkOut" | "breakStart" | "breakEnd") => { setBusy(true); await act(a, a === "checkOut" ? { note: txt } : {}, msg[a]); setBusy(false); setNote(false); setTxt("") }
     return (
         <div className={"th-clock" + (brk ? " brk" : open ? " on" : "")}>
             <span className="dot" aria-hidden="true" />
             <div className="ct">{brk ? <><b>On a break · since {fmtTime(brk.start)}</b><small>{fmtDur(brkMins(brk))} so far · {fmtDur(total)} worked today</small></>
-                : open ? <><b>Checked in · {fmtTime(open.checkIn)}</b><small>{fmtDur(total)} worked today</small></>
-                : <><b>{today.length ? "Checked out" : off && !off.half ? "On leave today" : "Not checked in"}</b><small>{today.length ? fmtDur(total) + " today" : off ? LEAVE_T[off.type] + " leave" + (off.half ? " · half day" : "") : (hub as any).shift ? "Shift starts " + fmtTime(new Date(localDay(new Date().toISOString()) + "T" + (hub as any).shift.start + ":00+05:30").toISOString()) + " IST" : "Start your day"}</small></>}</div>
+                : open ? <><b>Logged in · {fmtTime(open.checkIn)}</b><small>{fmtDur(total)} worked today</small></>
+                : <><b>{today.length ? "Logged out" : off && !off.half ? "On leave today" : "Not logged in"}</b><small>{today.length ? fmtDur(total) + " today" : off ? LEAVE_T[off.type] + " leave" + (off.half ? " · half day" : "") : (hub as any).shift ? "Shift starts " + fmtTime(new Date(localDay(new Date().toISOString()) + "T" + (hub as any).shift.start + ":00+05:30").toISOString()) + " IST" : "Start your day"}</small></>}</div>
             {brk ? <button className="th-cta" disabled={busy} onClick={() => go("breakEnd")}>End break</button>
-                : open ? <>{(hub as any).breaks ? <button className="th-ghost" disabled={busy} onClick={() => go("breakStart")}>Break</button> : null}<button className="th-cta" disabled={busy} onClick={() => setNote(true)}>Check out</button></>
-                : <button className="th-cta" disabled={busy} onClick={() => go("checkIn")}>Check in</button>}
+                : open ? <>{(hub as any).breaks ? <button className="th-ghost" disabled={busy} onClick={() => go("breakStart")}>Break</button> : null}<button className="th-cta" disabled={busy} onClick={() => setNote(true)}>Log out</button></>
+                : <button className="th-cta" disabled={busy} onClick={() => go("checkIn")}>Log in</button>}
             {note ? (
-                <div className="th-pop" role="dialog" aria-label="Check out">
+                <div className="th-pop" role="dialog" aria-label="Log out">
                     <label className="th-fld"><span>What did you work on? (optional)</span><input value={txt} onChange={(e) => setTxt(e.target.value)} placeholder="e.g. Homepage hero, research notes" autoFocus /></label>
-                    <div className="th-dacts"><button className="th-ghost" onClick={() => setNote(false)}>Cancel</button><button className="th-cta" disabled={busy} onClick={() => go("checkOut")}>Check out now</button></div>
+                    <div className="th-dacts"><button className="th-ghost" onClick={() => setNote(false)}>Cancel</button><button className="th-cta" disabled={busy} onClick={() => go("checkOut")}>Log out now</button></div>
                 </div>
             ) : null}
         </div>
@@ -669,7 +669,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
     return (
         <div className="th-col">
             <section className="th-panel">
-                <div className="th-ph"><div><h2>Check-ins</h2><p>{canEdit ? "Everyone's check-in and check-out times" : "Your check-in and check-out times"} · India time (IST) · shift starts {shift} · Sat and Sun off</p></div>
+                <div className="th-ph"><div><h2>Logins</h2><p>{canEdit ? "Everyone's log-in and log-out times" : "Your log-in and log-out times"} · India time (IST) · shift starts {shift} · Sat and Sun off</p></div>
                     <div className="th-weeknav"><button className="th-round" aria-label="Previous week" onClick={() => setWeek(week - 1)}>‹</button><b>{fmtDate(days[0])} – {fmtDate(days[6])}</b><button className="th-round" aria-label="Next week" disabled={week >= 0} onClick={() => setWeek(week + 1)}>›</button></div></div>
                 <div className="th-tablewrap"><table className="th-table"><thead><tr><th>Person</th>{days.map((d) => <th key={d} className={(d === todayK ? "today" : "") + (isWeekend(d) ? " wkend" : "")}>{dayName(d)} {d8(d).getUTCDate()}</th>)}<th>Week</th></tr></thead>
                     <tbody>{people.map((m) => <tr key={m.id}><td><span className="who"><span className="th-av sm">{initials(m.name)}</span>{m.name}</span></td>
@@ -681,7 +681,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                         <td><b>{fmtDur(weekMins(m.id))}</b></td></tr>)}</tbody></table></div>
             </section>
             <section className="th-panel">
-                <div className="th-ph"><div><h2>Sessions</h2><p>Times are recorded automatically when you check in and out. You can edit what you worked on for 12 hours after checking out.</p></div></div>
+                <div className="th-ph"><div><h2>Sessions</h2><p>Times are recorded automatically when you log in and out. You can edit what you worked on for 12 hours after logging out.</p></div></div>
                 {recent.length ? recent.map((w) => {
                     const mine = w.personId === hub.me.id, left = noteLeft(w), canNote = mine && left > 0
                     const saveNote = async () => { setBusy(true); const r = await act("saveNote", { id: w.id, note: txt }, "Saved"); setBusy(false); if (r) setEdit("") }
@@ -689,7 +689,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                     <div key={w.id} className="th-srow">
                         <span className="th-av sm">{initials(mem(w.personId)?.name || "?")}</span>
                         <div className="mid"><b>{mem(w.personId)?.name || w.personId}</b>
-                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : openBreakOf(hub, w.personId) ? <span className="livetxt">on a break</span> : <span className="livetxt">still checked in</span>}{w.brk ? " · " + fmtDur(w.brk) + " break" : ""}{w.source === "auto-closed" ? <span className="badtxt"> · missed check-out, closed automatically</span> : null}</div>
+                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : openBreakOf(hub, w.personId) ? <span className="livetxt">on a break</span> : <span className="livetxt">still logged in</span>}{w.brk ? " · " + fmtDur(w.brk) + " break" : ""}{w.source === "auto-closed" ? <span className="badtxt"> · missed log-out, closed automatically</span> : null}</div>
                             {edit === w.id ? (
                                 <form className="th-noteform" onSubmit={(e) => { e.preventDefault(); saveNote() }}>
                                     <input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={300} placeholder="What did you work on?" aria-label="What did you work on?" autoFocus />
@@ -701,7 +701,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                         <b className="dur">{fmtDur(minsOf(w))}</b>
                         {canNote && edit !== w.id ? <button className="th-edit" onClick={() => { setEdit(w.id); setTxt(w.note) }}>{w.note ? "Edit work" : "Add work"}</button> : null}
                     </div>
-                ) }) : <p className="th-note">No check-ins this week.</p>}
+                ) }) : <p className="th-note">No logins this week.</p>}
             </section>
         </div>
     )
