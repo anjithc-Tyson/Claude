@@ -93,6 +93,8 @@ export default function TeamHub(props: Props) {
     const [tab, setTab] = useState<TabKey>("dashboard")
     const [toast, setToast] = useState("")
     const [leaving, setLeaving] = useState(false)
+    const [menu, setMenu] = useState(false)
+    const [seenTick, setSeenTick] = useState(0)
     const [, tick] = useState(0)
     const toastTimer = useRef<number>()
     const routed = useRef(false)
@@ -115,6 +117,24 @@ export default function TeamHub(props: Props) {
     }, [apiUrl, token])
 
     useEffect(() => { load() }, [load])
+    // keep badges fresh: reload every 2 minutes while the page is open, and when someone comes back to the tab or app
+    useEffect(() => {
+        const again = () => { if (document.visibilityState === "visible") load() }
+        const t = window.setInterval(again, 120000)
+        document.addEventListener("visibilitychange", again)
+        return () => { window.clearInterval(t); document.removeEventListener("visibilitychange", again) }
+    }, [load])
+    // leave decisions you haven't looked at yet (remembered per person on this device)
+    const seenKey = hub ? "takshila-hub-leave-seen:" + hub.me.id : ""
+    const seenAt = useMemo(() => { try { return (seenKey && localStorage.getItem(seenKey)) || "" } catch { return "" } }, [seenKey, seenTick])
+    const news = hub ? leaveOf(hub).filter((l) => l.personId === hub.me.id && (l.status === "approved" || l.status === "declined") && l.decidedAt && l.decidedAt > seenAt && +new Date(l.decidedAt) > Date.now() - 14 * 86400000) : []
+    useEffect(() => {
+        if (tab !== "leave" || !news.length) return
+        try { localStorage.setItem(seenKey, new Date().toISOString()) } catch {}
+        const t = window.setTimeout(() => setSeenTick((n) => n + 1), 4000)   // let the badge show briefly on arrival
+        return () => window.clearTimeout(t)
+    }, [tab, news.length, seenKey])
+    useEffect(() => { if (!menu) return; const k = (e: KeyboardEvent) => e.key === "Escape" && setMenu(false); window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k) }, [menu])
 
     // new people land on Onboarding until the required steps are done
     useEffect(() => {
@@ -155,22 +175,30 @@ export default function TeamHub(props: Props) {
     const left = onboardingLeft(hub, hub.me.id)
     const tabs: { k: TabKey; l: string; i: string; badge?: number }[] = [
         { k: "dashboard", l: "Dashboard", i: "grid" }, { k: "tasks", l: "Tasks", i: "check" },
-        { k: "time", l: "Logins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: leaveOf(hub).filter((l) => l.canDecide).length || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
+        { k: "time", l: "Logins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: leaveOf(hub).filter((l) => l.canDecide).length + news.length || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
         { k: "onboarding", l: "Onboarding", i: "play", badge: left || undefined }, { k: "docs", l: "Documents", i: "folder" },
         ...(isLead ? [{ k: "team" as TabKey, l: "Team & emails", i: "mail" }] : []),
     ]
     const open = openSessionOf(hub, hub.me.id)
     const signOut = async () => { try { await post(apiUrl, { action: "signOut", token }) } catch {} store.set(""); setToken(""); setHub(null); setLeaving(false) }
     const titleOf = tab === "dashboard" ? greet : tabs.find((t) => t.k === tab)!.l
+    const anyBadge = tabs.some((t) => t.badge)
+    const go = (k: TabKey) => { setTab(k); setMenu(false) }
 
     return shell(
         <div className="th-shell">
-            <aside className="th-side" aria-label="Sections">
+            <div className="th-mbar">
+                <button className="th-mbtn" aria-label="Open menu" aria-expanded={menu} onClick={() => setMenu(true)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" /></svg>{anyBadge ? <i aria-hidden="true" /> : null}</button>
+                <b>{props.title.replace(/^Takshila\s*/i, "") || "Team Hub"}</b>
+                <span className="th-av sm">{initials(hub.me.name)}</span>
+            </div>
+            {menu ? <div className="th-scrim" onClick={() => setMenu(false)} aria-hidden="true" /> : null}
+            <aside className={"th-side" + (menu ? " open" : "")} aria-label="Sections">
                 <div className="th-brand"><span className="th-logo sm">T</span><b>{props.title.replace(/^Takshila\s*/i, "") || "Team Hub"}</b></div>
                 <nav className="th-snav">
                     {tabs.map((t) => (
-                        <button key={t.k} aria-current={tab === t.k ? "page" : undefined} onClick={() => setTab(t.k)}>
-                            <Ico n={t.i} /><span>{t.l}</span>{t.badge ? <em aria-label={t.badge + (t.k === "leave" ? " leave requests to review" : " onboarding steps left")}>{t.badge}</em> : null}
+                        <button key={t.k} aria-current={tab === t.k ? "page" : undefined} onClick={() => go(t.k)}>
+                            <Ico n={t.i} /><span>{t.l}</span>{t.badge ? <em aria-label={t.badge + (t.k === "leave" ? " leave updates" : " onboarding steps left")}>{t.badge}</em> : null}
                         </button>
                     ))}
                 </nav>
@@ -192,6 +220,7 @@ export default function TeamHub(props: Props) {
                         <button className="th-round" title="Refresh" aria-label="Refresh" onClick={() => load(true)} disabled={state === "loading"}>↻</button>
                     </div>
                 </header>
+                {news.length && tab !== "leave" ? <button className={"th-obanner leave " + news[0].status} onClick={() => setTab("leave")}><Ico n="sun" /><span><b>Your {LEAVE_T[news[0].type].toLowerCase()} leave was {news[0].status}.</b> {leaveDates(news[0])}{news.length > 1 ? " · and " + (news.length - 1) + " more" : ""}</span><span className="go">View ›</span></button> : null}
                 {left > 0 && tab !== "onboarding" ? <button className="th-obanner" onClick={() => setTab("onboarding")}><Ico n="play" /><span><b>Finish your onboarding.</b> {left} required {left === 1 ? "step" : "steps"} left.</span><span className="go">Continue ›</span></button> : null}
                 {tab === "dashboard" && <Dashboard hub={hub} mem={mem} go={(t) => setTab(t)} />}
                 {tab === "tasks" && <Tasks hub={hub} mem={mem} />}
@@ -1062,6 +1091,11 @@ function hubCss(r: number) {
 .th-dacts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .th-modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:16px}
 .th-dlg{background:var(--panel);border-radius:${r + 6}px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:10px}.th-dlg h2{margin:0;font-size:19px;font-weight:500}
+.th-mbar{display:none;position:sticky;top:0;z-index:20;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--line)}.th-mbar b{flex:1;font-weight:500;font-size:15px}
+.th-mbtn{position:relative;width:40px;height:40px;border:0;border-radius:12px;background:var(--panel);color:var(--fg);display:grid;place-items:center;cursor:pointer}.th-mbtn i{position:absolute;top:8px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--bad);box-shadow:0 0 0 2px var(--panel)}
+.th-scrim{position:fixed;inset:0;z-index:35;background:rgba(20,20,18,.35)}
+.th-obanner.leave.approved{background:color-mix(in srgb,var(--good) 22%,var(--panel));color:var(--fg)}.th-obanner.leave.declined{background:color-mix(in srgb,var(--bad) 14%,var(--panel));color:var(--fg)}
+@media (prefers-reduced-motion:reduce){.th-side{transition:none}}
 .th-obanner{display:flex;align-items:center;gap:12px;border:0;cursor:pointer;text-align:left;background:var(--accent);color:#151514;border-radius:${r}px;padding:12px 16px;font-size:14px}.th-obanner b{font-weight:600}.th-obanner .go{margin-left:auto;font-weight:500}
 .th-tcell{display:inline-flex;flex-direction:column;line-height:1.25;background:var(--sunk);border-radius:10px;padding:6px 10px;min-width:92px}.th-tcell b{font-weight:500}.th-tcell small{color:var(--muted);font-size:11.5px}.th-tcell.live{box-shadow:inset 0 0 0 1.5px var(--good)}
 .th-srow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.th-srow .mid b{font-weight:500}.th-srow .worked{margin-top:4px;font-size:14px;overflow-wrap:anywhere}.th-noteform{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.th-noteform input{flex:1 1 220px;min-width:0;font:inherit;font-size:14px;height:40px;padding:0 12px;border:0;border-radius:10px;background:var(--panel);color:var(--fg)}.th-srow .dur{font-variant-numeric:tabular-nums}
@@ -1099,9 +1133,10 @@ function hubCss(r: number) {
 @media (max-width:900px){
  .th-shell{grid-template-columns:minmax(0,1fr)}
  .th-head{align-items:stretch}.th-head>div:first-child{width:100%}.th-me{width:100%}.th-ogrid>*{min-width:0}
- .th-side{position:sticky;top:0;z-index:10;height:auto;flex-direction:row;align-items:center;padding:8px 10px;border-right:0;border-bottom:1px solid var(--line)}
- .th-brand{display:none}.th-sfoot{border:0;padding:0}.th-sfoot .who2,.th-sfoot .th-av{display:none}
- .th-snav{flex-direction:row;overflow-x:auto;gap:4px}.th-snav button{white-space:nowrap;padding:8px 10px}.th-snav button span{display:inline}
+ .th-mbar{display:flex}
+ .th-side{position:fixed;top:0;left:0;bottom:0;z-index:40;width:min(300px,84vw);height:100%;transform:translateX(-102%);transition:transform .22s ease;box-shadow:none;padding:18px 12px max(18px,env(safe-area-inset-bottom))}
+ .th-side.open{transform:none;box-shadow:0 10px 40px rgba(0,0,0,.18)}
+ .th-snav button{padding:12px;font-size:15px}
  .th-main{padding:12px}
  .th-ogrid{grid-template-columns:1fr}
  .th-docrow{grid-template-columns:auto minmax(0,1fr) auto}.th-docrow .when,.th-docrow .th-edit{display:none}
