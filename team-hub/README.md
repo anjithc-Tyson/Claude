@@ -115,6 +115,14 @@ These live in the same Google Sheet, in five more tabs: **WorkLog**, **Folders**
 
 **Check-ins.** Everyone has a **Check in** / **Check out** button at the top of the dashboard. Each press is saved to the WorkLog tab with the exact time. Times always come from the server clock: nobody, including leadership, can type or change a check-in or check-out time. People can say what they worked on when they check out, and can edit that note for 12 hours after checking out; after that it locks. The engine enforces both rules, not just the dashboard. If someone signs out while still checked in, the dashboard asks whether to check out first. The **Check-ins** section shows a week grid of hours per person and every session. Employees see only their own. Leadership see everyone.
 
+**Check-in alerts in Google Chat.** Every check-in and check-out can post to a Google Chat space, for example "🟢 *Name* checked in · 9:04 AM IST" and "🔴 *Name* checked out · 6:12 PM IST · 9h 08m" with what they worked on. To turn it on:
+
+1. In Google Chat, open (or create) the space, then click its name → **Apps & integrations → Webhooks → Add webhook**. Name it "Team Hub" and copy the URL. If you don't see Webhooks, a Google Workspace admin has to allow them (Admin console → Apps → Google Workspace → Google Chat → *Allow users to add and use incoming webhooks*).
+2. In Apps Script: **Project Settings → Script properties → Add script property**. Property `CHAT_WEBHOOK`, value: the URL. Treat it like a password: anyone with it can post to the space.
+3. Run `testChat` once from the editor. A hello message should appear in the space.
+
+No new deployment is needed for the property itself. If Chat is down, check-ins still save.
+
 **Onboarding.** Leadership add steps from the dashboard (**Onboarding → + Add step**). Each step is one of:
 - **Video to watch.** YouTube, Google Drive, Loom, Vimeo or a direct `.mp4` link. For YouTube and `.mp4` videos, the step only unlocks after 90% of the video has actually been played, and skipping ahead in an `.mp4` isn't allowed. Drive, Loom and Vimeo can't report progress, so those unlock after the length you set (in minutes) has passed with the page open.
 - **Document to read** or **link to open.** Unlocks once it's been opened.

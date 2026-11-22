@@ -573,14 +573,33 @@ function checkIn_(me) {
   if (openSession_(me.id)) return { ok: false, error: 'already_checked_in' };
   const now = new Date();
   upsert_('WorkLog', WORK_HEADERS, { id: newId_('w'), date: Utilities.formatDate(now, CFG.TZ_LOCAL, 'yyyy-MM-dd'), personId: me.id, checkIn: now.toISOString(), checkOut: '', minutes: '', source: 'hub', note: '' }, () => false);
+  chatPost_('🟢 *' + me.name + '* checked in · ' + chatTime_(now));
   return { ok: true, at: now.toISOString() };
 }
 function checkOut_(me, note) {
   const s = openSession_(me.id); if (!s) return { ok: false, error: 'not_checked_in' };
   const now = new Date(), mins = Math.max(0, Math.round((now - new Date(s.checkIn)) / 60000));
   upsert_('WorkLog', WORK_HEADERS, Object.assign({}, s, { checkOut: now.toISOString(), minutes: mins, note: String(note || '').slice(0, 300) }), o => String(o.id) === s.id);
+  const worked = String(note || '').trim();
+  chatPost_('🔴 *' + me.name + '* checked out · ' + chatTime_(now) + ' · ' + Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm' + (worked ? '\nWorked on: ' + worked.slice(0, 300) : ''));
   return { ok: true, at: now.toISOString(), minutes: mins };
 }
+
+/* ---- Google Chat notifications ----
+ * Posts each check-in and check-out to a Google Chat space, so the team sees them as they happen.
+ * Set up: in the Chat space, Apps & integrations → Webhooks → Add webhook, copy the URL, and save it in
+ * Project Settings → Script Properties as CHAT_WEBHOOK. No property = no messages. Run testChat() to check. */
+const chatTime_ = d => Utilities.formatDate(d, CFG.TZ_LOCAL, 'h:mm a') + ' IST';
+function chatPost_(text) {
+  const url = PropertiesService.getScriptProperties().getProperty('CHAT_WEBHOOK');
+  if (!url) return false;
+  try {
+    const r = UrlFetchApp.fetch(url, { method: 'post', contentType: 'application/json; charset=UTF-8', payload: JSON.stringify({ text: text }), muteHttpExceptions: true });
+    if (r.getResponseCode() >= 300) { console.warn('Chat webhook ' + r.getResponseCode() + ': ' + r.getContentText().slice(0, 200)); return false; }
+    return true;
+  } catch (e) { console.warn('Chat webhook failed: ' + e); return false; }   // never block a check-in because Chat is down
+}
+function testChat() { Logger.log(chatPost_('👋 Team Hub is connected. Check-ins and check-outs will show up here.') ? 'Sent. Look in your Chat space.' : 'Not sent. Check the CHAT_WEBHOOK script property.'); }
 /** Check-in and check-out times always come from the server clock and can't be changed by anyone.
  *  The only editable part is the work note: by the person who checked in, and only until 12 hours after their check-out. */
 const NOTE_EDIT_HOURS = 12;
