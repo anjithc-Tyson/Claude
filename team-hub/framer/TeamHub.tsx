@@ -140,6 +140,7 @@ export default function TeamHub(props: Props) {
     const pending = useRef(0)                 // actions still on their way to the server
     const queue = useRef<Promise<any>>(Promise.resolve())   // actions go to the server one at a time, in order
     const parts = useRef<any>(null)
+    const gen = useRef(0)                     // bumps on every tap, so a reload that started before the tap can't undo it
 
     const say = useCallback((m: string) => { setToast(m); window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(""), 2600) }, [])
     useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 30000); return () => window.clearInterval(t) }, [])
@@ -147,6 +148,7 @@ export default function TeamHub(props: Props) {
     const load = useCallback(async (refresh = false) => {
         if (!apiUrl || !token) return
         setState("loading")
+        const started = gen.current
         try {
             const r = await fetch(apiUrl + (apiUrl.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token) + (refresh ? "&refresh=1" : ""))
             const j = await r.json()
@@ -154,7 +156,7 @@ export default function TeamHub(props: Props) {
                 if (j.error === "signed_out") { store.set(""); cache.clear(); setToken(""); setHub(null); setState("idle"); return }
                 throw new Error(j.error || "Something went wrong")
             }
-            if (pending.current) { setState("idle"); return }   // an action is in flight; its answer will update the screen
+            if (pending.current || started !== gen.current) { setState("idle"); return }   // a tap happened meanwhile, so this data is already out of date
             setHub(j); cache.set(token, j); setState("idle"); setErr("")
         } catch (e: any) { setErr(e.message || "Couldn't reach the dashboard service."); setState("error") }
     }, [apiUrl, token])
@@ -188,6 +190,7 @@ export default function TeamHub(props: Props) {
 
     const act = useCallback((action: string, body: Record<string, unknown>, ok?: string): Promise<any> => {
         const guess = OPTIMISTIC[action]
+        gen.current++
         if (guess) { setHub((h) => (h ? guess(h, body) : h)); if (ok) say(ok) }
         pending.current++
         const run = async () => {
