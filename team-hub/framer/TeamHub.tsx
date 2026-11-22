@@ -155,7 +155,7 @@ export default function TeamHub(props: Props) {
     const left = onboardingLeft(hub, hub.me.id)
     const tabs: { k: TabKey; l: string; i: string; badge?: number }[] = [
         { k: "dashboard", l: "Dashboard", i: "grid" }, { k: "tasks", l: "Tasks", i: "check" },
-        { k: "time", l: "Check-ins", i: "clock" }, { k: "attendance", l: "Stand-up", i: "users" },
+        { k: "time", l: "Check-ins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: (isLead ? leaveOf(hub).filter((l) => l.status === "pending" && l.personId !== hub.me.id).length : 0) || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
         { k: "onboarding", l: "Onboarding", i: "play", badge: left || undefined }, { k: "docs", l: "Documents", i: "folder" },
         ...(isLead ? [{ k: "team" as TabKey, l: "Team & emails", i: "mail" }] : []),
     ]
@@ -170,7 +170,7 @@ export default function TeamHub(props: Props) {
                 <nav className="th-snav">
                     {tabs.map((t) => (
                         <button key={t.k} aria-current={tab === t.k ? "page" : undefined} onClick={() => setTab(t.k)}>
-                            <Ico n={t.i} /><span>{t.l}</span>{t.badge ? <em aria-label={t.badge + " onboarding steps left"}>{t.badge}</em> : null}
+                            <Ico n={t.i} /><span>{t.l}</span>{t.badge ? <em aria-label={t.badge + (t.k === "leave" ? " leave requests to review" : " onboarding steps left")}>{t.badge}</em> : null}
                         </button>
                     ))}
                 </nav>
@@ -185,7 +185,7 @@ export default function TeamHub(props: Props) {
                 <header className="th-head">
                     <div>
                         <h1>{titleOf}</h1>
-                        <p className="th-sub">{tab === "docs" || tab === "onboarding" || tab === "time" ? "Takshila team" : <>Live from Linear · updated {new Date(hub.updated).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{hub.hidden ? " · " + hub.hidden + " hidden" : ""}</>}</p>
+                        <p className="th-sub">{tab === "docs" || tab === "onboarding" || tab === "time" || tab === "leave" ? "Takshila team" : <>Live from Linear · updated {new Date(hub.updated).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}{hub.hidden ? " · " + hub.hidden + " hidden" : ""}</>}</p>
                     </div>
                     <div className="th-me">
                         <ClockCard hub={hub} act={act} />
@@ -196,6 +196,7 @@ export default function TeamHub(props: Props) {
                 {tab === "dashboard" && <Dashboard hub={hub} mem={mem} go={(t) => setTab(t)} />}
                 {tab === "tasks" && <Tasks hub={hub} mem={mem} />}
                 {tab === "time" && <TimeLog hub={hub} mem={mem} canEdit={isLead} act={act} />}
+                {tab === "leave" && <LeavePage hub={hub} canEdit={isLead} act={act} mem={mem} />}
                 {tab === "attendance" && <Attendance hub={hub} canEdit={isLead} act={act} />}
                 {tab === "onboarding" && <Onboarding hub={hub} canEdit={isLead} act={act} mem={mem} />}
                 {tab === "docs" && <Library hub={hub} canEdit={isLead} act={act} />}
@@ -559,8 +560,10 @@ function SendPanel({ hub, act }: { hub: Hub; act: (a: string, b: Record<string, 
 
 /* ------------------------------------------------------------------ check-ins, onboarding, documents */
 
-type TabKey = "dashboard" | "tasks" | "time" | "attendance" | "onboarding" | "docs" | "team"
-type Work = { id: string; date: string; personId: string; checkIn: string; checkOut: string; minutes: number | null; source: string; note: string }
+type TabKey = "dashboard" | "tasks" | "time" | "leave" | "attendance" | "onboarding" | "docs" | "team"
+type Work = { id: string; date: string; personId: string; checkIn: string; checkOut: string; minutes: number | null; source: string; note: string; brk?: number }
+type Brk = { id: string; workId: string; personId: string; start: string; end: string }
+type Leave = { id: string; personId: string; from: string; to: string; type: "casual" | "sick" | "paid" | "unpaid"; half: boolean; reason: string; status: "pending" | "approved" | "declined" | "cancelled"; decidedBy: string; decidedAt: string; requested: string }
 type Folder = { id: string; name: string; description: string; order: number }
 type Doc = { id: string; folderId: string; title: string; url: string; description: string; addedBy: string; added: string; order: number }
 type Step = { id: string; order: number; title: string; kind: "video" | "doc" | "link" | "task"; url: string; minutes: number; required: boolean; description: string }
@@ -572,9 +575,20 @@ const ERRORS: Record<string, string> = {
     already_checked_in: "You're already checked in.", not_checked_in: "You're not checked in.",
     folder_not_empty: "Move or remove the documents in this folder first.", bad_url: "Links must start with https://",
     bad_input: "Some details are missing.", not_yours: "You can only edit your own work notes.",
-    note_locked: "Work notes lock 12 hours after check-out.", unknown_action: "Update the Apps Script engine to use this.",
+    note_locked: "Work notes lock 12 hours after check-out.",
+    already_on_break: "You're already on a break.", not_on_break: "You're not on a break.",
+    leave_overlap: "You already have leave on those dates.", own_leave: "Another leader has to approve your own leave.", leave_started: "This leave has started, so it can't be cancelled. Ask leadership.", unknown_action: "Update the Apps Script engine to use this.",
 }
-const workOf = (hub: Hub): Work[] => (hub as any).work || []
+const breaksOf = (hub: Hub): Brk[] => (hub as any).breaks || []
+const leaveOf = (hub: Hub): Leave[] => (hub as any).leave || []
+const brkMins = (b: Brk) => Math.max(0, Math.round(((b.end ? +new Date(b.end) : Date.now()) - +new Date(b.start)) / 60000))
+// each session carries its break minutes, so live totals can leave breaks out (closed sessions are already net)
+const workOf = (hub: Hub): Work[] => { const bs = breaksOf(hub); return ((hub as any).work || []).map((w: Work) => ({ ...w, brk: bs.filter((b) => b.workId === w.id).reduce((n, b) => n + brkMins(b), 0) })) }
+const openBreakOf = (hub: Hub, id: string) => breaksOf(hub).find((b) => b.personId === id && !b.end) || null
+const LEAVE_T: Record<string, string> = { casual: "Casual", sick: "Sick", paid: "Paid", unpaid: "Unpaid" }
+const leaveOn = (hub: Hub, id: string, day: string) => leaveOf(hub).find((l) => l.personId === id && l.status === "approved" && l.from <= day && l.to >= day) || null
+const workDays = (l: Leave) => { if (l.half) return 0.5; let n = 0; for (let d = d8(l.from); d <= d8(l.to); d.setUTCDate(d.getUTCDate() + 1)) if (d.getUTCDay() % 6) n++; return n }
+const leaveDates = (l: Leave) => (l.from === l.to ? dayName(l.from) + " " + fmtDate(l.from) + (l.half ? " · half day" : "") : fmtDate(l.from) + " – " + fmtDate(l.to))
 const libOf = (hub: Hub): { folders: Folder[]; docs: Doc[] } => (hub as any).library || { folders: [], docs: [] }
 const onbOf = (hub: Hub): { steps: Step[]; progress: Prog[] } => (hub as any).onboarding || { steps: [], progress: [] }
 const engineOld = (hub: Hub) => !(hub as any).library
@@ -582,7 +596,7 @@ function onboardingLeft(hub: Hub, id: string) { const o = onbOf(hub); return o.s
 function openSessionOf(hub: Hub, id: string) { return workOf(hub).filter((w) => w.personId === id && w.checkIn && !w.checkOut).sort((a, b) => b.checkIn.localeCompare(a.checkIn))[0] || null }
 const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "")
 const fmtDur = (mins: number) => { const h = Math.floor(mins / 60), m = Math.round(mins % 60); return h ? h + "h " + String(m).padStart(2, "0") + "m" : m + "m" }
-const minsOf = (w: Work) => (w.checkOut ? (w.minutes ?? Math.round((+new Date(w.checkOut) - +new Date(w.checkIn)) / 60000)) : Math.max(0, Math.round((Date.now() - +new Date(w.checkIn)) / 60000)))
+const minsOf = (w: Work) => (w.checkOut ? (w.minutes ?? Math.round((+new Date(w.checkOut) - +new Date(w.checkIn)) / 60000)) : Math.max(0, Math.round((Date.now() - +new Date(w.checkIn)) / 60000) - (w.brk || 0)))
 const localDay = (iso: string) => { const d = new Date(iso); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
 // times come from the server clock and are never editable; the work note stays editable for 12 hours after check-out
 const NOTE_EDIT_MS = 12 * 3600000
@@ -594,6 +608,7 @@ const ICONS: Record<string, string> = {
     play: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18ZM10 8.5v7l6-3.5-6-3.5Z", folder: "M3.5 6.5a1.5 1.5 0 0 1 1.5-1.5h4.2l2 2.2H19a1.5 1.5 0 0 1 1.5 1.5v9.3a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5V6.5Z",
     mail: "M3.5 6h17v12h-17zM3.5 6.5 12 13l8.5-6.5", doc: "M7 3.5h7l4 4V20a.5.5 0 0 1-.5.5h-10.5a.5.5 0 0 1-.5-.5V4a.5.5 0 0 1 .5-.5Zm7 0V8h4M9 13h6m-6 3.5h4",
     link: "M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1", task: "M5 5h14v14H5zM8.5 12l2.5 2.5L16 9.5",
+    sun: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0-13v2m0 14v2M3 12h2m14 0h2M5.6 5.6 7 7m10 10 1.4 1.4M5.6 18.4 7 17m10-10 1.4-1.4",
     lock: "M6.5 10.5h11a1 1 0 0 1 1 1V19a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1Zm2 0V7.5a3.5 3.5 0 0 1 7 0v3", back: "M19 12H5m0 0 6-6m-6 6 6 6",
 }
 const Ico = ({ n, s = 18 }: { n: string; s?: number }) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ flex: "none" }}><path d={ICONS[n]} /></svg>
@@ -607,12 +622,19 @@ function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
     const open = openSessionOf(hub, hub.me.id)
     const today = workOf(hub).filter((w) => w.personId === hub.me.id && localDay(w.checkIn) === localDay(new Date().toISOString()))
     const total = today.reduce((n, w) => n + minsOf(w), 0)
-    const go = async (a: "checkIn" | "checkOut") => { setBusy(true); await act(a, a === "checkOut" ? { note: txt } : {}, a === "checkIn" ? "Checked in" : "Checked out"); setBusy(false); setNote(false); setTxt("") }
+    const brk = openBreakOf(hub, hub.me.id)
+    const off = leaveOn(hub, hub.me.id, localDay(new Date().toISOString()))
+    const msg: Record<string, string> = { checkIn: "Checked in", checkOut: "Checked out", breakStart: "Enjoy your break", breakEnd: "Welcome back" }
+    const go = async (a: "checkIn" | "checkOut" | "breakStart" | "breakEnd") => { setBusy(true); await act(a, a === "checkOut" ? { note: txt } : {}, msg[a]); setBusy(false); setNote(false); setTxt("") }
     return (
-        <div className={"th-clock" + (open ? " on" : "")}>
+        <div className={"th-clock" + (brk ? " brk" : open ? " on" : "")}>
             <span className="dot" aria-hidden="true" />
-            <div className="ct">{open ? <><b>Checked in · {fmtTime(open.checkIn)}</b><small>{fmtDur(total)} today</small></> : <><b>{today.length ? "Checked out" : "Not checked in"}</b><small>{today.length ? fmtDur(total) + " today" : "Start your day"}</small></>}</div>
-            {open ? <button className="th-cta" disabled={busy} onClick={() => setNote(true)}>Check out</button> : <button className="th-cta" disabled={busy} onClick={() => go("checkIn")}>Check in</button>}
+            <div className="ct">{brk ? <><b>On a break · since {fmtTime(brk.start)}</b><small>{fmtDur(brkMins(brk))} so far · {fmtDur(total)} worked today</small></>
+                : open ? <><b>Checked in · {fmtTime(open.checkIn)}</b><small>{fmtDur(total)} worked today</small></>
+                : <><b>{today.length ? "Checked out" : off && !off.half ? "On leave today" : "Not checked in"}</b><small>{today.length ? fmtDur(total) + " today" : off ? LEAVE_T[off.type] + " leave" + (off.half ? " · half day" : "") : "Start your day"}</small></>}</div>
+            {brk ? <button className="th-cta" disabled={busy} onClick={() => go("breakEnd")}>End break</button>
+                : open ? <>{(hub as any).breaks ? <button className="th-ghost" disabled={busy} onClick={() => go("breakStart")}>Break</button> : null}<button className="th-cta" disabled={busy} onClick={() => setNote(true)}>Check out</button></>
+                : <button className="th-cta" disabled={busy} onClick={() => go("checkIn")}>Check in</button>}
             {note ? (
                 <div className="th-pop" role="dialog" aria-label="Check out">
                     <label className="th-fld"><span>What did you work on? (optional)</span><input value={txt} onChange={(e) => setTxt(e.target.value)} placeholder="e.g. Homepage hero, research notes" autoFocus /></label>
@@ -647,6 +669,8 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                 <div className="th-tablewrap"><table className="th-table"><thead><tr><th>Person</th>{days.map((d) => <th key={d} className={d === todayK ? "today" : ""}>{dayName(d)} {d8(d).getUTCDate()}</th>)}<th>Week</th></tr></thead>
                     <tbody>{people.map((m) => <tr key={m.id}><td><span className="who"><span className="th-av sm">{initials(m.name)}</span>{m.name}</span></td>
                         {days.map((d) => { const c = cell(m.id, d), live = c.some((w) => !w.checkOut), mins = c.reduce((a, w) => a + minsOf(w), 0)
+                            const lv = c.length ? null : leaveOn(hub, m.id, d)
+                            if (lv) return <td key={d}><span className="th-tcell leave"><b>On leave</b><small>{LEAVE_T[lv.type]}{lv.half ? " · half" : ""}</small></span></td>
                             return <td key={d}>{c.length ? <span className={"th-tcell" + (live ? " live" : "")} title={c.map((w) => fmtTime(w.checkIn) + " – " + (w.checkOut ? fmtTime(w.checkOut) : "now")).join("\n")}><b>{fmtDur(mins)}</b><small>{fmtTime(c[c.length - 1].checkIn)}{live ? " · in" : " – " + fmtTime(c[0].checkOut)}</small></span> : <span className="th-note">–</span>}</td> })}
                         <td><b>{fmtDur(weekMins(m.id))}</b></td></tr>)}</tbody></table></div>
             </section>
@@ -659,7 +683,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                     <div key={w.id} className="th-srow">
                         <span className="th-av sm">{initials(mem(w.personId)?.name || "?")}</span>
                         <div className="mid"><b>{mem(w.personId)?.name || w.personId}</b>
-                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : <span className="livetxt">still checked in</span>}</div>
+                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : openBreakOf(hub, w.personId) ? <span className="livetxt">on a break</span> : <span className="livetxt">still checked in</span>}{w.brk ? " · " + fmtDur(w.brk) + " break" : ""}</div>
                             {edit === w.id ? (
                                 <form className="th-noteform" onSubmit={(e) => { e.preventDefault(); saveNote() }}>
                                     <input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={300} placeholder="What did you work on?" aria-label="What did you work on?" autoFocus />
@@ -676,6 +700,79 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
         </div>
     )
 }
+/* ---- leave ---- */
+function LeavePage({ hub, canEdit, act, mem }: { hub: Hub; canEdit: boolean; act: Act; mem: (id: string) => any }) {
+    const today = localDay(new Date().toISOString())
+    const blank = { type: "casual", from: today, to: today, half: false, reason: "" }
+    const [form, setForm] = useState<typeof blank | null>(null)
+    const [busy, setBusy] = useState("")
+    const all = leaveOf(hub)
+    const mine = all.filter((l) => l.personId === hub.me.id).sort((a, b) => b.from.localeCompare(a.from))
+    const otherLead = hub.team.some((m) => m.level === "leadership" && m.id !== hub.me.id)
+    const toReview = canEdit ? all.filter((l) => l.status === "pending" && (l.personId !== hub.me.id || !otherLead)).sort((a, b) => a.from.localeCompare(b.from)) : []
+    const horizon = (() => { const d = d8(today); d.setUTCDate(d.getUTCDate() + 14); return d.toISOString().slice(0, 10) })()
+    const out = all.filter((l) => l.status === "approved" && l.to >= today && l.from <= horizon).sort((a, b) => a.from.localeCompare(b.from))
+    const run = async (key: string, a: string, body: Record<string, unknown>, ok: string) => { setBusy(key); const r = await act(a, body, ok); setBusy(""); return r }
+    const submit = async (e: React.FormEvent) => {
+        e.preventDefault(); if (!form) return
+        const to = form.to < form.from ? form.from : form.to
+        const r = await run("new", "requestLeave", { leave: { ...form, to, half: form.half && form.from === to } }, "Leave requested")
+        if (r) setForm(null)
+    }
+    const chip = (l: Leave) => <span className={"th-lst " + l.status}>{l.status === "pending" ? "Waiting for approval" : l.status[0].toUpperCase() + l.status.slice(1)}</span>
+    const days = (l: Leave) => { const n = workDays(l); return n === 0.5 ? "½ day" : n + (n === 1 ? " working day" : " working days") }
+    if (engineOld(hub) || !(hub as any).leave) return <EngineNote />
+    return (
+        <div className="th-col">
+            {toReview.length ? (
+                <section className="th-panel">
+                    <div className="th-ph"><div><h2>Requests to review <span className="th-note">· {toReview.length}</span></h2><p>Approving posts to the team's Chat space. Reasons stay here.</p></div></div>
+                    {toReview.map((l) => (
+                        <div key={l.id} className="th-lrow">
+                            <span className="th-av sm">{initials(mem(l.personId)?.name || "?")}</span>
+                            <div className="mid"><b>{mem(l.personId)?.name || l.personId}</b><div className="sub">{LEAVE_T[l.type]} leave · {leaveDates(l)} · {days(l)}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
+                            <div className="acts"><button className="th-ghost" disabled={!!busy} onClick={() => run(l.id, "decideLeave", { id: l.id, status: "declined" }, "Declined")}>Decline</button><button className="th-cta" disabled={!!busy} onClick={() => run(l.id, "decideLeave", { id: l.id, status: "approved" }, "Approved")}>Approve</button></div>
+                        </div>
+                    ))}
+                </section>
+            ) : null}
+            <section className="th-panel">
+                <div className="th-ph"><div><h2>Your leave</h2><p>Request time off. Leadership approve it, and the team sees the dates in Chat.</p></div>{form ? null : <button className="th-cta" onClick={() => setForm(blank)}>Request leave</button>}</div>
+                {form ? (
+                    <form className="th-mform" onSubmit={submit} style={{ marginTop: 0, marginBottom: 14, borderTop: 0, paddingTop: 0 }}>
+                        <label className="th-fld"><span>Type</span><select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{Object.keys(LEAVE_T).map((k) => <option key={k} value={k}>{LEAVE_T[k]} leave</option>)}</select></label>
+                        <label className="th-fld"><span>From</span><input type="date" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value, to: form.to < e.target.value ? e.target.value : form.to })} required /></label>
+                        <label className="th-fld"><span>To</span><input type="date" value={form.to} min={form.from} onChange={(e) => setForm({ ...form, to: e.target.value })} required /></label>
+                        {form.from === form.to ? <label className="th-chk full"><input type="checkbox" checked={form.half} onChange={(e) => setForm({ ...form, half: e.target.checked })} /> Half day</label> : null}
+                        <label className="th-fld full"><span>Reason (optional, only leadership see it)</span><input value={form.reason} maxLength={300} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="e.g. Family function" /></label>
+                        <div className="full row"><span className="th-note">{days({ ...(form as any), to: form.to < form.from ? form.from : form.to, half: form.half && form.from === form.to })}</span><span style={{ display: "flex", gap: 8 }}><button type="button" className="th-ghost" onClick={() => setForm(null)}>Cancel</button><button className="th-cta" disabled={busy === "new"}>Send request</button></span></div>
+                    </form>
+                ) : null}
+                {mine.length ? mine.map((l) => {
+                    const canCancel = l.status === "pending" || (l.status === "approved" && l.from > today)
+                    return (
+                        <div key={l.id} className="th-lrow">
+                            <span className="th-lic"><Ico n="sun" s={16} /></span>
+                            <div className="mid"><b>{LEAVE_T[l.type]} leave</b><div className="sub">{leaveDates(l)} · {days(l)}{l.decidedBy && l.status !== "cancelled" ? " · " + l.status + " by " + (mem(l.decidedBy)?.name.split(" ")[0] || "leadership") : ""}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
+                            <div className="acts">{chip(l)}{canCancel ? <button className="th-edit" disabled={!!busy} onClick={() => run(l.id, "cancelLeave", { id: l.id }, "Leave cancelled")}>Cancel</button> : null}</div>
+                        </div>
+                    )
+                }) : form ? null : <p className="th-note">No leave yet.</p>}
+            </section>
+            <section className="th-panel">
+                <div className="th-ph"><div><h2>Who's out</h2><p>Approved leave for the next two weeks</p></div></div>
+                {out.length ? out.map((l) => (
+                    <div key={l.id} className="th-lrow">
+                        <span className="th-av sm">{initials(mem(l.personId)?.name || "?")}</span>
+                        <div className="mid"><b>{mem(l.personId)?.name || l.personId}</b><div className="sub">{LEAVE_T[l.type]} leave · {leaveDates(l)}</div></div>
+                        <div className="acts">{l.from <= today ? <span className="th-lst approved">Out today</span> : null}</div>
+                    </div>
+                )) : <p className="th-note">Nobody is on leave in the next two weeks.</p>}
+            </section>
+        </div>
+    )
+}
+
 /* ---- onboarding ---- */
 function ytId(u: string) { const m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/); return m ? m[1] : "" }
 function embedOf(u: string) {
@@ -927,7 +1024,16 @@ function hubCss(r: number) {
 .th-clock{position:relative;display:flex;align-items:center;gap:10px;background:var(--panel);border-radius:999px;padding:5px 5px 5px 14px}
 .th-clock .dot{width:9px;height:9px;border-radius:50%;background:var(--muted)}.th-clock.on .dot{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 20%,transparent)}
 .th-clock .ct{display:flex;flex-direction:column;line-height:1.2}.th-clock .ct b{font-weight:500;font-size:13px}.th-clock .ct small{color:var(--muted);font-size:12px}
-.th-clock .th-cta{padding:8px 16px}
+.th-clock .th-cta{padding:8px 16px}.th-clock .th-ghost{padding:8px 14px}
+.th-clock.brk .dot{background:var(--warn);box-shadow:0 0 0 4px color-mix(in srgb,var(--warn) 22%,transparent)}
+.th-tcell.leave{background:color-mix(in srgb,var(--accent) 22%,transparent)}
+.th-lrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.th-lrow:last-child{border-bottom:0}
+.th-lrow .mid b{font-weight:500}.th-lrow .sub{color:var(--muted);font-size:13px;margin-top:2px}.th-lrow .why{font-size:13.5px;margin-top:4px;overflow-wrap:anywhere}
+.th-lrow .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.th-lic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);color:var(--muted)}
+.th-lst{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:12px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
+.th-lst.pending{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--fg)}.th-lst.approved{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}.th-lst.declined{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.th-chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}.th-chk input{width:16px;height:16px;accent-color:var(--fg)}
 .th-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:320px;background:var(--panel);border-radius:${r}px;padding:14px;box-shadow:0 18px 40px -18px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:10px}
 .th-dacts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
 .th-modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.35);display:grid;place-items:center;padding:16px}
@@ -976,7 +1082,7 @@ function hubCss(r: number) {
  .th-ogrid{grid-template-columns:1fr}
  .th-docrow{grid-template-columns:auto minmax(0,1fr) auto}.th-docrow .when,.th-docrow .th-edit{display:none}
  .th-srow{grid-template-columns:auto minmax(0,1fr) auto}.th-srow .th-edit{grid-column:2/-1;justify-self:start}
- .th-clock{width:100%}.th-clock .ct{flex:1}.th-pop{width:auto;left:0}
+ .th-clock{width:100%;flex-wrap:wrap}.th-clock .ct{flex:1}.th-lrow{grid-template-columns:auto minmax(0,1fr)}.th-lrow .acts{grid-column:2/-1;justify-content:flex-start}.th-pop{width:auto;left:0}
 }
 `
 }

@@ -115,7 +115,11 @@ These live in the same Google Sheet, in five more tabs: **WorkLog**, **Folders**
 
 **Check-ins.** Everyone has a **Check in** / **Check out** button at the top of the dashboard. Each press is saved to the WorkLog tab with the exact time. Times always come from the server clock: nobody, including leadership, can type or change a check-in or check-out time. People can say what they worked on when they check out, and can edit that note for 12 hours after checking out; after that it locks. The engine enforces both rules, not just the dashboard. If someone signs out while still checked in, the dashboard asks whether to check out first. The **Check-ins** section shows a week grid of hours per person and every session. Employees see only their own. Leadership see everyone.
 
-**Check-in alerts in Google Chat.** Every check-in and check-out can post to a Google Chat space, for example "🟢 *Name* checked in · 9:04 AM IST" and "🔴 *Name* checked out · 6:12 PM IST · 9h 08m" with what they worked on. To turn it on:
+**Breaks.** While checked in, people press **Break**, then **End break** when they're back. Break time is left out of their worked hours, and checking out ends any open break. Breaks are saved in the Breaks tab.
+
+**Leave.** The **Leave** section lets anyone request casual, sick, paid or unpaid leave for a date range or a half day, with an optional reason. Leadership approve or decline it (a leader's own leave needs another leader, if there is one), and the menu shows how many requests are waiting. People can cancel a request until the leave starts. Approved leave shows as "On leave" in the Check-ins week grid and in **Who's out**. Requests are saved in the Leave tab.
+
+**Check-in alerts in Google Chat.** Every check-in, check-out, break and leave request or decision can post to a Google Chat space (leave reasons are never posted), for example "🟢 *Name* checked in · 9:04 AM IST" and "🔴 *Name* checked out · 6:12 PM IST · 9h 08m" with what they worked on. To turn it on:
 
 1. In Google Chat, open (or create) the space, then click its name → **Apps & integrations → Webhooks → Add webhook**. Name it "Team Hub" and copy the URL. If you don't see Webhooks, a Google Workspace admin has to allow them (Admin console → Apps → Google Workspace → Google Chat → *Allow users to add and use incoming webhooks*).
 2. In Apps Script: **Project Settings → Script properties → Add script property**. Property `CHAT_WEBHOOK`, value: the URL. Treat it like a password: anyone with it can post to the space.

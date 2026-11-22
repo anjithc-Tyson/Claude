@@ -33,6 +33,9 @@ const FOLDER_HEADERS = ['id', 'name', 'description', 'order'];
 const DOC_HEADERS = ['id', 'folderId', 'title', 'url', 'description', 'addedBy', 'added', 'order'];
 const STEP_HEADERS = ['id', 'order', 'title', 'kind', 'url', 'minutes', 'required', 'description'];
 const PROGRESS_HEADERS = ['personId', 'stepId', 'doneAt'];
+const BREAK_HEADERS = ['id', 'workId', 'personId', 'start', 'end'];
+const LEAVE_HEADERS = ['id', 'personId', 'from', 'to', 'type', 'half', 'reason', 'status', 'decidedBy', 'decidedAt', 'requested'];
+const LEAVE_TYPES = { casual: 'casual leave', sick: 'sick leave', paid: 'paid leave', unpaid: 'unpaid leave' };
 const DEFAULT_SETTINGS = {
   meeting: 'Daily stand-up',
   calendarTitle: 'Stand Up',     // part of the Google Calendar event title to look for
@@ -535,16 +538,18 @@ function ensureHubSheets_(ss) {
   ensureSheet_(ss, 'Documents', DOC_HEADERS);
   ensureSheet_(ss, 'Onboarding', STEP_HEADERS);
   ensureSheet_(ss, 'Progress', PROGRESS_HEADERS);
+  ensureSheet_(ss, 'Breaks', BREAK_HEADERS);
+  ensureSheet_(ss, 'Leave', LEAVE_HEADERS);
 }
 /** Run once after updating the code, if your Sheet was created before these tabs existed. */
-function upgradeSheets() { ensureHubSheets_(ss_()); Logger.log('WorkLog, Folders, Documents, Onboarding and Progress tabs are ready.'); }
+function upgradeSheets() { ensureHubSheets_(ss_()); Logger.log('WorkLog, Breaks, Leave, Folders, Documents, Onboarding and Progress tabs are ready.'); }
 
 function rows_(name, headers) {
   const sh = ss_().getSheetByName(name); if (!sh) return [];
   const v = sh.getDataRange().getValues(); const h = v.shift() || headers;
   const tz = ss_().getSpreadsheetTimeZone() || CFG.TZ_LOCAL;
   // plain date columns come back as the day typed in; timestamp columns as ISO times
-  const cell = (k, x) => !(x instanceof Date) ? x : (k === 'date' || k === 'added') ? Utilities.formatDate(x, tz, 'yyyy-MM-dd') : x.toISOString();
+  const cell = (k, x) => !(x instanceof Date) ? x : (k === 'date' || k === 'added' || k === 'from' || k === 'to') ? Utilities.formatDate(x, tz, 'yyyy-MM-dd') : x.toISOString();
   return v.filter(r => r[0] !== '' && r[0] !== null).map(r => { const o = {}; h.forEach((k, i) => o[k] = cell(k, r[i])); return o; });
 }
 function upsert_(name, headers, obj, keyFn) {
@@ -578,10 +583,13 @@ function checkIn_(me) {
 }
 function checkOut_(me, note) {
   const s = openSession_(me.id); if (!s) return { ok: false, error: 'not_checked_in' };
-  const now = new Date(), mins = Math.max(0, Math.round((now - new Date(s.checkIn)) / 60000));
+  const now = new Date();
+  const ob = openBreak_(me.id); if (ob) upsert_('Breaks', BREAK_HEADERS, Object.assign({}, ob, { end: now.toISOString() }), o => String(o.id) === ob.id);
+  const brk = breakMins_(s.id, now);
+  const mins = Math.max(0, Math.round((now - new Date(s.checkIn)) / 60000) - brk);   // worked time, breaks taken out
   upsert_('WorkLog', WORK_HEADERS, Object.assign({}, s, { checkOut: now.toISOString(), minutes: mins, note: String(note || '').slice(0, 300) }), o => String(o.id) === s.id);
   const worked = String(note || '').trim();
-  chatPost_('🔴 *' + me.name + '* checked out · ' + chatTime_(now) + ' · ' + Math.floor(mins / 60) + 'h ' + String(mins % 60).padStart(2, '0') + 'm' + (worked ? '\nWorked on: ' + worked.slice(0, 300) : ''));
+  chatPost_('🔴 *' + me.name + '* checked out · ' + chatTime_(now) + ' · ' + dur_(mins) + ' worked' + (brk ? ', ' + dur_(brk) + ' break' : '') + (worked ? '\nWorked on: ' + worked.slice(0, 300) : ''));
   return { ok: true, at: now.toISOString(), minutes: mins };
 }
 
@@ -600,6 +608,75 @@ function chatPost_(text) {
   } catch (e) { console.warn('Chat webhook failed: ' + e); return false; }   // never block a check-in because Chat is down
 }
 function testChat() { Logger.log(chatPost_('👋 Team Hub is connected. Check-ins and check-outs will show up here.') ? 'Sent. Look in your Chat space.' : 'Not sent. Check the CHAT_WEBHOOK script property.'); }
+const dur_ = m => Math.floor(m / 60) + 'h ' + String(m % 60).padStart(2, '0') + 'm';
+
+/* ---- breaks ---- */
+function readBreaks_(days) {
+  const since = new Date(Date.now() - (days || 62) * 86400000).toISOString();
+  return rows_('Breaks', BREAK_HEADERS).filter(r => String(r.start) >= since).map(r => ({ id: String(r.id), workId: String(r.workId), personId: String(r.personId), start: String(r.start), end: String(r.end || '') }));
+}
+function openBreak_(personId) { return readBreaks_(3).find(b => b.personId === personId && !b.end) || null; }
+function breakMins_(workId, now) { return readBreaks_(3).filter(b => b.workId === workId).reduce((n, b) => n + Math.max(0, Math.round(((b.end ? new Date(b.end) : now) - new Date(b.start)) / 60000)), 0); }
+function breakStart_(me) {
+  const s = openSession_(me.id); if (!s) return { ok: false, error: 'not_checked_in' };
+  if (openBreak_(me.id)) return { ok: false, error: 'already_on_break' };
+  ensureSheet_(ss_(), 'Breaks', BREAK_HEADERS);
+  const now = new Date();
+  upsert_('Breaks', BREAK_HEADERS, { id: newId_('b'), workId: s.id, personId: me.id, start: now.toISOString(), end: '' }, () => false);
+  chatPost_('☕ *' + me.name + '* is on a break · ' + chatTime_(now));
+  return { ok: true };
+}
+function breakEnd_(me) {
+  const b = openBreak_(me.id); if (!b) return { ok: false, error: 'not_on_break' };
+  const now = new Date(), m = Math.max(0, Math.round((now - new Date(b.start)) / 60000));
+  upsert_('Breaks', BREAK_HEADERS, Object.assign({}, b, { end: now.toISOString() }), o => String(o.id) === b.id);
+  chatPost_('↩️ *' + me.name + '* is back from a ' + dur_(m) + ' break · ' + chatTime_(now));
+  return { ok: true };
+}
+
+/* ---- leave ----
+ * Anyone can request leave for themselves. Leadership approve or decline it. People can cancel a request
+ * until it starts. Reasons stay in the hub; Chat only gets the dates and the type. */
+function readLeave_() {
+  const since = addDays_(localDay_(), -120);
+  return rows_('Leave', LEAVE_HEADERS).filter(r => String(r.to) >= since).map(r => ({
+    id: String(r.id), personId: String(r.personId), from: String(r.from).slice(0, 10), to: String(r.to).slice(0, 10), type: String(r.type), half: String(r.half) === 'true' || r.half === true,
+    reason: String(r.reason || ''), status: String(r.status), decidedBy: String(r.decidedBy || ''), decidedAt: String(r.decidedAt || ''), requested: String(r.requested || '')
+  }));
+}
+const leaveDates_ = l => l.from === l.to ? fmtDay_(l.from) + (l.half ? ' (half day)' : '') : fmtDay_(l.from) + ' – ' + fmtDay_(l.to);
+const fmtDay_ = d => Utilities.formatDate(new Date(d + 'T12:00:00Z'), 'UTC', 'EEE d MMM');
+function requestLeave_(me, l, team) {
+  l = l || {};
+  const from = String(l.from || '').slice(0, 10), to = String(l.to || l.from || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from || !LEAVE_TYPES[l.type]) return { ok: false, error: 'bad_input' };
+  if (addDays_(from, 0) < addDays_(localDay_(), -30)) return { ok: false, error: 'bad_input' };
+  if (readLeave_().some(x => x.personId === me.id && (x.status === 'pending' || x.status === 'approved') && x.from <= to && x.to >= from)) return { ok: false, error: 'leave_overlap' };
+  ensureSheet_(ss_(), 'Leave', LEAVE_HEADERS);
+  const rec = { id: newId_('l'), personId: me.id, from: from, to: to, type: l.type, half: from === to && !!l.half, reason: String(l.reason || '').slice(0, 300), status: 'pending', decidedBy: '', decidedAt: '', requested: new Date().toISOString() };
+  upsert_('Leave', LEAVE_HEADERS, rec, () => false);
+  chatPost_('🌴 *' + me.name + '* requested ' + LEAVE_TYPES[rec.type] + ' · ' + leaveDates_(rec) + ' · waiting for approval');
+  return { ok: true, id: rec.id };
+}
+function cancelLeave_(me, id) {
+  const l = readLeave_().find(x => x.id === String(id)); if (!l) return { ok: false, error: 'bad_input' };
+  if (l.personId !== me.id) return { ok: false, error: 'not_yours' };
+  if (l.status === 'declined' || l.status === 'cancelled' || (l.status === 'approved' && l.from <= localDay_())) return { ok: false, error: 'leave_started' };
+  upsert_('Leave', LEAVE_HEADERS, Object.assign({}, l, { status: 'cancelled' }), o => String(o.id) === l.id);
+  if (l.status === 'approved') chatPost_('↩️ *' + me.name + '* cancelled ' + LEAVE_TYPES[l.type] + ' · ' + leaveDates_(l));
+  return { ok: true };
+}
+function decideLeave_(me, id, status, team) {
+  if (status !== 'approved' && status !== 'declined') return { ok: false, error: 'bad_input' };
+  const l = readLeave_().find(x => x.id === String(id)); if (!l || l.status !== 'pending') return { ok: false, error: 'bad_input' };
+  // your own leave needs another leader, unless you're the only one
+  if (l.personId === me.id && team.some(m => m.level === 'leadership' && m.id !== me.id)) return { ok: false, error: 'own_leave' };
+  upsert_('Leave', LEAVE_HEADERS, Object.assign({}, l, { status: status, decidedBy: me.id, decidedAt: new Date().toISOString() }), o => String(o.id) === l.id);
+  const who = (team.find(m => m.id === l.personId) || { name: l.personId }).name;
+  chatPost_((status === 'approved' ? '✅ ' : '✖️ ') + LEAVE_TYPES[l.type].replace(/^./, c => c.toUpperCase()) + ' for *' + who + '* ' + status + ' by ' + me.name + ' · ' + leaveDates_(l));
+  return { ok: true };
+}
+
 /** Check-in and check-out times always come from the server clock and can't be changed by anyone.
  *  The only editable part is the work note: by the person who checked in, and only until 12 hours after their check-out. */
 const NOTE_EDIT_HOURS = 12;
@@ -714,6 +791,8 @@ function doGet(e) {
       people: vis ? {} : ctx.people,
       attendance: att, attendees: ctx.attPeople.map(m => m.id).filter(can),
       work: readWork_(62).filter(w => can(w.personId)),
+      breaks: readBreaks_(62).filter(b => can(b.personId)),
+      leave: readLeave_().filter(l => l.personId === me.id || (can(l.personId) && l.status !== 'cancelled')),
       library: readLibrary_(),
       onboarding: { steps: readSteps_(), progress: readProgress_().filter(p => can(p.personId)) }
     });
@@ -724,8 +803,9 @@ function doGet(e) {
  * POST (Content-Type text/plain, body JSON) {action, token, …}
  *  requestCode {email}  ·  verifyCode {email, code} → {token}  ·  signOut
  *  Anyone signed in:
- *   checkIn  ·  checkOut {note}  ·  saveNote {id, note} (own entry, up to 12h after check-out)  ·  completeStep {stepId}
+ *   checkIn  ·  checkOut {note}  ·  breakStart  ·  breakEnd  ·  requestLeave {leave: {from, to, type, half, reason}}  ·  cancelLeave {id}  ·  saveNote {id, note} (own entry, up to 12h after check-out)  ·  completeStep {stepId}
  *  Leadership only:
+ *   decideLeave {id, status: approved|declined}
  *   saveFolder {folder: {id?, name, description, order}}  ·  removeFolder {id}   (only when empty)
  *   saveDoc {doc: {id?, folderId, title, url, description}}  ·  removeDoc {id}
  *   saveStep {step: {id?, title, kind: video|doc|link|task, url, minutes, required, description}}  ·  removeStep {id}  ·  moveStep {id, dir: up|down}  ·  resetStep {personId, stepId}
@@ -750,6 +830,10 @@ function doPost(e) {
     if (b.action === 'checkIn') return json_(checkIn_(me));
     if (b.action === 'checkOut') return json_(checkOut_(me, b.note));
     if (b.action === 'saveNote') return json_(saveNote_(me, b.id, b.note));
+    if (b.action === 'breakStart') return json_(breakStart_(me));
+    if (b.action === 'breakEnd') return json_(breakEnd_(me));
+    if (b.action === 'requestLeave') return json_(requestLeave_(me, b.leave));
+    if (b.action === 'cancelLeave') return json_(cancelLeave_(me, b.id));
     if (b.action === 'completeStep') {
       const st = readSteps_().find(x => x.id === String(b.stepId)); if (!st) return json_({ ok: false, error: 'bad_input' });
       upsert_('Progress', PROGRESS_HEADERS, { personId: me.id, stepId: st.id, doneAt: new Date().toISOString() }, o => String(o.personId) === me.id && String(o.stepId) === st.id);
@@ -763,6 +847,7 @@ function doPost(e) {
         upsert_('Folders', FOLDER_HEADERS, { id: id, name: String(f.name).trim(), description: String(f.description || ''), order: Number(f.order) || 99 }, o => String(o.id) === id);
         return json_({ ok: true, id: id });
       }
+      case 'decideLeave': return json_(decideLeave_(me, b.id, b.status, readTeam()));
       case 'removeFolder': {
         if (readLibrary_().docs.some(d => d.folderId === String(b.id))) return json_({ ok: false, error: 'folder_not_empty' });
         deleteWhere_('Folders', FOLDER_HEADERS, o => String(o.id) === String(b.id)); return json_({ ok: true });
