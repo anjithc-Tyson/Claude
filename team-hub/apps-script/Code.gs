@@ -93,13 +93,17 @@ function ensureSheet_(ss, name, headers) {
 
 /* ============================== SHEET DATA ============================== */
 
-function ss_() { return SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('SHEET_ID')); }
+// Speed: each request opens the Sheet once and reads each tab at most once. Writes clear that tab's copy.
+let SS_ = null, SS_TZ_ = null, TEAM_ = null, SETTINGS_ = null; const ROWS_ = {};
+function ss_() { return SS_ || (SS_ = SpreadsheetApp.openById(PropertiesService.getScriptProperties().getProperty('SHEET_ID'))); }
+function sheetTz_() { return SS_TZ_ || (SS_TZ_ = ss_().getSpreadsheetTimeZone() || CFG.TZ_LOCAL); }
 function bool_(v, dflt) { if (v === '' || v === null || v === undefined) return dflt; return String(v).toLowerCase() === 'true' || v === true || String(v).toLowerCase() === 'yes'; }
 
 function readTeam() {
+  if (TEAM_) return TEAM_;
   const rows = ss_().getSheetByName('Team').getDataRange().getValues();
   const h = rows.shift();
-  return rows.filter(r => r[0]).map(r => {
+  return TEAM_ = rows.filter(r => r[0]).map(r => {
     const o = {}; h.forEach((k, i) => o[k] = r[i]);
     return {
       id: String(o.id), name: String(o.name || o.id), email: String(o.email || '').trim(),
@@ -111,6 +115,7 @@ function readTeam() {
 }
 
 function writeMember(m) {
+  TEAM_ = null;
   const sh = ss_().getSheetByName('Team');
   const rows = sh.getDataRange().getValues();
   const row = TEAM_HEADERS.map(k => m[k] === undefined ? '' : m[k]);
@@ -119,23 +124,27 @@ function writeMember(m) {
 }
 
 function removeMember(id) {
+  TEAM_ = null;
   const sh = ss_().getSheetByName('Team');
   const rows = sh.getDataRange().getValues();
   for (let i = rows.length - 1; i >= 1; i--) if (String(rows[i][0]) === String(id)) sh.deleteRow(i + 1);
 }
 
 function readSettings() {
+  if (SETTINGS_) return Object.assign({}, SETTINGS_);
   const out = Object.assign({}, DEFAULT_SETTINGS);
   ss_().getSheetByName('Settings').getDataRange().getValues().slice(1).forEach(r => { if (r[0]) out[r[0]] = String(r[1]); });
-  return {
+  SETTINGS_ = {
     meeting: out.meeting, calendarTitle: out.calendarTitle, start: normTime_(out.start), grace: Number(out.grace) || 0,
     days: String(out.days).split(',').map(s => Number(s.trim())).filter(n => n >= 0 && n <= 6),
     attendees: String(out.attendees).split(',').map(s => s.trim()).filter(Boolean),
     scopeOwner: out.scopeOwner, dashboardUrl: out.dashboardUrl
   };
+  return Object.assign({}, SETTINGS_);
 }
 
 function writeSetting(key, value) {
+  SETTINGS_ = null;
   const sh = ss_().getSheetByName('Settings');
   const rows = sh.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) if (rows[i][0] === key) { sh.getRange(i + 1, 2).setValue(value); return; }
@@ -548,20 +557,23 @@ function ensureHubSheets_(ss) {
 function upgradeSheets() { ensureHubSheets_(ss_()); Logger.log('WorkLog, Breaks, Leave, Folders, Documents, Onboarding and Progress tabs are ready.'); }
 
 function rows_(name, headers) {
+  if (ROWS_[name]) return ROWS_[name];
   const sh = ss_().getSheetByName(name); if (!sh) return [];
   const v = sh.getDataRange().getValues(); const h = v.shift() || headers;
-  const tz = ss_().getSpreadsheetTimeZone() || CFG.TZ_LOCAL;
+  const tz = sheetTz_();
   // plain date columns come back as the day typed in; timestamp columns as ISO times
   const cell = (k, x) => !(x instanceof Date) ? x : (k === 'date' || k === 'added' || k === 'from' || k === 'to') ? Utilities.formatDate(x, tz, 'yyyy-MM-dd') : x.toISOString();
-  return v.filter(r => r[0] !== '' && r[0] !== null).map(r => { const o = {}; h.forEach((k, i) => o[k] = cell(k, r[i])); return o; });
+  return ROWS_[name] = v.filter(r => r[0] !== '' && r[0] !== null).map(r => { const o = {}; h.forEach((k, i) => o[k] = cell(k, r[i])); return o; });
 }
 function upsert_(name, headers, obj, keyFn) {
+  delete ROWS_[name];
   const sh = ss_().getSheetByName(name); const v = sh.getDataRange().getValues();
   const row = headers.map(k => obj[k] === undefined || obj[k] === null ? '' : obj[k]);
   for (let i = 1; i < v.length; i++) { const o = {}; headers.forEach((k, j) => o[k] = v[i][j]); if (keyFn(o)) { sh.getRange(i + 1, 1, 1, row.length).setValues([row]); return; } }
   sh.appendRow(row);
 }
 function deleteWhere_(name, headers, fn) {
+  delete ROWS_[name];
   const sh = ss_().getSheetByName(name); const v = sh.getDataRange().getValues();
   for (let i = v.length - 1; i >= 1; i--) { const o = {}; headers.forEach((k, j) => o[k] = v[i][j]); if (fn(o)) sh.deleteRow(i + 1); }
 }
@@ -809,6 +821,21 @@ function whoIs_(token, key, team) {
   return team.find(m => m.id === s.id) || null;
 }
 
+/** The hub's own data (not Linear or attendance), filtered by role. doGet sends it, and so does every hub action,
+ *  so the dashboard can update in place instead of reloading everything. */
+function hubParts_(me, team) {
+  const vis = visibleIds_(me, team), can = id => !vis || vis[id];
+  return {
+    work: readWork_(62).filter(w => can(w.personId)),
+    breaks: readBreaks_(62).filter(b => can(b.personId)),
+    leave: readLeave_().filter(l => l.personId === me.id || (can(l.personId) && l.status !== 'cancelled')).map(l => Object.assign({}, l, { approverId: (approverOf_(team, l.personId) || { id: '' }).id, canDecide: l.status === 'pending' && canDecide_(me, l, team) })),
+    library: readLibrary_(),
+    onboarding: { steps: readSteps_(), progress: readProgress_().filter(p => can(p.personId)) }
+  };
+}
+const HUB_ACTIONS_ = { checkIn: 1, checkOut: 1, breakStart: 1, breakEnd: 1, saveNote: 1, requestLeave: 1, cancelLeave: 1, decideLeave: 1, completeStep: 1,
+  saveFolder: 1, removeFolder: 1, saveDoc: 1, removeDoc: 1, saveStep: 1, removeStep: 1, moveStep: 1, resetStep: 1 };
+
 /** What each role may see: leadership everything, managers their reporting line, employees only themselves. */
 function visibleIds_(me, team) {
   if (me.level === 'leadership') return null;   // null = everyone
@@ -832,7 +859,7 @@ function doGet(e) {
     const can = id => !vis || vis[id];
     const att = {};
     Object.keys(ctx.attendance).forEach(d => { Object.keys(ctx.attendance[d]).forEach(id => { if (can(id)) (att[d] = att[d] || {})[id] = ctx.attendance[d][id]; }); });
-    return json_({
+    return json_(Object.assign({
       ok: true, me: { id: me.id, name: me.name, title: me.title, level: me.level },
       today: workDay_(), updated: new Date().toISOString(),
       team: me.level === 'leadership' ? ctx.team : ctx.team.filter(m => can(m.id)),
@@ -840,13 +867,8 @@ function doGet(e) {
       tasks: vis ? ctx.tasks.filter(t => can(t.assigneeId)) : ctx.tasks,
       people: vis ? {} : ctx.people,
       attendance: att, attendees: ctx.attPeople.map(m => m.id).filter(can),
-      work: readWork_(62).filter(w => can(w.personId)),
-      breaks: readBreaks_(62).filter(b => can(b.personId)),
-      leave: readLeave_().filter(l => l.personId === me.id || (can(l.personId) && l.status !== 'cancelled')).map(l => Object.assign(l, { approverId: (approverOf_(team, l.personId) || { id: '' }).id, canDecide: l.status === 'pending' && canDecide_(me, l, team) })),
-      shift: { start: CFG.SHIFT_START, autoCloseHour: CFG.AUTO_CLOSE_HOUR, tz: CFG.TZ_LOCAL },
-      library: readLibrary_(),
-      onboarding: { steps: readSteps_(), progress: readProgress_().filter(p => can(p.personId)) }
-    });
+      shift: { start: CFG.SHIFT_START, autoCloseHour: CFG.AUTO_CLOSE_HOUR, tz: CFG.TZ_LOCAL }
+    }, hubParts_(me, team)));
   } catch (err) { return json_({ ok: false, error: err.message }); }
 }
 
@@ -867,6 +889,15 @@ function doGet(e) {
  *   sendNow       {kind: 'ahead'|'review', period, from, to, onlyMe}
  */
 function doPost(e) {
+  const out = doPostCore_(e);
+  let b; try { b = JSON.parse(e.postData.contents); } catch (err) { return out; }
+  if (!HUB_ACTIONS_[b.action]) return out;
+  let o; try { o = JSON.parse(out.getContent()); } catch (err) { return out; }
+  if (!o.ok) return out;
+  try { const team = readTeam(), me = whoIs_(b.token, b.key, team); if (me) o.parts = hubParts_(me, team); } catch (err) { console.warn('parts: ' + err); }
+  return json_(o);
+}
+function doPostCore_(e) {
   let b = {};
   try { b = JSON.parse(e.postData.contents); } catch (err) { return json_({ ok: false, error: 'bad_json' }); }
   if (b.action === 'requestCode') return json_(requestCode_(b.email));

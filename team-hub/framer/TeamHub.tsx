@@ -67,6 +67,35 @@ const store = {
     set: (v: string) => { try { v ? localStorage.setItem(TOKEN_KEY, v) : localStorage.removeItem(TOKEN_KEY) } catch {} },
 }
 
+// Speed: the last dashboard is kept on this device so the hub opens instantly, then refreshes in the background.
+const CACHE_KEY = "takshila-hub-cache"
+const cache = {
+    get: (token: string): any => { try { const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); return c && c.k === token.slice(-12) && Date.now() - c.at < 7 * 86400000 ? c.hub : null } catch { return null } },
+    set: (token: string, hub: any) => { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ k: token.slice(-12), at: Date.now(), hub })) } catch {} },
+    clear: () => { try { localStorage.removeItem(CACHE_KEY) } catch {} },
+}
+
+// Speed: these actions show on screen straight away; the server's answer then replaces the guess.
+const nowIso = () => new Date().toISOString()
+const raw = (h: any, k: string) => (h[k] || []) as any[]
+const OPTIMISTIC: Record<string, (h: any, b: any) => any> = {
+    checkIn: (h) => ({ ...h, work: [...raw(h, "work"), { id: "tmp-" + Date.now(), date: localDay(nowIso()), personId: h.me.id, checkIn: nowIso(), checkOut: "", minutes: null, source: "hub", note: "" }] }),
+    checkOut: (h, b) => {
+        const now = nowIso(), open = raw(h, "work").find((w) => w.personId === h.me.id && !w.checkOut); if (!open) return h
+        const breaks = raw(h, "breaks").map((x) => (x.personId === h.me.id && !x.end ? { ...x, end: now } : x))
+        const brk = breaks.filter((x) => x.workId === open.id).reduce((n, x) => n + Math.max(0, Math.round((+new Date(x.end) - +new Date(x.start)) / 60000)), 0)
+        const mins = Math.max(0, Math.round((+new Date(now) - +new Date(open.checkIn)) / 60000) - brk)
+        return { ...h, breaks, work: raw(h, "work").map((w) => (w === open ? { ...w, checkOut: now, minutes: mins, note: String(b.note || "") } : w)) }
+    },
+    breakStart: (h) => { const open = raw(h, "work").find((w) => w.personId === h.me.id && !w.checkOut); return open ? { ...h, breaks: [...raw(h, "breaks"), { id: "tmp-" + Date.now(), workId: open.id, personId: h.me.id, start: nowIso(), end: "" }] } : h },
+    breakEnd: (h) => ({ ...h, breaks: raw(h, "breaks").map((x) => (x.personId === h.me.id && !x.end ? { ...x, end: nowIso() } : x)) }),
+    saveNote: (h, b) => ({ ...h, work: raw(h, "work").map((w) => (w.id === b.id ? { ...w, note: b.note } : w)) }),
+    requestLeave: (h, b) => ({ ...h, leave: [...raw(h, "leave"), { id: "tmp-" + Date.now(), personId: h.me.id, reason: "", ...b.leave, status: "pending", decidedBy: "", decidedAt: "", requested: nowIso() }] }),
+    cancelLeave: (h, b) => ({ ...h, leave: raw(h, "leave").map((l) => (l.id === b.id ? { ...l, status: "cancelled" } : l)) }),
+    decideLeave: (h, b) => ({ ...h, leave: raw(h, "leave").map((l) => (l.id === b.id ? { ...l, status: b.status, canDecide: false, decidedBy: h.me.id, decidedAt: nowIso() } : l)) }),
+    completeStep: (h, b) => (h.onboarding ? { ...h, onboarding: { ...h.onboarding, progress: [...h.onboarding.progress, { personId: h.me.id, stepId: b.stepId, doneAt: nowIso() }] } } : h),
+}
+
 async function post(api: string, body: Record<string, unknown>) {
     // text/plain avoids a CORS preflight, which Apps Script can't answer.
     const r = await fetch(api, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
@@ -87,7 +116,7 @@ function relDue(t: Task, today: string) {
 export default function TeamHub(props: Props) {
     const { apiUrl, accent, background, panel, sunk, text, muted, good, warn, bad, font, radius } = props
     const [token, setToken] = useState<string>(() => store.get())
-    const [hub, setHub] = useState<Hub | null>(null)
+    const [hub, setHub] = useState<Hub | null>(() => (token ? cache.get(token) : null))
     const [state, setState] = useState<"idle" | "loading" | "error">("idle")
     const [err, setErr] = useState("")
     const [tab, setTab] = useState<TabKey>("dashboard")
@@ -98,6 +127,9 @@ export default function TeamHub(props: Props) {
     const [, tick] = useState(0)
     const toastTimer = useRef<number>()
     const routed = useRef(false)
+    const pending = useRef(0)                 // actions still on their way to the server
+    const queue = useRef<Promise<any>>(Promise.resolve())   // actions go to the server one at a time, in order
+    const parts = useRef<any>(null)
 
     const say = useCallback((m: string) => { setToast(m); window.clearTimeout(toastTimer.current); toastTimer.current = window.setTimeout(() => setToast(""), 2600) }, [])
     useEffect(() => { const t = window.setInterval(() => tick((n) => n + 1), 30000); return () => window.clearInterval(t) }, [])
@@ -109,10 +141,11 @@ export default function TeamHub(props: Props) {
             const r = await fetch(apiUrl + (apiUrl.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token) + (refresh ? "&refresh=1" : ""))
             const j = await r.json()
             if (!j.ok) {
-                if (j.error === "signed_out") { store.set(""); setToken(""); setHub(null); setState("idle"); return }
+                if (j.error === "signed_out") { store.set(""); cache.clear(); setToken(""); setHub(null); setState("idle"); return }
                 throw new Error(j.error || "Something went wrong")
             }
-            setHub(j); setState("idle"); setErr("")
+            if (pending.current) { setState("idle"); return }   // an action is in flight; its answer will update the screen
+            setHub(j); cache.set(token, j); setState("idle"); setErr("")
         } catch (e: any) { setErr(e.message || "Couldn't reach the dashboard service."); setState("error") }
     }, [apiUrl, token])
 
@@ -143,14 +176,29 @@ export default function TeamHub(props: Props) {
         if (onboardingLeft(hub, hub.me.id) > 0) setTab("onboarding")
     }, [hub])
 
-    const act = useCallback(async (action: string, body: Record<string, unknown>, ok?: string) => {
-        try {
-            const j = await post(apiUrl, { action, token, ...body })
-            if (!j.ok) { say(ERRORS[j.error] || "Couldn't save: " + j.error); return null }
-            if (ok) say(ok)
-            await load()
+    const act = useCallback((action: string, body: Record<string, unknown>, ok?: string): Promise<any> => {
+        const guess = OPTIMISTIC[action]
+        if (guess) { setHub((h) => (h ? guess(h, body) : h)); if (ok) say(ok) }
+        pending.current++
+        const run = async () => {
+            let j: any = null, failed = false
+            try {
+                j = await post(apiUrl, { action, token, ...body })
+                if (!j.ok) { failed = true; say(ERRORS[j.error] || "Couldn't save: " + j.error); j = null }
+                else { if (!guess && ok) say(ok); if (j.parts) parts.current = { ...(parts.current || {}), ...j.parts } }
+            } catch { failed = true; say("Couldn't reach the dashboard service. Try again.") }
+            pending.current--
+            if (!pending.current) {
+                // last action in the queue: apply the server's view, or reload if something failed or it sent nothing back
+                const p = parts.current; parts.current = null
+                if (!failed && p && j && j.parts) setHub((h) => { const n = h ? ({ ...h, ...p } as Hub) : h; if (n) cache.set(token, n); return n })
+                else load()
+            } else if (failed) parts.current = null
             return j
-        } catch { say("Couldn't reach the dashboard service. Try again."); return null }
+        }
+        const r = queue.current.then(run, run)
+        queue.current = r
+        return r
     }, [apiUrl, token, load, say])
 
     const C = { accent, background, panel, sunk, text, muted, good, warn, bad, radius }
@@ -180,7 +228,7 @@ export default function TeamHub(props: Props) {
         ...(isLead ? [{ k: "team" as TabKey, l: "Team & emails", i: "mail" }] : []),
     ]
     const open = openSessionOf(hub, hub.me.id)
-    const signOut = async () => { try { await post(apiUrl, { action: "signOut", token }) } catch {} store.set(""); setToken(""); setHub(null); setLeaving(false) }
+    const signOut = async () => { try { await post(apiUrl, { action: "signOut", token }) } catch {} store.set(""); cache.clear(); setToken(""); setHub(null); setLeaving(false) }
     const titleOf = tab === "dashboard" ? greet : tabs.find((t) => t.k === tab)!.l
     const anyBadge = tabs.some((t) => t.badge)
     const go = (k: TabKey) => { setTab(k); setMenu(false) }
@@ -649,7 +697,7 @@ const Ico = ({ n, s = 18 }: { n: string; s?: number }) => <svg width={s} height=
 
 /* ---- check in / out (header) ---- */
 function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
-    const [busy, setBusy] = useState(false)
+    const busy = false
     const [note, setNote] = useState(false)
     const [txt, setTxt] = useState("")
     if (engineOld(hub)) return null
@@ -659,7 +707,8 @@ function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
     const brk = openBreakOf(hub, hub.me.id)
     const off = leaveOn(hub, hub.me.id, localDay(new Date().toISOString()))
     const msg: Record<string, string> = { checkIn: "Logged in", checkOut: "Logged out", breakStart: "Enjoy your break", breakEnd: "Welcome back" }
-    const go = async (a: "checkIn" | "checkOut" | "breakStart" | "breakEnd") => { setBusy(true); await act(a, a === "checkOut" ? { note: txt } : {}, msg[a]); setBusy(false); setNote(false); setTxt("") }
+    // no waiting: the card changes as soon as it's tapped, and the save follows in the background
+    const go = (a: "checkIn" | "checkOut" | "breakStart" | "breakEnd") => { act(a, a === "checkOut" ? { note: txt } : {}, msg[a]); setNote(false); setTxt("") }
     return (
         <div className={"th-clock" + (brk ? " brk" : open ? " on" : "")}>
             <span className="dot" aria-hidden="true" />
