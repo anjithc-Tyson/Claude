@@ -49,7 +49,7 @@ Open the Sheet from the log.
 
 | Column | Meaning |
 |---|---|
-| `id` | Short unique id, e.g. `anjith`, `alina` |
+| `id` | Short unique id, e.g. `priya`, `rahul` |
 | `name`, `title` | Shown on the dashboard and in emails |
 | `email` | Where emails and sign-in codes go |
 | `linearEmail` | Their Linear login email, if different |
@@ -67,8 +67,8 @@ Open the Sheet from the log.
 | `start` | 21:00 | Stand-up start, India time, 24-hour |
 | `grace` | 2 | Minutes after the start that still count as on time |
 | `days` | 1,2,3,4,5 | Meeting days (0 = Sunday … 6 = Saturday) |
-| `attendees` | anjith,aikansh,himanshi,alina | Team ids tracked for attendance. Blank = everyone with `inReports` on |
-| `scopeOwner` | anjith | Team id of the Design & SEO lead |
+| `attendees` | priya,rahul,sam | Team ids tracked for attendance. Blank = everyone with `inReports` on |
+| `scopeOwner` | priya | Team id of the Design & SEO lead |
 | `dashboardUrl` | https://your-site.framer.website | Linked at the bottom of every email |
 
 ## 3. Connect Linear
