@@ -571,7 +571,8 @@ const ERRORS: Record<string, string> = {
     not_allowed: "Only leadership can change this.", signed_out: "Your session ended. Sign in again.",
     already_checked_in: "You're already checked in.", not_checked_in: "You're not checked in.",
     folder_not_empty: "Move or remove the documents in this folder first.", bad_url: "Links must start with https://",
-    bad_input: "Some details are missing.", bad_times: "Check-out has to be after check-in.", unknown_action: "Update the Apps Script engine to use this.",
+    bad_input: "Some details are missing.", not_yours: "You can only edit your own work notes.",
+    note_locked: "Work notes lock 12 hours after check-out.", unknown_action: "Update the Apps Script engine to use this.",
 }
 const workOf = (hub: Hub): Work[] => (hub as any).work || []
 const libOf = (hub: Hub): { folders: Folder[]; docs: Doc[] } => (hub as any).library || { folders: [], docs: [] }
@@ -583,7 +584,9 @@ const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleTimeString([], { h
 const fmtDur = (mins: number) => { const h = Math.floor(mins / 60), m = Math.round(mins % 60); return h ? h + "h " + String(m).padStart(2, "0") + "m" : m + "m" }
 const minsOf = (w: Work) => (w.checkOut ? (w.minutes ?? Math.round((+new Date(w.checkOut) - +new Date(w.checkIn)) / 60000)) : Math.max(0, Math.round((Date.now() - +new Date(w.checkIn)) / 60000)))
 const localDay = (iso: string) => { const d = new Date(iso); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
-const toLocalInput = (iso: string) => { if (!iso) return ""; const d = new Date(iso); return localDay(iso) + "T" + String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0") }
+// times come from the server clock and are never editable; the work note stays editable for 12 hours after check-out
+const NOTE_EDIT_MS = 12 * 3600000
+const noteLeft = (w: Work) => (w.checkOut ? +new Date(w.checkOut) + NOTE_EDIT_MS - Date.now() : Infinity)
 
 const ICONS: Record<string, string> = {
     grid: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z", check: "M4 12.5 9 17.5 20 6.5", clock: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0-13v5l3 2",
@@ -623,7 +626,9 @@ function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
 /* ---- check-in log ---- */
 function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => any; canEdit: boolean; act: Act }) {
     const [week, setWeek] = useState(0)
-    const [edit, setEdit] = useState<Partial<Work> | null>(null)
+    const [edit, setEdit] = useState("")
+    const [txt, setTxt] = useState("")
+    const [busy, setBusy] = useState(false)
     if (engineOld(hub)) return <EngineNote />
     const now = new Date(), dIdx = (now.getDay() + 6) % 7
     const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dIdx + week * 7)
@@ -646,34 +651,31 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                         <td><b>{fmtDur(weekMins(m.id))}</b></td></tr>)}</tbody></table></div>
             </section>
             <section className="th-panel">
-                <div className="th-ph"><div><h2>Sessions</h2><p>Every check-in this week{canEdit ? ". Fix a forgotten check-out or add a missed one." : ""}</p></div>{canEdit ? <button className="th-cta" onClick={() => setEdit({ personId: hub.me.id, checkIn: "", checkOut: "", note: "" })}>Add entry</button> : null}</div>
-                {edit ? <WorkForm hub={hub} entry={edit} onCancel={() => setEdit(null)} onSave={async (e) => { const r = await act("saveWork", { entry: e }, "Saved"); if (r) setEdit(null) }} /> : null}
-                {recent.length ? recent.map((w) => (
+                <div className="th-ph"><div><h2>Sessions</h2><p>Times are recorded automatically when you check in and out. You can edit what you worked on for 12 hours after checking out.</p></div></div>
+                {recent.length ? recent.map((w) => {
+                    const mine = w.personId === hub.me.id, left = noteLeft(w), canNote = mine && left > 0
+                    const saveNote = async () => { setBusy(true); const r = await act("saveNote", { id: w.id, note: txt }, "Saved"); setBusy(false); if (r) setEdit("") }
+                    return (
                     <div key={w.id} className="th-srow">
                         <span className="th-av sm">{initials(mem(w.personId)?.name || "?")}</span>
-                        <div className="mid"><b>{mem(w.personId)?.name || w.personId}</b><div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : <span className="livetxt">still checked in</span>}{w.note ? " · " + w.note : ""}</div></div>
+                        <div className="mid"><b>{mem(w.personId)?.name || w.personId}</b>
+                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : <span className="livetxt">still checked in</span>}</div>
+                            {edit === w.id ? (
+                                <form className="th-noteform" onSubmit={(e) => { e.preventDefault(); saveNote() }}>
+                                    <input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={300} placeholder="What did you work on?" aria-label="What did you work on?" autoFocus />
+                                    <button type="button" className="th-ghost" onClick={() => setEdit("")}>Cancel</button><button className="th-cta" disabled={busy}>Save</button>
+                                </form>
+                            ) : <div className="worked">{w.note ? w.note : <span className="th-note">{mine ? "No work note yet" : "No work note"}</span>}
+                                {mine && w.checkOut ? <small className="th-note">{canNote ? " · editable for " + fmtDur(Math.ceil(left / 60000)) : " · locked"}</small> : null}</div>}
+                        </div>
                         <b className="dur">{fmtDur(minsOf(w))}</b>
-                        {canEdit ? <button className="th-edit" onClick={() => setEdit(w)}>{w.checkOut ? "Edit" : "Set check-out"}</button> : null}
+                        {canNote && edit !== w.id ? <button className="th-edit" onClick={() => { setEdit(w.id); setTxt(w.note) }}>{w.note ? "Edit work" : "Add work"}</button> : null}
                     </div>
-                )) : <p className="th-note">No check-ins this week.</p>}
+                ) }) : <p className="th-note">No check-ins this week.</p>}
             </section>
         </div>
     )
 }
-function WorkForm({ hub, entry, onSave, onCancel }: { hub: Hub; entry: Partial<Work>; onSave: (e: any) => void; onCancel: () => void }) {
-    const [e, setE] = useState({ id: entry.id || "", personId: entry.personId || hub.me.id, checkIn: toLocalInput(entry.checkIn || ""), checkOut: toLocalInput(entry.checkOut || ""), note: entry.note || "" })
-    const save = (ev: React.FormEvent) => { ev.preventDefault(); if (!e.checkIn) return; onSave({ ...e, checkIn: new Date(e.checkIn).toISOString(), checkOut: e.checkOut ? new Date(e.checkOut).toISOString() : "" }) }
-    return (
-        <form className="th-mform" onSubmit={save} style={{ marginTop: 0, marginBottom: 14, borderTop: 0, paddingTop: 0 }}>
-            <label className="th-fld"><span>Person</span><select value={e.personId} onChange={(x) => setE({ ...e, personId: x.target.value })} disabled={!!e.id}>{hub.team.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</select></label>
-            <label className="th-fld"><span>Checked in</span><input type="datetime-local" value={e.checkIn} onChange={(x) => setE({ ...e, checkIn: x.target.value })} required /></label>
-            <label className="th-fld"><span>Checked out</span><input type="datetime-local" value={e.checkOut} onChange={(x) => setE({ ...e, checkOut: x.target.value })} /></label>
-            <label className="th-fld full"><span>Note</span><input value={e.note} onChange={(x) => setE({ ...e, note: x.target.value })} /></label>
-            <div className="full row"><button type="button" className="th-ghost" onClick={onCancel}>Cancel</button><button className="th-cta">Save entry</button></div>
-        </form>
-    )
-}
-
 /* ---- onboarding ---- */
 function ytId(u: string) { const m = u.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/); return m ? m[1] : "" }
 function embedOf(u: string) {
@@ -932,7 +934,7 @@ function hubCss(r: number) {
 .th-dlg{background:var(--panel);border-radius:${r + 6}px;padding:22px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:10px}.th-dlg h2{margin:0;font-size:19px;font-weight:500}
 .th-obanner{display:flex;align-items:center;gap:12px;border:0;cursor:pointer;text-align:left;background:var(--accent);color:#151514;border-radius:${r}px;padding:12px 16px;font-size:14px}.th-obanner b{font-weight:600}.th-obanner .go{margin-left:auto;font-weight:500}
 .th-tcell{display:inline-flex;flex-direction:column;line-height:1.25;background:var(--sunk);border-radius:10px;padding:6px 10px;min-width:92px}.th-tcell b{font-weight:500}.th-tcell small{color:var(--muted);font-size:11.5px}.th-tcell.live{box-shadow:inset 0 0 0 1.5px var(--good)}
-.th-srow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.th-srow .mid b{font-weight:500}.th-srow .dur{font-variant-numeric:tabular-nums}
+.th-srow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.th-srow .mid b{font-weight:500}.th-srow .worked{margin-top:4px;font-size:14px;overflow-wrap:anywhere}.th-noteform{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}.th-noteform input{flex:1 1 220px;min-width:0;font:inherit;font-size:14px;height:40px;padding:0 12px;border:0;border-radius:10px;background:var(--panel);color:var(--fg)}.th-srow .dur{font-variant-numeric:tabular-nums}
 .livetxt{color:var(--good)}
 .th-pbar{height:10px;background:var(--sunk);border-radius:999px;overflow:hidden}.th-pbar i{display:block;height:100%;background:var(--good);border-radius:999px;transition:width .4s ease}
 .th-ogrid{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:14px;align-items:start}

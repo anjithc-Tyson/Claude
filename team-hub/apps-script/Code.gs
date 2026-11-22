@@ -581,11 +581,15 @@ function checkOut_(me, note) {
   upsert_('WorkLog', WORK_HEADERS, Object.assign({}, s, { checkOut: now.toISOString(), minutes: mins, note: String(note || '').slice(0, 300) }), o => String(o.id) === s.id);
   return { ok: true, at: now.toISOString(), minutes: mins };
 }
-/** Leadership: fix a forgotten check-out or add a missed entry. Times are ISO strings. */
-function saveWork_(e, me) {
-  const inT = new Date(e.checkIn), outT = e.checkOut ? new Date(e.checkOut) : null;
-  if (isNaN(inT) || (outT && (isNaN(outT) || outT < inT))) return { ok: false, error: 'bad_times' };
-  upsert_('WorkLog', WORK_HEADERS, { id: e.id || newId_('w'), date: Utilities.formatDate(inT, CFG.TZ_LOCAL, 'yyyy-MM-dd'), personId: String(e.personId), checkIn: inT.toISOString(), checkOut: outT ? outT.toISOString() : '', minutes: outT ? Math.round((outT - inT) / 60000) : '', source: 'edited by ' + me.id, note: String(e.note || '').slice(0, 300) }, o => String(o.id) === String(e.id));
+/** Check-in and check-out times always come from the server clock and can't be changed by anyone.
+ *  The only editable part is the work note: by the person who checked in, and only until 12 hours after their check-out. */
+const NOTE_EDIT_HOURS = 12;
+function saveNote_(me, id, note) {
+  const s = readWork_(3).find(r => r.id === String(id));
+  if (!s) return { ok: false, error: 'bad_input' };
+  if (s.personId !== me.id) return { ok: false, error: 'not_yours' };
+  if (s.checkOut && Date.now() - new Date(s.checkOut).getTime() > NOTE_EDIT_HOURS * 3600000) return { ok: false, error: 'note_locked' };
+  upsert_('WorkLog', WORK_HEADERS, Object.assign({}, s, { minutes: s.minutes === null ? '' : s.minutes, note: String(note || '').slice(0, 300) }), o => String(o.id) === s.id);
   return { ok: true };
 }
 
@@ -701,9 +705,8 @@ function doGet(e) {
  * POST (Content-Type text/plain, body JSON) {action, token, …}
  *  requestCode {email}  ·  verifyCode {email, code} → {token}  ·  signOut
  *  Anyone signed in:
- *   checkIn  ·  checkOut {note}  ·  completeStep {stepId}
+ *   checkIn  ·  checkOut {note}  ·  saveNote {id, note} (own entry, up to 12h after check-out)  ·  completeStep {stepId}
  *  Leadership only:
- *   saveWork {entry: {id?, personId, checkIn, checkOut, note}}  ·  removeWork {id}
  *   saveFolder {folder: {id?, name, description, order}}  ·  removeFolder {id}   (only when empty)
  *   saveDoc {doc: {id?, folderId, title, url, description}}  ·  removeDoc {id}
  *   saveStep {step: {id?, title, kind: video|doc|link|task, url, minutes, required, description}}  ·  removeStep {id}  ·  moveStep {id, dir: up|down}  ·  resetStep {personId, stepId}
@@ -727,6 +730,7 @@ function doPost(e) {
     // anyone signed in
     if (b.action === 'checkIn') return json_(checkIn_(me));
     if (b.action === 'checkOut') return json_(checkOut_(me, b.note));
+    if (b.action === 'saveNote') return json_(saveNote_(me, b.id, b.note));
     if (b.action === 'completeStep') {
       const st = readSteps_().find(x => x.id === String(b.stepId)); if (!st) return json_({ ok: false, error: 'bad_input' });
       upsert_('Progress', PROGRESS_HEADERS, { personId: me.id, stepId: st.id, doneAt: new Date().toISOString() }, o => String(o.personId) === me.id && String(o.stepId) === st.id);
@@ -734,8 +738,6 @@ function doPost(e) {
     }
     if (me.level !== 'leadership') return json_({ ok: false, error: 'not_allowed' });
     switch (b.action) {
-      case 'saveWork': return json_(saveWork_(b.entry || {}, me));
-      case 'removeWork': deleteWhere_('WorkLog', WORK_HEADERS, o => String(o.id) === String(b.id)); return json_({ ok: true });
       case 'saveFolder': {
         const f = b.folder || {}; if (!String(f.name || '').trim()) return json_({ ok: false, error: 'bad_input' });
         const id = f.id || String(f.name).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || newId_('f');
