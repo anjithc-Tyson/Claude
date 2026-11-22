@@ -23,7 +23,9 @@ const CFG = {
   SENDER_NAME: 'Takshila Design & SEO',
   KEEP_DONE_DAYS: 90,
   CACHE_SECONDS: 300,
-  MEET_SENDER: 'meetings-noreply@google.com'
+  MEET_SENDER: 'meetings-noreply@google.com',
+  SHIFT_START: '18:00',   // India time. Shown on the dashboard; check-ins aren't marked late, only recorded.
+  AUTO_CLOSE_HOUR: 1      // India time. Sessions still open at 1 AM are closed and flagged as a missed check-out.
 };
 
 const TEAM_HEADERS = ['id', 'name', 'email', 'linearEmail', 'title', 'level', 'reportsTo', 'getsEmail', 'inReports'];
@@ -35,7 +37,7 @@ const STEP_HEADERS = ['id', 'order', 'title', 'kind', 'url', 'minutes', 'require
 const PROGRESS_HEADERS = ['personId', 'stepId', 'doneAt'];
 const BREAK_HEADERS = ['id', 'workId', 'personId', 'start', 'end'];
 const LEAVE_HEADERS = ['id', 'personId', 'from', 'to', 'type', 'half', 'reason', 'status', 'decidedBy', 'decidedAt', 'requested'];
-const LEAVE_TYPES = { casual: 'casual leave', sick: 'sick leave', paid: 'paid leave', unpaid: 'unpaid leave' };
+const LEAVE_TYPES = { casual: 'casual leave', sick: 'sick leave', exam: 'exam leave', paid: 'paid leave', unpaid: 'unpaid leave' };
 const DEFAULT_SETTINGS = {
   meeting: 'Daily stand-up',
   calendarTitle: 'Stand Up',     // part of the Google Calendar event title to look for
@@ -78,7 +80,8 @@ function installTriggers() {
   ScriptApp.newTrigger('sendMonday').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(20).nearMinute(45).inTimezone(CFG.TZ_LOCAL).create();
   ScriptApp.newTrigger('sendFriday').timeBased().onWeekDay(ScriptApp.WeekDay.SATURDAY).atHour(0).nearMinute(5).inTimezone(CFG.TZ_LOCAL).create();
   ScriptApp.newTrigger('attendanceCheck').timeBased().everyDays(1).atHour(22).nearMinute(20).inTimezone(CFG.TZ_LOCAL).create();
-  Logger.log('Triggers installed: Monday ~8:45 PM, Saturday ~12:05 AM, daily ~10:20 PM (India time).');
+  ScriptApp.newTrigger('autoCloseOpen').timeBased().everyDays(1).atHour(CFG.AUTO_CLOSE_HOUR).nearMinute(0).inTimezone(CFG.TZ_LOCAL).create();
+  Logger.log('Triggers installed: Monday ~8:45 PM, Saturday ~12:05 AM, daily ~10:20 PM, and missed check-outs closed daily at ' + CFG.AUTO_CLOSE_HOUR + ' AM (India time).');
 }
 
 function ensureSheet_(ss, name, headers) {
@@ -593,6 +596,21 @@ function checkOut_(me, note) {
   return { ok: true, at: now.toISOString(), minutes: mins };
 }
 
+/** Runs daily at CFG.AUTO_CLOSE_HOUR (India time): anyone still checked in is checked out at that hour and flagged.
+ *  They can check in again if they're still working. */
+function autoCloseOpen() {
+  const now = new Date();
+  const cut = new Date(Utilities.formatDate(now, CFG.TZ_LOCAL, 'yyyy-MM-dd') + 'T' + String(CFG.AUTO_CLOSE_HOUR).padStart(2, '0') + ':00:00+05:30');
+  const at = cut <= now ? cut : now, team = readTeam();
+  readWork_(3).filter(w => w.checkIn && !w.checkOut && new Date(w.checkIn) < at).forEach(w => {
+    readBreaks_(3).filter(b => b.workId === w.id && !b.end).forEach(b => upsert_('Breaks', BREAK_HEADERS, Object.assign({}, b, { end: at.toISOString() }), o => String(o.id) === b.id));
+    const brk = breakMins_(w.id, at), mins = Math.max(0, Math.round((at - new Date(w.checkIn)) / 60000) - brk);
+    upsert_('WorkLog', WORK_HEADERS, Object.assign({}, w, { checkOut: at.toISOString(), minutes: mins, source: 'auto-closed' }), o => String(o.id) === w.id);
+    const who = (team.find(m => m.id === w.personId) || { name: w.personId }).name;
+    chatPost_('⚠️ *' + who + '* didn\'t check out · closed automatically at ' + chatTime_(at) + ' · ' + dur_(mins) + ' recorded');
+  });
+}
+
 /* ---- Google Chat notifications ----
  * Posts each check-in and check-out to a Google Chat space, so the team sees them as they happen.
  * Set up: in the Chat space, Apps & integrations → Webhooks → Add webhook, copy the URL, and save it in
@@ -634,6 +652,33 @@ function breakEnd_(me) {
   return { ok: true };
 }
 
+/** Who approves someone's leave: the first manager or leader up their reportsTo chain on the Team tab.
+ *  null = nobody set, so any leader can approve. */
+function approverOf_(team, personId) {
+  const seen = {}; let cur = team.find(m => m.id === personId);
+  while (cur && cur.reportsTo && !seen[cur.id]) {
+    seen[cur.id] = true;
+    const up = team.find(m => m.id === cur.reportsTo); if (!up) return null;
+    if (up.level === 'leadership' || up.level === 'manager') return up;
+    cur = up;
+  }
+  return null;
+}
+function canDecide_(me, l, team) {
+  const ap = approverOf_(team, l.personId);
+  if (l.personId === me.id) return !ap && !team.some(m => m.level === 'leadership' && m.id !== me.id);   // only when there's nobody else
+  return (ap && ap.id === me.id) || me.level === 'leadership';
+}
+function leaveMail_(to, subject, lines) {
+  if (!to) return;
+  const set = readSettings();
+  const html = '<div style="font-family:Arial,sans-serif;font-size:15px;color:#151514;line-height:1.5">' + lines.map(x => '<p style="margin:0 0 10px">' + esc_(x) + '</p>').join('') +
+    (set.dashboardUrl ? '<p style="margin-top:20px"><a href="' + esc_(set.dashboardUrl) + '" style="background:#151514;color:#fff;padding:10px 18px;border-radius:999px;text-decoration:none">Open the dashboard →</a></p>' : '') + '</div>';
+  try { GmailApp.sendEmail(to, subject, lines.join('\n') + (set.dashboardUrl ? '\n\nDashboard: ' + set.dashboardUrl : ''), { htmlBody: html, name: CFG.SENDER_NAME }); } catch (e) { console.warn('Leave email failed: ' + e); }
+}
+const workDays_ = l => { if (l.half) return 0.5; let n = 0; for (let d = l.from; d <= l.to; d = addDays_(d, 1)) { const w = new Date(d + 'T12:00:00Z').getUTCDay(); if (w !== 0 && w !== 6) n++; } return n; };
+const daysTxt_ = n => n === 0.5 ? 'half a day' : n + (n === 1 ? ' working day' : ' working days');
+
 /* ---- leave ----
  * Anyone can request leave for themselves. Leadership approve or decline it. People can cancel a request
  * until it starts. Reasons stay in the hub; Chat only gets the dates and the type. */
@@ -646,8 +691,8 @@ function readLeave_() {
 }
 const leaveDates_ = l => l.from === l.to ? fmtDay_(l.from) + (l.half ? ' (half day)' : '') : fmtDay_(l.from) + ' – ' + fmtDay_(l.to);
 const fmtDay_ = d => Utilities.formatDate(new Date(d + 'T12:00:00Z'), 'UTC', 'EEE d MMM');
-function requestLeave_(me, l, team) {
-  l = l || {};
+function requestLeave_(me, l) {
+  l = l || {}; const team = readTeam();
   const from = String(l.from || '').slice(0, 10), to = String(l.to || l.from || '').slice(0, 10);
   if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to) || to < from || !LEAVE_TYPES[l.type]) return { ok: false, error: 'bad_input' };
   if (addDays_(from, 0) < addDays_(localDay_(), -30)) return { ok: false, error: 'bad_input' };
@@ -655,7 +700,11 @@ function requestLeave_(me, l, team) {
   ensureSheet_(ss_(), 'Leave', LEAVE_HEADERS);
   const rec = { id: newId_('l'), personId: me.id, from: from, to: to, type: l.type, half: from === to && !!l.half, reason: String(l.reason || '').slice(0, 300), status: 'pending', decidedBy: '', decidedAt: '', requested: new Date().toISOString() };
   upsert_('Leave', LEAVE_HEADERS, rec, () => false);
-  chatPost_('🌴 *' + me.name + '* requested ' + LEAVE_TYPES[rec.type] + ' · ' + leaveDates_(rec) + ' · waiting for approval');
+  const ap = approverOf_(team, me.id);
+  chatPost_('🌴 *' + me.name + '* requested ' + LEAVE_TYPES[rec.type] + ' · ' + leaveDates_(rec) + ' · waiting for ' + (ap ? ap.name : 'leadership'));
+  const mailTo = ap ? ap.email : team.filter(m => m.level === 'leadership' && m.id !== me.id && m.email).map(m => m.email).join(',');
+  leaveMail_(mailTo, 'Leave request: ' + me.name + ' · ' + LEAVE_TYPES[rec.type] + ' · ' + leaveDates_(rec),
+    [me.name + ' asked for ' + LEAVE_TYPES[rec.type] + ': ' + leaveDates_(rec) + ' (' + daysTxt_(workDays_(rec)) + ').'].concat(rec.reason ? ['Reason: ' + rec.reason] : []).concat(['Approve or decline it in the Leave section of the Team Hub.']));
   return { ok: true, id: rec.id };
 }
 function cancelLeave_(me, id) {
@@ -666,13 +715,14 @@ function cancelLeave_(me, id) {
   if (l.status === 'approved') chatPost_('↩️ *' + me.name + '* cancelled ' + LEAVE_TYPES[l.type] + ' · ' + leaveDates_(l));
   return { ok: true };
 }
-function decideLeave_(me, id, status, team) {
+function decideLeave_(me, id, status) {
   if (status !== 'approved' && status !== 'declined') return { ok: false, error: 'bad_input' };
+  const team = readTeam();
   const l = readLeave_().find(x => x.id === String(id)); if (!l || l.status !== 'pending') return { ok: false, error: 'bad_input' };
-  // your own leave needs another leader, unless you're the only one
-  if (l.personId === me.id && team.some(m => m.level === 'leadership' && m.id !== me.id)) return { ok: false, error: 'own_leave' };
+  if (!canDecide_(me, l, team)) return { ok: false, error: l.personId === me.id ? 'own_leave' : 'not_approver' };
   upsert_('Leave', LEAVE_HEADERS, Object.assign({}, l, { status: status, decidedBy: me.id, decidedAt: new Date().toISOString() }), o => String(o.id) === l.id);
-  const who = (team.find(m => m.id === l.personId) || { name: l.personId }).name;
+  const p = team.find(m => m.id === l.personId) || { name: l.personId, email: '' }, who = p.name;
+  leaveMail_(p.email, 'Your leave was ' + status + ' · ' + leaveDates_(l), ['Your ' + LEAVE_TYPES[l.type] + ' for ' + leaveDates_(l) + ' was ' + status + ' by ' + me.name + '.']);
   chatPost_((status === 'approved' ? '✅ ' : '✖️ ') + LEAVE_TYPES[l.type].replace(/^./, c => c.toUpperCase()) + ' for *' + who + '* ' + status + ' by ' + me.name + ' · ' + leaveDates_(l));
   return { ok: true };
 }
@@ -792,7 +842,8 @@ function doGet(e) {
       attendance: att, attendees: ctx.attPeople.map(m => m.id).filter(can),
       work: readWork_(62).filter(w => can(w.personId)),
       breaks: readBreaks_(62).filter(b => can(b.personId)),
-      leave: readLeave_().filter(l => l.personId === me.id || (can(l.personId) && l.status !== 'cancelled')),
+      leave: readLeave_().filter(l => l.personId === me.id || (can(l.personId) && l.status !== 'cancelled')).map(l => Object.assign(l, { approverId: (approverOf_(team, l.personId) || { id: '' }).id, canDecide: l.status === 'pending' && canDecide_(me, l, team) })),
+      shift: { start: CFG.SHIFT_START, autoCloseHour: CFG.AUTO_CLOSE_HOUR, tz: CFG.TZ_LOCAL },
       library: readLibrary_(),
       onboarding: { steps: readSteps_(), progress: readProgress_().filter(p => can(p.personId)) }
     });
@@ -803,9 +854,8 @@ function doGet(e) {
  * POST (Content-Type text/plain, body JSON) {action, token, …}
  *  requestCode {email}  ·  verifyCode {email, code} → {token}  ·  signOut
  *  Anyone signed in:
- *   checkIn  ·  checkOut {note}  ·  breakStart  ·  breakEnd  ·  requestLeave {leave: {from, to, type, half, reason}}  ·  cancelLeave {id}  ·  saveNote {id, note} (own entry, up to 12h after check-out)  ·  completeStep {stepId}
+ *   checkIn  ·  checkOut {note}  ·  breakStart  ·  breakEnd  ·  requestLeave {leave: {from, to, type, half, reason}}  ·  cancelLeave {id}  ·  decideLeave {id, status: approved|declined} (their manager, or leadership)  ·  saveNote {id, note} (own entry, up to 12h after check-out)  ·  completeStep {stepId}
  *  Leadership only:
- *   decideLeave {id, status: approved|declined}
  *   saveFolder {folder: {id?, name, description, order}}  ·  removeFolder {id}   (only when empty)
  *   saveDoc {doc: {id?, folderId, title, url, description}}  ·  removeDoc {id}
  *   saveStep {step: {id?, title, kind: video|doc|link|task, url, minutes, required, description}}  ·  removeStep {id}  ·  moveStep {id, dir: up|down}  ·  resetStep {personId, stepId}
@@ -833,6 +883,7 @@ function doPost(e) {
     if (b.action === 'breakStart') return json_(breakStart_(me));
     if (b.action === 'breakEnd') return json_(breakEnd_(me));
     if (b.action === 'requestLeave') return json_(requestLeave_(me, b.leave));
+    if (b.action === 'decideLeave') return json_(decideLeave_(me, b.id, b.status));
     if (b.action === 'cancelLeave') return json_(cancelLeave_(me, b.id));
     if (b.action === 'completeStep') {
       const st = readSteps_().find(x => x.id === String(b.stepId)); if (!st) return json_({ ok: false, error: 'bad_input' });
@@ -847,7 +898,6 @@ function doPost(e) {
         upsert_('Folders', FOLDER_HEADERS, { id: id, name: String(f.name).trim(), description: String(f.description || ''), order: Number(f.order) || 99 }, o => String(o.id) === id);
         return json_({ ok: true, id: id });
       }
-      case 'decideLeave': return json_(decideLeave_(me, b.id, b.status, readTeam()));
       case 'removeFolder': {
         if (readLibrary_().docs.some(d => d.folderId === String(b.id))) return json_({ ok: false, error: 'folder_not_empty' });
         deleteWhere_('Folders', FOLDER_HEADERS, o => String(o.id) === String(b.id)); return json_({ ok: true });

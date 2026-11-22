@@ -117,7 +117,11 @@ These live in the same Google Sheet, in five more tabs: **WorkLog**, **Folders**
 
 **Breaks.** While checked in, people press **Break**, then **End break** when they're back. Break time is left out of their worked hours, and checking out ends any open break. Breaks are saved in the Breaks tab.
 
-**Leave.** The **Leave** section lets anyone request casual, sick, paid or unpaid leave for a date range or a half day, with an optional reason. Leadership approve or decline it (a leader's own leave needs another leader, if there is one), and the menu shows how many requests are waiting. People can cancel a request until the leave starts. Approved leave shows as "On leave" in the Check-ins week grid and in **Who's out**. Requests are saved in the Leave tab.
+**Shift and India time.** Check-ins are recorded and shown in India time (IST). The shift starts at 6:00 PM IST (`CFG.SHIFT_START`); check-ins aren't marked late, only recorded. Saturday and Sunday are off: they're greyed out in the week grid and never count as leave days.
+
+**Missed check-outs.** Anyone still checked in at 1:00 AM IST (`CFG.AUTO_CLOSE_HOUR`) is checked out at 1:00 AM automatically. The session is flagged "missed check-out" in red, and Chat gets a ⚠️ message. If they're still working, they can check in again. Run `installTriggers` once after updating the code to turn this on.
+
+**Leave.** The **Leave** section lets anyone request casual, sick, exam, paid or unpaid leave for a date range or a half day, with an optional reason. Each request goes by email to the person's manager: the first manager or leader up their `reportsTo` chain on the Team tab (for example an intern → the CTO). If nobody is set, it goes to all of leadership. That manager approves or declines it in **Requests to review**, and any leader can step in. A leader's own leave needs another leader. The person gets an email with the answer. People can cancel a request until the leave starts. Managers and leadership see **Team bandwidth**: who's out over the next four weeks, with pending requests dashed. Approved leave also shows as "On leave" in the week grid. Requests are saved in the Leave tab.
 
 **Check-in alerts in Google Chat.** Every check-in, check-out, break and leave request or decision can post to a Google Chat space (leave reasons are never posted), for example "🟢 *Name* checked in · 9:04 AM IST" and "🔴 *Name* checked out · 6:12 PM IST · 9h 08m" with what they worked on. To turn it on:
 

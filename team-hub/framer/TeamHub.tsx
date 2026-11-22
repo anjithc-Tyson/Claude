@@ -155,7 +155,7 @@ export default function TeamHub(props: Props) {
     const left = onboardingLeft(hub, hub.me.id)
     const tabs: { k: TabKey; l: string; i: string; badge?: number }[] = [
         { k: "dashboard", l: "Dashboard", i: "grid" }, { k: "tasks", l: "Tasks", i: "check" },
-        { k: "time", l: "Check-ins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: (isLead ? leaveOf(hub).filter((l) => l.status === "pending" && l.personId !== hub.me.id).length : 0) || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
+        { k: "time", l: "Check-ins", i: "clock" }, { k: "leave", l: "Leave", i: "sun", badge: leaveOf(hub).filter((l) => l.canDecide).length || undefined }, { k: "attendance", l: "Stand-up", i: "users" },
         { k: "onboarding", l: "Onboarding", i: "play", badge: left || undefined }, { k: "docs", l: "Documents", i: "folder" },
         ...(isLead ? [{ k: "team" as TabKey, l: "Team & emails", i: "mail" }] : []),
     ]
@@ -196,7 +196,7 @@ export default function TeamHub(props: Props) {
                 {tab === "dashboard" && <Dashboard hub={hub} mem={mem} go={(t) => setTab(t)} />}
                 {tab === "tasks" && <Tasks hub={hub} mem={mem} />}
                 {tab === "time" && <TimeLog hub={hub} mem={mem} canEdit={isLead} act={act} />}
-                {tab === "leave" && <LeavePage hub={hub} canEdit={isLead} act={act} mem={mem} />}
+                {tab === "leave" && <LeavePage hub={hub} act={act} mem={mem} />}
                 {tab === "attendance" && <Attendance hub={hub} canEdit={isLead} act={act} />}
                 {tab === "onboarding" && <Onboarding hub={hub} canEdit={isLead} act={act} mem={mem} />}
                 {tab === "docs" && <Library hub={hub} canEdit={isLead} act={act} />}
@@ -563,7 +563,7 @@ function SendPanel({ hub, act }: { hub: Hub; act: (a: string, b: Record<string, 
 type TabKey = "dashboard" | "tasks" | "time" | "leave" | "attendance" | "onboarding" | "docs" | "team"
 type Work = { id: string; date: string; personId: string; checkIn: string; checkOut: string; minutes: number | null; source: string; note: string; brk?: number }
 type Brk = { id: string; workId: string; personId: string; start: string; end: string }
-type Leave = { id: string; personId: string; from: string; to: string; type: "casual" | "sick" | "paid" | "unpaid"; half: boolean; reason: string; status: "pending" | "approved" | "declined" | "cancelled"; decidedBy: string; decidedAt: string; requested: string }
+type Leave = { id: string; personId: string; from: string; to: string; type: "casual" | "sick" | "exam" | "paid" | "unpaid"; half: boolean; reason: string; status: "pending" | "approved" | "declined" | "cancelled"; decidedBy: string; decidedAt: string; requested: string; approverId?: string; canDecide?: boolean }
 type Folder = { id: string; name: string; description: string; order: number }
 type Doc = { id: string; folderId: string; title: string; url: string; description: string; addedBy: string; added: string; order: number }
 type Step = { id: string; order: number; title: string; kind: "video" | "doc" | "link" | "task"; url: string; minutes: number; required: boolean; description: string }
@@ -577,7 +577,7 @@ const ERRORS: Record<string, string> = {
     bad_input: "Some details are missing.", not_yours: "You can only edit your own work notes.",
     note_locked: "Work notes lock 12 hours after check-out.",
     already_on_break: "You're already on a break.", not_on_break: "You're not on a break.",
-    leave_overlap: "You already have leave on those dates.", own_leave: "Another leader has to approve your own leave.", leave_started: "This leave has started, so it can't be cancelled. Ask leadership.", unknown_action: "Update the Apps Script engine to use this.",
+    leave_overlap: "You already have leave on those dates.", own_leave: "Another leader has to approve your own leave.", not_approver: "Only their manager or leadership can decide this.", leave_started: "This leave has started, so it can't be cancelled. Ask leadership.", unknown_action: "Update the Apps Script engine to use this.",
 }
 const breaksOf = (hub: Hub): Brk[] => (hub as any).breaks || []
 const leaveOf = (hub: Hub): Leave[] => (hub as any).leave || []
@@ -585,7 +585,7 @@ const brkMins = (b: Brk) => Math.max(0, Math.round(((b.end ? +new Date(b.end) : 
 // each session carries its break minutes, so live totals can leave breaks out (closed sessions are already net)
 const workOf = (hub: Hub): Work[] => { const bs = breaksOf(hub); return ((hub as any).work || []).map((w: Work) => ({ ...w, brk: bs.filter((b) => b.workId === w.id).reduce((n, b) => n + brkMins(b), 0) })) }
 const openBreakOf = (hub: Hub, id: string) => breaksOf(hub).find((b) => b.personId === id && !b.end) || null
-const LEAVE_T: Record<string, string> = { casual: "Casual", sick: "Sick", paid: "Paid", unpaid: "Unpaid" }
+const LEAVE_T: Record<string, string> = { casual: "Casual", sick: "Sick", exam: "Exam", paid: "Paid", unpaid: "Unpaid" }
 const leaveOn = (hub: Hub, id: string, day: string) => leaveOf(hub).find((l) => l.personId === id && l.status === "approved" && l.from <= day && l.to >= day) || null
 const workDays = (l: Leave) => { if (l.half) return 0.5; let n = 0; for (let d = d8(l.from); d <= d8(l.to); d.setUTCDate(d.getUTCDate() + 1)) if (d.getUTCDay() % 6) n++; return n }
 const leaveDates = (l: Leave) => (l.from === l.to ? dayName(l.from) + " " + fmtDate(l.from) + (l.half ? " · half day" : "") : fmtDate(l.from) + " – " + fmtDate(l.to))
@@ -594,10 +594,15 @@ const onbOf = (hub: Hub): { steps: Step[]; progress: Prog[] } => (hub as any).on
 const engineOld = (hub: Hub) => !(hub as any).library
 function onboardingLeft(hub: Hub, id: string) { const o = onbOf(hub); return o.steps.filter((s) => s.required && !o.progress.some((p) => p.personId === id && p.stepId === s.id)).length }
 function openSessionOf(hub: Hub, id: string) { return workOf(hub).filter((w) => w.personId === id && w.checkIn && !w.checkOut).sort((a, b) => b.checkIn.localeCompare(a.checkIn))[0] || null }
-const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "")
+// the team works a US shift from India, so check-ins are tracked and shown in India time
+const TZ = "Asia/Kolkata"
+const fmtTime = (iso: string) => (iso ? new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ }) : "")
 const fmtDur = (mins: number) => { const h = Math.floor(mins / 60), m = Math.round(mins % 60); return h ? h + "h " + String(m).padStart(2, "0") + "m" : m + "m" }
 const minsOf = (w: Work) => (w.checkOut ? (w.minutes ?? Math.round((+new Date(w.checkOut) - +new Date(w.checkIn)) / 60000)) : Math.max(0, Math.round((Date.now() - +new Date(w.checkIn)) / 60000) - (w.brk || 0)))
-const localDay = (iso: string) => { const d = new Date(iso); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
+const istDay = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" })
+const localDay = (iso: string) => istDay.format(new Date(iso))
+const plusDays = (day: string, n: number) => { const d = d8(day); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) }
+const isWeekend = (day: string) => d8(day).getUTCDay() % 6 === 0
 // times come from the server clock and are never editable; the work note stays editable for 12 hours after check-out
 const NOTE_EDIT_MS = 12 * 3600000
 const noteLeft = (w: Work) => (w.checkOut ? +new Date(w.checkOut) + NOTE_EDIT_MS - Date.now() : Infinity)
@@ -631,7 +636,7 @@ function ClockCard({ hub, act }: { hub: Hub; act: Act }) {
             <span className="dot" aria-hidden="true" />
             <div className="ct">{brk ? <><b>On a break · since {fmtTime(brk.start)}</b><small>{fmtDur(brkMins(brk))} so far · {fmtDur(total)} worked today</small></>
                 : open ? <><b>Checked in · {fmtTime(open.checkIn)}</b><small>{fmtDur(total)} worked today</small></>
-                : <><b>{today.length ? "Checked out" : off && !off.half ? "On leave today" : "Not checked in"}</b><small>{today.length ? fmtDur(total) + " today" : off ? LEAVE_T[off.type] + " leave" + (off.half ? " · half day" : "") : "Start your day"}</small></>}</div>
+                : <><b>{today.length ? "Checked out" : off && !off.half ? "On leave today" : "Not checked in"}</b><small>{today.length ? fmtDur(total) + " today" : off ? LEAVE_T[off.type] + " leave" + (off.half ? " · half day" : "") : (hub as any).shift ? "Shift starts " + fmtTime(new Date(localDay(new Date().toISOString()) + "T" + (hub as any).shift.start + ":00+05:30").toISOString()) + " IST" : "Start your day"}</small></>}</div>
             {brk ? <button className="th-cta" disabled={busy} onClick={() => go("breakEnd")}>End break</button>
                 : open ? <>{(hub as any).breaks ? <button className="th-ghost" disabled={busy} onClick={() => go("breakStart")}>Break</button> : null}<button className="th-cta" disabled={busy} onClick={() => setNote(true)}>Check out</button></>
                 : <button className="th-cta" disabled={busy} onClick={() => go("checkIn")}>Check in</button>}
@@ -652,10 +657,10 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
     const [txt, setTxt] = useState("")
     const [busy, setBusy] = useState(false)
     if (engineOld(hub)) return <EngineNote />
-    const now = new Date(), dIdx = (now.getDay() + 6) % 7
-    const mon = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dIdx + week * 7)
-    const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(mon); d.setDate(mon.getDate() + i); return localDay(d.toISOString()) })
-    const todayK = localDay(now.toISOString())
+    const todayK = localDay(new Date().toISOString())
+    const mon = plusDays(todayK, -((d8(todayK).getUTCDay() + 6) % 7) + week * 7)
+    const days = Array.from({ length: 7 }, (_, i) => plusDays(mon, i))
+    const shift = (hub as any).shift ? fmtTime(new Date(localDay(new Date().toISOString()) + "T" + (hub as any).shift.start + ":00+05:30").toISOString()) : "6:00 PM"
     const work = workOf(hub)
     const people = (canEdit ? hub.team : hub.team.filter((m) => work.some((w) => w.personId === m.id) || m.id === hub.me.id)).filter((m) => m.inReports || m.id === hub.me.id)
     const cell = (id: string, d: string) => work.filter((w) => w.personId === id && localDay(w.checkIn) === d)
@@ -664,14 +669,15 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
     return (
         <div className="th-col">
             <section className="th-panel">
-                <div className="th-ph"><div><h2>Check-ins</h2><p>{canEdit ? "Everyone's check-in and check-out times" : "Your check-in and check-out times"} · shown in your time zone</p></div>
+                <div className="th-ph"><div><h2>Check-ins</h2><p>{canEdit ? "Everyone's check-in and check-out times" : "Your check-in and check-out times"} · India time (IST) · shift starts {shift} · Sat and Sun off</p></div>
                     <div className="th-weeknav"><button className="th-round" aria-label="Previous week" onClick={() => setWeek(week - 1)}>‹</button><b>{fmtDate(days[0])} – {fmtDate(days[6])}</b><button className="th-round" aria-label="Next week" disabled={week >= 0} onClick={() => setWeek(week + 1)}>›</button></div></div>
-                <div className="th-tablewrap"><table className="th-table"><thead><tr><th>Person</th>{days.map((d) => <th key={d} className={d === todayK ? "today" : ""}>{dayName(d)} {d8(d).getUTCDate()}</th>)}<th>Week</th></tr></thead>
+                <div className="th-tablewrap"><table className="th-table"><thead><tr><th>Person</th>{days.map((d) => <th key={d} className={(d === todayK ? "today" : "") + (isWeekend(d) ? " wkend" : "")}>{dayName(d)} {d8(d).getUTCDate()}</th>)}<th>Week</th></tr></thead>
                     <tbody>{people.map((m) => <tr key={m.id}><td><span className="who"><span className="th-av sm">{initials(m.name)}</span>{m.name}</span></td>
                         {days.map((d) => { const c = cell(m.id, d), live = c.some((w) => !w.checkOut), mins = c.reduce((a, w) => a + minsOf(w), 0)
                             const lv = c.length ? null : leaveOn(hub, m.id, d)
                             if (lv) return <td key={d}><span className="th-tcell leave"><b>On leave</b><small>{LEAVE_T[lv.type]}{lv.half ? " · half" : ""}</small></span></td>
-                            return <td key={d}>{c.length ? <span className={"th-tcell" + (live ? " live" : "")} title={c.map((w) => fmtTime(w.checkIn) + " – " + (w.checkOut ? fmtTime(w.checkOut) : "now")).join("\n")}><b>{fmtDur(mins)}</b><small>{fmtTime(c[c.length - 1].checkIn)}{live ? " · in" : " – " + fmtTime(c[0].checkOut)}</small></span> : <span className="th-note">–</span>}</td> })}
+                            const missed = c.some((w) => w.source === "auto-closed")
+                            return <td key={d} className={isWeekend(d) ? "wkend" : ""}>{c.length ? <span className={"th-tcell" + (live ? " live" : "") + (missed ? " missed" : "")} title={c.map((w) => fmtTime(w.checkIn) + " – " + (w.checkOut ? fmtTime(w.checkOut) : "now")).join("\n")}><b>{fmtDur(mins)}</b><small>{fmtTime(c[c.length - 1].checkIn)}{live ? " · in" : " – " + fmtTime(c[0].checkOut)}{missed ? " · missed" : ""}</small></span> : <span className="th-note">{isWeekend(d) ? "Off" : "–"}</span>}</td> })}
                         <td><b>{fmtDur(weekMins(m.id))}</b></td></tr>)}</tbody></table></div>
             </section>
             <section className="th-panel">
@@ -683,7 +689,7 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
                     <div key={w.id} className="th-srow">
                         <span className="th-av sm">{initials(mem(w.personId)?.name || "?")}</span>
                         <div className="mid"><b>{mem(w.personId)?.name || w.personId}</b>
-                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : openBreakOf(hub, w.personId) ? <span className="livetxt">on a break</span> : <span className="livetxt">still checked in</span>}{w.brk ? " · " + fmtDur(w.brk) + " break" : ""}</div>
+                            <div className="sub">{dayName(localDay(w.checkIn))} {fmtDate(localDay(w.checkIn))} · {fmtTime(w.checkIn)} – {w.checkOut ? fmtTime(w.checkOut) : openBreakOf(hub, w.personId) ? <span className="livetxt">on a break</span> : <span className="livetxt">still checked in</span>}{w.brk ? " · " + fmtDur(w.brk) + " break" : ""}{w.source === "auto-closed" ? <span className="badtxt"> · missed check-out, closed automatically</span> : null}</div>
                             {edit === w.id ? (
                                 <form className="th-noteform" onSubmit={(e) => { e.preventDefault(); saveNote() }}>
                                     <input value={txt} onChange={(e) => setTxt(e.target.value)} maxLength={300} placeholder="What did you work on?" aria-label="What did you work on?" autoFocus />
@@ -701,17 +707,18 @@ function TimeLog({ hub, mem, canEdit, act }: { hub: Hub; mem: (id: string) => an
     )
 }
 /* ---- leave ---- */
-function LeavePage({ hub, canEdit, act, mem }: { hub: Hub; canEdit: boolean; act: Act; mem: (id: string) => any }) {
+// Requests go to the person's manager (first manager or leader up their "reportsTo" chain); leadership can step in.
+function LeavePage({ hub, act, mem }: { hub: Hub; act: Act; mem: (id: string) => any }) {
     const today = localDay(new Date().toISOString())
-    const blank = { type: "casual", from: today, to: today, half: false, reason: "" }
+    const blank = { type: "casual", from: plusDays(today, 1), to: plusDays(today, 1), half: false, reason: "" }
     const [form, setForm] = useState<typeof blank | null>(null)
     const [busy, setBusy] = useState("")
     const all = leaveOf(hub)
+    const first = (id?: string) => (id ? mem(id)?.name.split(" ")[0] || "your manager" : "leadership")
     const mine = all.filter((l) => l.personId === hub.me.id).sort((a, b) => b.from.localeCompare(a.from))
-    const otherLead = hub.team.some((m) => m.level === "leadership" && m.id !== hub.me.id)
-    const toReview = canEdit ? all.filter((l) => l.status === "pending" && (l.personId !== hub.me.id || !otherLead)).sort((a, b) => a.from.localeCompare(b.from)) : []
-    const horizon = (() => { const d = d8(today); d.setUTCDate(d.getUTCDate() + 14); return d.toISOString().slice(0, 10) })()
-    const out = all.filter((l) => l.status === "approved" && l.to >= today && l.from <= horizon).sort((a, b) => a.from.localeCompare(b.from))
+    const toReview = all.filter((l) => l.canDecide).sort((a, b) => a.from.localeCompare(b.from))
+    const myApprover = all.find((l) => l.personId === hub.me.id)?.approverId
+    const seesTeam = hub.me.level !== "employee"
     const run = async (key: string, a: string, body: Record<string, unknown>, ok: string) => { setBusy(key); const r = await act(a, body, ok); setBusy(""); return r }
     const submit = async (e: React.FormEvent) => {
         e.preventDefault(); if (!form) return
@@ -719,33 +726,44 @@ function LeavePage({ hub, canEdit, act, mem }: { hub: Hub; canEdit: boolean; act
         const r = await run("new", "requestLeave", { leave: { ...form, to, half: form.half && form.from === to } }, "Leave requested")
         if (r) setForm(null)
     }
-    const chip = (l: Leave) => <span className={"th-lst " + l.status}>{l.status === "pending" ? "Waiting for approval" : l.status[0].toUpperCase() + l.status.slice(1)}</span>
+    const chip = (l: Leave) => <span className={"th-lst " + l.status}>{l.status === "pending" ? "Waiting for " + first(l.approverId) : l.status[0].toUpperCase() + l.status.slice(1)}</span>
     const days = (l: Leave) => { const n = workDays(l); return n === 0.5 ? "½ day" : n + (n === 1 ? " working day" : " working days") }
+    const ahead = (l: Leave) => { if (!l.requested) return ""; const n = Math.round((+d8(l.from) - +d8(localDay(l.requested))) / 86400000); return n > 0 ? " · asked " + n + (n === 1 ? " day" : " days") + " ahead" : n === 0 ? " · asked the same day" : " · asked after it started" }
+    // bandwidth: the next four weeks, Monday to Friday, approved and pending leave
+    const mon0 = isWeekend(today) ? plusDays(today, d8(today).getUTCDay() === 6 ? 2 : 1) : plusDays(today, -((d8(today).getUTCDay() + 6) % 7))   // on a weekend, start with the coming week
+    const weeks = Array.from({ length: 4 }, (_, i) => {
+        const from = plusDays(mon0, i * 7), to = plusDays(from, 4)
+        const ls = all.filter((l) => (l.status === "approved" || l.status === "pending") && l.from <= to && l.to >= from).sort((a, b) => a.from.localeCompare(b.from))
+        const daysOut = ls.reduce((n, l) => n + workDays({ ...l, from: l.from < from ? from : l.from, to: l.to > to ? to : l.to }), 0)
+        return { from, to, ls, daysOut, people: new Set(ls.map((l) => l.personId)).size }
+    })
     if (engineOld(hub) || !(hub as any).leave) return <EngineNote />
     return (
         <div className="th-col">
             {toReview.length ? (
                 <section className="th-panel">
-                    <div className="th-ph"><div><h2>Requests to review <span className="th-note">· {toReview.length}</span></h2><p>Approving posts to the team's Chat space. Reasons stay here.</p></div></div>
+                    <div className="th-ph"><div><h2>Requests to review <span className="th-note">· {toReview.length}</span></h2><p>The person gets an email with your answer. Chat sees the dates, never the reason.</p></div></div>
                     {toReview.map((l) => (
                         <div key={l.id} className="th-lrow">
                             <span className="th-av sm">{initials(mem(l.personId)?.name || "?")}</span>
-                            <div className="mid"><b>{mem(l.personId)?.name || l.personId}</b><div className="sub">{LEAVE_T[l.type]} leave · {leaveDates(l)} · {days(l)}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
+                            <div className="mid"><b>{mem(l.personId)?.name || l.personId}</b> <span className="th-note">{l.approverId === hub.me.id ? "· reports to you" : l.approverId ? "· " + first(l.approverId) + "'s team" : ""}</span>
+                                <div className="sub">{LEAVE_T[l.type]} leave · {leaveDates(l)} · {days(l)}{ahead(l)}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
                             <div className="acts"><button className="th-ghost" disabled={!!busy} onClick={() => run(l.id, "decideLeave", { id: l.id, status: "declined" }, "Declined")}>Decline</button><button className="th-cta" disabled={!!busy} onClick={() => run(l.id, "decideLeave", { id: l.id, status: "approved" }, "Approved")}>Approve</button></div>
                         </div>
                     ))}
                 </section>
             ) : null}
             <section className="th-panel">
-                <div className="th-ph"><div><h2>Your leave</h2><p>Request time off. Leadership approve it, and the team sees the dates in Chat.</p></div>{form ? null : <button className="th-cta" onClick={() => setForm(blank)}>Request leave</button>}</div>
+                <div className="th-ph"><div><h2>Your leave</h2><p>Requests go to {myApprover ? first(myApprover) : "your manager"} by email. Apply early, especially for exams, so the team can plan.</p></div>{form ? null : <button className="th-cta" onClick={() => setForm(blank)}>Request leave</button>}</div>
                 {form ? (
                     <form className="th-mform" onSubmit={submit} style={{ marginTop: 0, marginBottom: 14, borderTop: 0, paddingTop: 0 }}>
                         <label className="th-fld"><span>Type</span><select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>{Object.keys(LEAVE_T).map((k) => <option key={k} value={k}>{LEAVE_T[k]} leave</option>)}</select></label>
                         <label className="th-fld"><span>From</span><input type="date" value={form.from} onChange={(e) => setForm({ ...form, from: e.target.value, to: form.to < e.target.value ? e.target.value : form.to })} required /></label>
                         <label className="th-fld"><span>To</span><input type="date" value={form.to} min={form.from} onChange={(e) => setForm({ ...form, to: e.target.value })} required /></label>
                         {form.from === form.to ? <label className="th-chk full"><input type="checkbox" checked={form.half} onChange={(e) => setForm({ ...form, half: e.target.checked })} /> Half day</label> : null}
-                        <label className="th-fld full"><span>Reason (optional, only leadership see it)</span><input value={form.reason} maxLength={300} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder="e.g. Family function" /></label>
-                        <div className="full row"><span className="th-note">{days({ ...(form as any), to: form.to < form.from ? form.from : form.to, half: form.half && form.from === form.to })}</span><span style={{ display: "flex", gap: 8 }}><button type="button" className="th-ghost" onClick={() => setForm(null)}>Cancel</button><button className="th-cta" disabled={busy === "new"}>Send request</button></span></div>
+                        <label className="th-fld full"><span>{form.type === "exam" ? "Which exam? (only your manager and leadership see this)" : "Reason (optional, only your manager and leadership see it)"}</span><input value={form.reason} maxLength={300} onChange={(e) => setForm({ ...form, reason: e.target.value })} placeholder={form.type === "exam" ? "e.g. Semester 5 finals" : "e.g. Family function"} /></label>
+                        {form.type === "exam" ? <p className="th-note full">Add each exam block as soon as your timetable is out, even if it's weeks away.</p> : null}
+                        <div className="full row"><span className="th-note">{days({ ...(form as any), to: form.to < form.from ? form.from : form.to, half: form.half && form.from === form.to })} · weekends don't count</span><span style={{ display: "flex", gap: 8 }}><button type="button" className="th-ghost" onClick={() => setForm(null)}>Cancel</button><button className="th-cta" disabled={busy === "new"}>Send request</button></span></div>
                     </form>
                 ) : null}
                 {mine.length ? mine.map((l) => {
@@ -753,22 +771,24 @@ function LeavePage({ hub, canEdit, act, mem }: { hub: Hub; canEdit: boolean; act
                     return (
                         <div key={l.id} className="th-lrow">
                             <span className="th-lic"><Ico n="sun" s={16} /></span>
-                            <div className="mid"><b>{LEAVE_T[l.type]} leave</b><div className="sub">{leaveDates(l)} · {days(l)}{l.decidedBy && l.status !== "cancelled" ? " · " + l.status + " by " + (mem(l.decidedBy)?.name.split(" ")[0] || "leadership") : ""}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
+                            <div className="mid"><b>{LEAVE_T[l.type]} leave</b><div className="sub">{leaveDates(l)} · {days(l)}{l.decidedBy && l.status !== "cancelled" ? " · " + l.status + " by " + first(l.decidedBy) : ""}</div>{l.reason ? <div className="why">“{l.reason}”</div> : null}</div>
                             <div className="acts">{chip(l)}{canCancel ? <button className="th-edit" disabled={!!busy} onClick={() => run(l.id, "cancelLeave", { id: l.id }, "Leave cancelled")}>Cancel</button> : null}</div>
                         </div>
                     )
                 }) : form ? null : <p className="th-note">No leave yet.</p>}
             </section>
-            <section className="th-panel">
-                <div className="th-ph"><div><h2>Who's out</h2><p>Approved leave for the next two weeks</p></div></div>
-                {out.length ? out.map((l) => (
-                    <div key={l.id} className="th-lrow">
-                        <span className="th-av sm">{initials(mem(l.personId)?.name || "?")}</span>
-                        <div className="mid"><b>{mem(l.personId)?.name || l.personId}</b><div className="sub">{LEAVE_T[l.type]} leave · {leaveDates(l)}</div></div>
-                        <div className="acts">{l.from <= today ? <span className="th-lst approved">Out today</span> : null}</div>
-                    </div>
-                )) : <p className="th-note">Nobody is on leave in the next two weeks.</p>}
-            </section>
+            {seesTeam ? (
+                <section className="th-panel">
+                    <div className="th-ph"><div><h2>Team bandwidth</h2><p>Who's out over the next four weeks, Monday to Friday. Pending requests are dashed.</p></div></div>
+                    {weeks.map((w, i) => (
+                        <div key={w.from} className="th-bw">
+                            <div className="wk"><b>{i === 0 ? "This week" : i === 1 ? "Next week" : "Week of " + fmtDate(w.from)}</b><small>{fmtDate(w.from)} – {fmtDate(w.to)}</small></div>
+                            <div className="who">{w.ls.length ? w.ls.map((l) => <span key={l.id} className={"th-bchip" + (l.status === "pending" ? " pend" : "")} title={LEAVE_T[l.type] + " leave · " + leaveDates(l) + (l.status === "pending" ? " · waiting for approval" : "")}>{mem(l.personId)?.name.split(" ")[0] || l.personId} · {LEAVE_T[l.type]} · {l.from === l.to ? dayName(l.from) + (l.half ? " ½" : "") : (l.from < w.from ? "Mon" : dayName(l.from)) + "–" + (l.to > w.to ? "Fri" : dayName(l.to))}</span>) : <span className="th-note">Everyone's in</span>}</div>
+                            <div className="sum">{w.people ? <><b>{w.people}</b> out · {w.daysOut} days</> : null}</div>
+                        </div>
+                    ))}
+                </section>
+            ) : null}
         </div>
     )
 }
@@ -1028,11 +1048,15 @@ function hubCss(r: number) {
 .th-clock.brk .dot{background:var(--warn);box-shadow:0 0 0 4px color-mix(in srgb,var(--warn) 22%,transparent)}
 .th-tcell.leave{background:color-mix(in srgb,var(--accent) 22%,transparent)}
 .th-lrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.th-lrow:last-child{border-bottom:0}
-.th-lrow .mid b{font-weight:500}.th-lrow .sub{color:var(--muted);font-size:13px;margin-top:2px}.th-lrow .why{font-size:13.5px;margin-top:4px;overflow-wrap:anywhere}
+.th-lrow .mid b{font-weight:500}.th-lrow .sub{color:var(--muted);font-size:13px;margin-top:2px;white-space:normal;overflow:visible;text-overflow:clip}.th-lrow .why{font-size:13.5px;margin-top:4px;overflow-wrap:anywhere}
 .th-lrow .acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
 .th-lic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--sunk);color:var(--muted)}
 .th-lst{display:inline-flex;align-items:center;border-radius:999px;padding:4px 10px;font-size:12px;white-space:nowrap;background:var(--sunk);color:var(--muted)}
 .th-lst.pending{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--fg)}.th-lst.approved{background:color-mix(in srgb,var(--good) 18%,transparent);color:var(--good)}.th-lst.declined{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.th-bw{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.th-bw:last-child{border-bottom:0}
+.th-bw .wk{display:flex;flex-direction:column;line-height:1.3}.th-bw .wk b{font-weight:500}.th-bw .wk small{color:var(--muted);font-size:12px}.th-bw .who{display:flex;flex-wrap:wrap;gap:6px}.th-bw .sum{font-size:13px;color:var(--muted);white-space:nowrap}.th-bw .sum b{color:var(--fg);font-weight:500}
+.th-bchip{border-radius:999px;padding:5px 11px;font-size:12.5px;background:color-mix(in srgb,var(--accent) 26%,transparent)}.th-bchip.pend{background:transparent;box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--muted) 55%,transparent);border:0}
+.th-tcell.missed{box-shadow:inset 0 0 0 1.5px var(--bad)}.th-table th.wkend,.th-table td.wkend{opacity:.55}
 .th-chk{display:flex;gap:8px;align-items:center;font-size:14px;cursor:pointer}.th-chk input{width:16px;height:16px;accent-color:var(--fg)}
 .th-pop{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:320px;background:var(--panel);border-radius:${r}px;padding:14px;box-shadow:0 18px 40px -18px rgba(0,0,0,.35);display:flex;flex-direction:column;gap:10px}
 .th-dacts{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
@@ -1082,7 +1106,7 @@ function hubCss(r: number) {
  .th-ogrid{grid-template-columns:1fr}
  .th-docrow{grid-template-columns:auto minmax(0,1fr) auto}.th-docrow .when,.th-docrow .th-edit{display:none}
  .th-srow{grid-template-columns:auto minmax(0,1fr) auto}.th-srow .th-edit{grid-column:2/-1;justify-self:start}
- .th-clock{width:100%;flex-wrap:wrap}.th-clock .ct{flex:1}.th-lrow{grid-template-columns:auto minmax(0,1fr)}.th-lrow .acts{grid-column:2/-1;justify-content:flex-start}.th-pop{width:auto;left:0}
+ .th-clock{width:100%;flex-wrap:wrap}.th-clock .ct{flex:1}.th-lrow{grid-template-columns:auto minmax(0,1fr)}.th-bw{grid-template-columns:minmax(0,1fr) auto}.th-bw .who{grid-column:1/-1;grid-row:2}.th-lrow .acts{grid-column:2/-1;justify-content:flex-start}.th-pop{width:auto;left:0}
 }
 `
 }
