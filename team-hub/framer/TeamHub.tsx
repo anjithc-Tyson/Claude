@@ -93,6 +93,16 @@ const OPTIMISTIC: Record<string, (h: any, b: any) => any> = {
     requestLeave: (h, b) => ({ ...h, leave: [...raw(h, "leave"), { id: "tmp-" + Date.now(), personId: h.me.id, reason: "", ...b.leave, status: "pending", decidedBy: "", decidedAt: "", requested: nowIso() }] }),
     cancelLeave: (h, b) => ({ ...h, leave: raw(h, "leave").map((l) => (l.id === b.id ? { ...l, status: "cancelled" } : l)) }),
     decideLeave: (h, b) => ({ ...h, leave: raw(h, "leave").map((l) => (l.id === b.id ? { ...l, status: b.status, canDecide: false, decidedBy: h.me.id, decidedAt: nowIso() } : l)) }),
+    // Team & emails and Stand-up: change on screen now; a background reload then brings the rest
+    saveMember: (h, b) => { const m = b.member || {}; const has = (h.team || []).some((x: any) => x.id === m.id); return { ...h, team: has ? h.team.map((x: any) => (x.id === m.id ? { ...x, ...m } : x)) : [...(h.team || []), m] } },
+    removeMember: (h, b) => ({ ...h, team: (h.team || []).filter((x: any) => x.id !== b.id) }),
+    setAttendees: (h, b) => ({ ...h, attendees: b.ids || [] }),
+    saveSettings: (h, b) => ({ ...h, settings: { ...h.settings, ...b.settings } }),
+    setAttendance: (h, b) => {
+        const day = { ...((h.attendance || {})[b.date] || {}) }
+        if (b.status) day[b.personId] = { ...(day[b.personId] || {}), status: b.status, source: "manual" }; else delete day[b.personId]
+        return { ...h, attendance: { ...(h.attendance || {}), [b.date]: day } }
+    },
     completeStep: (h, b) => (h.onboarding ? { ...h, onboarding: { ...h.onboarding, progress: [...h.onboarding.progress, { personId: h.me.id, stepId: b.stepId, doneAt: nowIso() }] } } : h),
 }
 

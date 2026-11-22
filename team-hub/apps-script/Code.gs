@@ -22,7 +22,8 @@ const CFG = {
   // ...or anything assigned to the Team-sheet person whose "id" is in Settings → scopeOwner, or their reports.
   SENDER_NAME: 'Takshila Design & SEO',
   KEEP_DONE_DAYS: 90,
-  CACHE_SECONDS: 300,
+  CACHE_SECONDS: 21600,   // Linear tasks stay cached for up to 6 hours; refreshLinear() renews them every 10 minutes in the background
+  STALE_MINUTES: 20,      // if the background refresh isn't running, a page load fetches Linear once the copy is this old
   MEET_SENDER: 'meetings-noreply@google.com',
   SHIFT_START: '18:00',   // India time. Shown on the dashboard; check-ins aren't marked late, only recorded.
   AUTO_CLOSE_HOUR: 1      // India time. Sessions still open at 1 AM are closed and flagged as a missed check-out.
@@ -80,8 +81,9 @@ function installTriggers() {
   ScriptApp.newTrigger('sendMonday').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(20).nearMinute(45).inTimezone(CFG.TZ_LOCAL).create();
   ScriptApp.newTrigger('sendFriday').timeBased().onWeekDay(ScriptApp.WeekDay.SATURDAY).atHour(0).nearMinute(5).inTimezone(CFG.TZ_LOCAL).create();
   ScriptApp.newTrigger('attendanceCheck').timeBased().everyDays(1).atHour(22).nearMinute(20).inTimezone(CFG.TZ_LOCAL).create();
+  ScriptApp.newTrigger('refreshLinear').timeBased().everyMinutes(10).create();
   ScriptApp.newTrigger('autoCloseOpen').timeBased().everyDays(1).atHour(CFG.AUTO_CLOSE_HOUR).nearMinute(0).inTimezone(CFG.TZ_LOCAL).create();
-  Logger.log('Triggers installed: Monday ~8:45 PM, Saturday ~12:05 AM, daily ~10:20 PM, and missed check-outs closed daily at ' + CFG.AUTO_CLOSE_HOUR + ' AM (India time).');
+  Logger.log('Triggers installed: Monday ~8:45 PM, Saturday ~12:05 AM, daily ~10:20 PM, missed log-outs closed daily at ' + CFG.AUTO_CLOSE_HOUR + ' AM (India time), and Linear refreshed every 10 minutes.');
 }
 
 function ensureSheet_(ss, name, headers) {
@@ -218,8 +220,8 @@ function linear_(query, variables) {
 function fetchIssues_(force) {
   const cache = CacheService.getScriptCache();
   if (!force) {
-    const n = Number(cache.get('issues_n') || 0);
-    if (n) {
+    const n = Number(cache.get('issues_n') || 0), at = Number(cache.get('issues_at') || 0);
+    if (n && Date.now() - at < CFG.STALE_MINUTES * 60000) {
       const parts = cache.getAll(Array.from({ length: n }, (_, i) => 'issues_' + i));
       if (Object.keys(parts).length === n) return JSON.parse(Array.from({ length: n }, (_, i) => parts['issues_' + i]).join(''));
     }
@@ -234,9 +236,12 @@ function fetchIssues_(force) {
   } while (after && ++guard < 30);
   const json = JSON.stringify(all), size = 90000, chunks = {};
   for (let i = 0; i * size < json.length; i++) chunks['issues_' + i] = json.slice(i * size, (i + 1) * size);
-  try { cache.putAll(chunks, CFG.CACHE_SECONDS); cache.put('issues_n', String(Object.keys(chunks).length), CFG.CACHE_SECONDS); } catch (e) { }
+  try { cache.putAll(chunks, CFG.CACHE_SECONDS); cache.put('issues_n', String(Object.keys(chunks).length), CFG.CACHE_SECONDS); cache.put('issues_at', String(Date.now()), CFG.CACHE_SECONDS); } catch (e) { }
   return all;
 }
+
+/** Runs every 10 minutes (installTriggers): fetches Linear in the background, so nobody waits for it when they open the hub. */
+function refreshLinear() { fetchIssues_(true); }
 
 /** Normalised tasks. People with inReports off are left out entirely. */
 function tasks_(team, force) {
