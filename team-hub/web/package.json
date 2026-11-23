@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "build:wp": "vite build --config vite.wp.config.ts"
   },
   "dependencies": {
     "react": "18.3.1",

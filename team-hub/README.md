@@ -175,21 +175,21 @@ Manual marks made on the Attendance tab always win over automatic ones.
 - **Secrets stay out of code:** the Linear key and the admin access key live only in Apps Script's Script Properties. This repository is public, so never commit names, emails or keys.
 - **Email limits:** Google Workspace accounts can send about 1,500 emails a day from Apps Script, which is far more than this needs.
 
-## Hosting on your own domain (team.takshila.co)
+## WordPress plugin (team.takshila.co)
 
-`web/` turns the same `framer/TeamHub.tsx` into a standalone website, so the hub doesn't have to live inside a Framer project.
+`wordpress/takshila-team-hub/` is a WordPress plugin that puts the hub on the company WordPress site.
+
+- **Install:** Plugins → Add New → Upload Plugin → `takshila-team-hub.zip` → Activate.
+- **Page:** activation creates a page called **Team Hub** at `/hub`, using a full-screen layout (no theme header or footer), hidden from search engines.
+- **Settings → Team Hub:** the engine address (the Apps Script `/exec` URL; nothing else is accepted) and the sign-in title.
+- **Shortcode:** `[takshila_team_hub]` shows the hub inside any other page, e.g. `[takshila_team_hub height="80vh"]`.
+
+The plugin's `assets/team-hub.js` is built from `framer/TeamHub.tsx`, so Framer and WordPress run the same code. After changing the hub:
 
 ```
 cd web
 npm install
-npm run build        # creates web/dist
+npm run build:wp     # rebuilds wordpress/takshila-team-hub/assets/team-hub.js
 ```
 
-Upload everything inside `web/dist` (including the hidden `.htaccess` file) to the folder for your subdomain on any normal web host, for example a website added in your WordPress hosting panel. No WordPress install, theme or plugin is needed. The page:
-
-- talks to the Apps Script URL in `web/src/config.ts`
-- is kept out of search engines (`noindex`, `robots.txt`)
-- sends security headers and forces https through `.htaccess` (Apache / LiteSpeed hosts)
-- can be added to a phone's home screen as "Team Hub"
-
-After any change to `framer/TeamHub.tsx`, run `npm run build` again and re-upload `web/dist`. Then set `dashboardUrl` in the Settings tab to the new address so emails link there.
+Then zip the `takshila-team-hub` folder and upload it again (WordPress offers "Replace current with uploaded"). Update `dashboardUrl` in the Settings tab to the WordPress address so emails link there.
