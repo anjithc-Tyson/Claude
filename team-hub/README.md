@@ -174,3 +174,22 @@ Manual marks made on the Attendance tab always win over automatic ones.
 - **Roles are enforced by the engine:** an employee's browser never receives other people's tasks or attendance.
 - **Secrets stay out of code:** the Linear key and the admin access key live only in Apps Script's Script Properties. This repository is public, so never commit names, emails or keys.
 - **Email limits:** Google Workspace accounts can send about 1,500 emails a day from Apps Script, which is far more than this needs.
+
+## Hosting on your own domain (team.takshila.co)
+
+`web/` turns the same `framer/TeamHub.tsx` into a standalone website, so the hub doesn't have to live inside a Framer project.
+
+```
+cd web
+npm install
+npm run build        # creates web/dist
+```
+
+Upload everything inside `web/dist` (including the hidden `.htaccess` file) to the folder for your subdomain on any normal web host, for example a website added in your WordPress hosting panel. No WordPress install, theme or plugin is needed. The page:
+
+- talks to the Apps Script URL in `web/src/config.ts`
+- is kept out of search engines (`noindex`, `robots.txt`)
+- sends security headers and forces https through `.htaccess` (Apache / LiteSpeed hosts)
+- can be added to a phone's home screen as "Team Hub"
+
+After any change to `framer/TeamHub.tsx`, run `npm run build` again and re-upload `web/dist`. Then set `dashboardUrl` in the Settings tab to the new address so emails link there.
