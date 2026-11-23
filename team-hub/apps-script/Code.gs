@@ -780,6 +780,10 @@ function saveTokens_(t) {
 }
 
 /** Emails a 6-digit code to a Team member. Always answers the same way, so it doesn't reveal who is on the team. */
+/** A 6-digit code from Google's random UUID generator (Math.random() is predictable, so it isn't used for codes). */
+function secureCode_() { return String(100000 + parseInt(Utilities.getUuid().replace(/-/g, '').slice(0, 12), 16) % 900000); }
+const MAX_SESSIONS_PER_PERSON = 5;   // signing in on a 6th device signs out the oldest one
+
 function requestCode_(email) {
   email = String(email || '').trim().toLowerCase();
   const m = readTeam().find(x => x.email.toLowerCase() === email || x.linearEmail.toLowerCase() === email);
@@ -787,7 +791,7 @@ function requestCode_(email) {
     const cache = CacheService.getScriptCache();
     const tries = Number(cache.get('codeSent_' + email) || 0);
     if (tries < 5) {
-      const code = String(Math.floor(100000 + Math.random() * 900000));
+      const code = secureCode_();
       cache.put('code_' + email, JSON.stringify({ code: code, id: m.id, left: 5 }), 600);
       cache.put('codeSent_' + email, String(tries + 1), 3600);
       GmailApp.sendEmail(email, 'Your Takshila dashboard sign-in code: ' + code,
@@ -810,7 +814,10 @@ function verifyCode_(email, code) {
   }
   cache.remove('code_' + email);
   const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
-  const t = tokens_(); t[token] = { id: c.id, exp: Date.now() + SESSION_DAYS * 864e5 }; saveTokens_(t);
+  const t = tokens_(); t[token] = { id: c.id, exp: Date.now() + SESSION_DAYS * 864e5 };
+  // keep each person to their newest few sessions, so old devices drop off and the session store stays small
+  Object.keys(t).filter(k => t[k].id === c.id).sort((a, b) => t[b].exp - t[a].exp).slice(MAX_SESSIONS_PER_PERSON).forEach(k => delete t[k]);
+  saveTokens_(t);
   return { ok: true, token: token };
 }
 
